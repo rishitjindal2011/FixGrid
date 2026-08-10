@@ -12,6 +12,7 @@ import { WEEKDAYS, WEEKDAY_LABELS, type Weekday } from "@/lib/types/database";
 import type {
   BookingStatus,
   DeliveryMode,
+  InventoryCondition,
   PriceType,
 } from "@/lib/types/marketplace";
 import type { AppDatabase } from "@/lib/types/supabase";
@@ -1004,6 +1005,7 @@ async function revalidateCatalogue(
   fixerId: string | null,
 ): Promise<void> {
   revalidatePath("/dashboard/expert/services");
+  revalidatePath("/dashboard/expert/inventory");
   revalidatePath("/dashboard/expert");
   revalidatePath("/discover");
   revalidatePath("/search");
@@ -1040,6 +1042,341 @@ async function shopSlug(
   }
 
   return data?.slug ?? null;
+}
+
+/* ── Inventory ────────────────────────────────────────────────────────────── */
+
+const CONDITIONS = [
+  "new",
+  "refurbished",
+  "used",
+] as const satisfies readonly InventoryCondition[];
+
+const InventorySchema = z.object({
+  fixerId: z.string().uuid("That shop could not be found."),
+  id: z.string().uuid().optional(),
+  // Optional, not required: a shop that numbers nothing should not be forced to
+  // invent codes. When present it is unique per shop — enforced by
+  // `shop_inventory_sku_key`, whose 23505 becomes a sentence below.
+  sku: z.string().trim().max(64, "Keep the item ID under 64 characters.").optional(),
+  name: z
+    .string()
+    .trim()
+    .min(1, "Name the item.")
+    .max(160, "Keep the name under 160 characters."),
+  description: z
+    .string()
+    .trim()
+    .max(2000, "Keep the description under 2000 characters.")
+    .optional(),
+  brand: z.string().trim().max(80, "Keep the brand under 80 characters.").optional(),
+  categoryId: z.string().uuid().optional(),
+  condition: z.enum(CONDITIONS, {
+    errorMap: () => ({ message: "Pick the condition this item is in." }),
+  }),
+  isActive: z.boolean(),
+});
+
+type InventoryWrite = AppDatabase["public"]["Tables"]["shop_inventory"]["Update"];
+
+/**
+ * `explain` renders 23505 as "that has already been recorded", which is true
+ * and useless here: the only unique index on this table is the per-shop item
+ * ID, and the owner needs to be told *which* field collided so they can change
+ * it. Every other code falls through to the shared wording.
+ */
+function explainInventory(code: string | undefined, fallback: string): string {
+  if (code === "23505") {
+    return "You already have an item with that ID. Item IDs are unique per shop.";
+  }
+  return explain(code, fallback);
+}
+
+/**
+ * Create or edit one stock item. `id` present means edit.
+ *
+ * One action rather than two because the validation is identical and the two
+ * halves would drift — the create form and the edit form are the same form,
+ * exactly as with `upsertService`. Quantity, threshold and price are read with
+ * `bounded`/`poundsToPence` instead of being part of the Zod shape because
+ * `z.coerce.number()` turns a missing form field into `Number(null)` — zero —
+ * and a form that forgot an input would save a silently wrong count.
+ */
+export async function upsertInventoryItem(
+  _prev: BookingActionState,
+  formData: FormData,
+): Promise<BookingActionState> {
+  const parsed = InventorySchema.safeParse({
+    fixerId: formData.get("fixerId"),
+    id: optionalText(formData, "id"),
+    sku: optionalText(formData, "sku"),
+    name: formData.get("name"),
+    description: optionalText(formData, "description"),
+    brand: optionalText(formData, "brand"),
+    categoryId: optionalText(formData, "categoryId"),
+    condition: formData.get("condition"),
+    isActive: checked(formData, "isActive"),
+  });
+
+  if (!parsed.success) {
+    return FAILED(parsed.error.issues[0]?.message ?? "Check the form and try again.");
+  }
+
+  const input = parsed.data;
+
+  const quantity = bounded(
+    formData.get("quantity"),
+    0,
+    1000000,
+    "Set the quantity on the shelf, up to 1,000,000.",
+  );
+  if (!quantity.ok) return FAILED(quantity.error);
+
+  const threshold = bounded(
+    formData.get("threshold"),
+    0,
+    1000000,
+    "Set the low-stock alert in whole units, up to 1,000,000. Zero turns it off.",
+  );
+  if (!threshold.ok) return FAILED(threshold.error);
+
+  let unitPrice: number | null = null;
+
+  // Blank is a real answer here, unlike quantity: an item priced on request
+  // stores null and the public panel says "Ask us" rather than "£0.00".
+  const priceRaw = formData.get("price");
+  if (typeof priceRaw === "string" && priceRaw.trim() !== "") {
+    unitPrice = poundsToPence(priceRaw);
+    if (unitPrice === null) return FAILED("Enter the price in pounds, like 49.99.");
+    if (unitPrice > 1000000) {
+      return FAILED("Enter a price up to £10,000.");
+    }
+  }
+
+  const { supabase, user } = await currentUser();
+  if (!user) return FAILED("Sign in to edit your inventory.");
+
+  const denied = await assertOwnership(supabase, user.id, input.fixerId);
+  if (denied) return FAILED(denied);
+
+  const write: InventoryWrite = {
+    sku: input.sku ?? null,
+    name: input.name,
+    description: input.description ?? null,
+    brand: input.brand ?? null,
+    category_id: input.categoryId ?? null,
+    condition: input.condition,
+    // Null rather than 0: 0 would advertise "free" on the public page, and a
+    // blank price field is the owner saying "ask us".
+    unit_price: unitPrice,
+    quantity: quantity.value,
+    low_stock_threshold: threshold.value,
+    is_active: input.isActive,
+  };
+
+  if (input.id) {
+    // Scoped by `fixer_id` as well as `id`. RLS would refuse another shop's row,
+    // but a policy-refused update returns zero rows and reads as success —
+    // selecting the id back is what turns that into a message.
+    const { data, error } = await supabase
+      .from("shop_inventory")
+      .update(write)
+      .eq("id", input.id)
+      .eq("fixer_id", input.fixerId)
+      .select("id")
+      .maybeSingle<{ id: string }>();
+
+    if (error) return FAILED(explainInventory(error.code, "That item could not be saved."));
+    if (!data) return FAILED("That item could not be found on your shop.");
+  } else {
+    const { error } = await supabase.from("shop_inventory").insert({
+      ...write,
+      fixer_id: input.fixerId,
+      sort_order: await nextInventorySortOrder(supabase, input.fixerId),
+    });
+
+    if (error) return FAILED(explainInventory(error.code, "That item could not be added."));
+  }
+
+  await revalidateCatalogue(supabase, input.fixerId);
+
+  return OK(input.id ? "Item saved." : "Item added.");
+}
+
+export async function toggleInventoryActive(
+  _prev: BookingActionState,
+  formData: FormData,
+): Promise<BookingActionState> {
+  const id = readId(formData, "id");
+  if (!id) return FAILED("That item could not be found.");
+
+  const active = checked(formData, "active");
+
+  const { supabase, user } = await currentUser();
+  if (!user) return FAILED("Sign in to edit your inventory.");
+
+  const item = await readOwnedInventoryItem(supabase, user.id, id);
+  if (typeof item === "string") return FAILED(item);
+
+  const { error } = await supabase
+    .from("shop_inventory")
+    .update({ is_active: active })
+    .eq("id", id);
+
+  if (error) {
+    return FAILED(explain(error.code, "That item could not be updated."));
+  }
+
+  await revalidateCatalogue(supabase, item.fixer_id);
+
+  return OK(active ? "Item listed." : "Item unlisted.");
+}
+
+/**
+ * Move an item one place in the list. Mirrors `reorderService` — positions are
+ * rewritten as 0…n-1 rather than swapping the two stored values, because every
+ * row starts on the column default of 0 and a bare swap between two zeroes
+ * would change nothing at all.
+ */
+export async function reorderInventoryItem(
+  _prev: BookingActionState,
+  formData: FormData,
+): Promise<BookingActionState> {
+  const id = readId(formData, "id");
+  if (!id) return FAILED("That item could not be found.");
+
+  const direction = formData.get("direction");
+  if (direction !== "up" && direction !== "down") {
+    return FAILED("That item could not be moved.");
+  }
+
+  const { supabase, user } = await currentUser();
+  if (!user) return FAILED("Sign in to edit your inventory.");
+
+  const item = await readOwnedInventoryItem(supabase, user.id, id);
+  if (typeof item === "string") return FAILED(item);
+
+  const { data, error } = await supabase
+    .from("shop_inventory")
+    .select("id, sort_order, name")
+    .eq("fixer_id", item.fixer_id)
+    .returns<{ id: string; sort_order: number; name: string }[]>();
+
+  if (error) {
+    return FAILED(explain(error.code, "Your inventory could not be loaded."));
+  }
+
+  const ordered = [...(data ?? [])].sort(
+    (a, b) => a.sort_order - b.sort_order || a.name.localeCompare(b.name),
+  );
+
+  const from = ordered.findIndex((row) => row.id === id);
+  if (from < 0) return FAILED("That item could not be found on your shop.");
+
+  const to = direction === "up" ? from - 1 : from + 1;
+  // Already at the end of the list. Nothing moved and nothing went wrong, so
+  // this is a success with nothing to say rather than an error to explain.
+  if (to < 0 || to >= ordered.length) return OK();
+
+  const moved = ordered[from];
+  const displaced = ordered[to];
+  if (!moved || !displaced) return FAILED("That item could not be moved.");
+
+  ordered[from] = displaced;
+  ordered[to] = moved;
+
+  const writes = ordered
+    .map((row, position) => ({ row, position }))
+    .filter((entry) => entry.row.sort_order !== entry.position)
+    .map((entry) =>
+      supabase
+        .from("shop_inventory")
+        .update({ sort_order: entry.position })
+        .eq("id", entry.row.id),
+    );
+
+  const results = await Promise.all(writes);
+  const failure = results.find((result) => result.error);
+
+  if (failure?.error) {
+    return FAILED(explain(failure.error.code, "That item could not be moved."));
+  }
+
+  await revalidateCatalogue(supabase, item.fixer_id);
+
+  return OK();
+}
+
+export async function deleteInventoryItem(
+  _prev: BookingActionState,
+  formData: FormData,
+): Promise<BookingActionState> {
+  const id = readId(formData, "id");
+  if (!id) return FAILED("That item could not be found.");
+
+  const { supabase, user } = await currentUser();
+  if (!user) return FAILED("Sign in to edit your inventory.");
+
+  const item = await readOwnedInventoryItem(supabase, user.id, id);
+  if (typeof item === "string") return FAILED(item);
+
+  const { error } = await supabase.from("shop_inventory").delete().eq("id", id);
+
+  if (error) {
+    // Nothing references an inventory row today, but the FK on `bookings`
+    // taught us the shape of this failure. If a booking ever does quote an
+    // item, deleting it must not corrupt the history that names it.
+    if (error.code === "23503") {
+      return FAILED("This item is referenced elsewhere — unlist it instead.");
+    }
+    return FAILED(explain(error.code, "That item could not be deleted."));
+  }
+
+  await revalidateCatalogue(supabase, item.fixer_id);
+
+  return OK("Item deleted.");
+}
+
+/** Where a new item lands in the list — appended, like a new service. */
+async function nextInventorySortOrder(
+  supabase: ServerClient,
+  fixerId: string,
+): Promise<number> {
+  const { data, error } = await supabase
+    .from("shop_inventory")
+    .select("sort_order")
+    .eq("fixer_id", fixerId)
+    .order("sort_order", { ascending: false })
+    .limit(1)
+    .maybeSingle<{ sort_order: number }>();
+
+  if (error) {
+    logReadFailure("[expert] inventory sort order lookup failed", error);
+  }
+
+  return (data?.sort_order ?? -1) + 1;
+}
+
+/**
+ * One stock item the caller demonstrably owns, or the sentence explaining why
+ * not. The inventory analogue of `readOwnedService`.
+ */
+async function readOwnedInventoryItem(
+  supabase: ServerClient,
+  userId: string,
+  id: string,
+): Promise<{ id: string; fixer_id: string } | string> {
+  const { data, error } = await supabase
+    .from("shop_inventory")
+    .select("id, fixer_id")
+    .eq("id", id)
+    .maybeSingle<{ id: string; fixer_id: string }>();
+
+  if (error) return explain(error.code, "That item could not be loaded.");
+  if (!data) return "That item could not be found.";
+
+  const denied = await assertOwnership(supabase, userId, data.fixer_id);
+  return denied ?? data;
 }
 
 /* ── Shop settings ────────────────────────────────────────────────────────── */
@@ -1239,7 +1576,9 @@ export async function updateShopProfile(
       address: composeAddress(input.address, input.city, input.postcode),
       lat,
       lng,
-      updated_at: new Date().toISOString(),
+      // No `updated_at` here: the `fixer_profiles_updated_at` trigger sets it
+      // to now() on every update, so writing it from the client was always
+      // redundant — and it is the client's clock, which the trigger's is not.
     })
     .eq("id", input.fixerId)
     .select("slug")

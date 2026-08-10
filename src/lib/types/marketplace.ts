@@ -36,6 +36,7 @@ export type BookingStatus =
 
 export type DeliveryMode = "in_shop" | "home_visit" | "pickup_drop";
 export type PriceType = "fixed" | "from" | "quote";
+export type InventoryCondition = "new" | "refurbished" | "used";
 export type ClaimStatus = "pending" | "approved" | "rejected" | "withdrawn";
 export type PaymentStatus =
   | "pending"
@@ -104,6 +105,23 @@ export const DELIVERY_MODE_LABELS: Record<DeliveryMode, string> = {
   in_shop: "Drop in to the shop",
   home_visit: "Home visit",
   pickup_drop: "Collection and return",
+};
+
+export const INVENTORY_CONDITIONS: readonly InventoryCondition[] = [
+  "new",
+  "refurbished",
+  "used",
+];
+
+/**
+ * Shown on both the dashboard table and the public panel, so the wording is
+ * declared once — a part described as "Refurbished" to the owner and
+ * "Reconditioned" to the customer is the same part being sold twice.
+ */
+export const INVENTORY_CONDITION_LABELS: Record<InventoryCondition, string> = {
+  new: "New",
+  refurbished: "Refurbished",
+  used: "Used",
 };
 
 /** Statuses where the job is live and the customer should be kept informed. */
@@ -191,6 +209,40 @@ export interface ShopServiceRow {
   duration_minutes: number;
   delivery_modes: DeliveryMode[];
   warranty_days: number;
+  is_active: boolean;
+  sort_order: number;
+  created_at: string;
+  updated_at: string;
+}
+
+/**
+ * One item of stock a shop sells over the counter.
+ *
+ * Separate from `ShopServiceRow` on purpose: a service is labour with a
+ * duration and a diary slot, an item is a thing on a shelf with a count. The
+ * only fields they share are the ones every shop-owned catalogue row has.
+ */
+export interface ShopInventoryRow {
+  id: string;
+  fixer_id: string;
+  category_id: string | null;
+  /**
+   * The owner's own item ID — the code they quote down the phone. Free-form
+   * and unique per shop, case-insensitively. Null means they have not numbered
+   * this one.
+   */
+  sku: string | null;
+  name: string;
+  description: string | null;
+  brand: string | null;
+  condition: InventoryCondition;
+  /** Pence. Null means "price on request", never free. */
+  unit_price: number | null;
+  currency: string;
+  quantity: number;
+  /** Flag the row at or below this count. 0 disables the warning. */
+  low_stock_threshold: number;
+  /** Whether the item appears on the public page at all. */
   is_active: boolean;
   sort_order: number;
   created_at: string;

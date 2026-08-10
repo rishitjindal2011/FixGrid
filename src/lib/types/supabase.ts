@@ -42,6 +42,7 @@ import type {
   SavedExpertRow,
   ShopAvailabilityRow,
   ShopClaimRow,
+  ShopInventoryRow,
   ShopNoticeRow,
   ShopServiceRow,
   ShopTimeOffRow,
@@ -202,6 +203,7 @@ export interface AppDatabase {
       shop_notices: TableOf<ShopNoticeRow>;
       user_addresses: TableOf<UserAddressRow>;
       shop_services: TableOf<ShopServiceRow>;
+      shop_inventory: TableOf<ShopInventoryRow>;
       shop_availability: TableOf<ShopAvailabilityRow>;
       shop_time_off: TableOf<ShopTimeOffRow>;
       bookings: TableOf<BookingRow>;

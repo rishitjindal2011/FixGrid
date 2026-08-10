@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 
-import { requireEditor, getSession } from "@/lib/auth/session";
+import { requireEditor } from "@/lib/auth/session";
 import { toKeywordList } from "@/lib/cms/keywords";
 import { type FormState, formFailure, formSuccess } from "@/lib/redirects/state";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -48,7 +48,7 @@ export async function deleteBlogPost(formData: FormData) {
 }
 
 export async function createBlogPost(formData: FormData) {
-  const session = await requireEditor();
+  await requireEditor();
 
   const title = String(formData.get("title") ?? "Untitled Post").trim() || "Untitled Post";
   const slug = String(formData.get("slug") ?? `post-${Date.now()}`).trim() || `post-${Date.now()}`;
@@ -60,6 +60,10 @@ export async function createBlogPost(formData: FormData) {
       title,
       slug,
       status: "draft",
+      // Stays null: `blog_posts.author_id` references `public.users`, the
+      // marketplace's customer table, whereas an editor here is a `seo_admins`
+      // row. The two id spaces are unrelated, so writing the session id would
+      // fail the foreign key rather than record an author.
       author_id: null,
       content: "",
       meta_title: null,

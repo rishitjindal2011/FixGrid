@@ -141,19 +141,90 @@ grant update (
    takeover), `slug` (URL hijack), and the payout columns.
    ─────────────────────────────────────────────────────────────────────────── */
 
-revoke update on public.fixer_profiles from anon, authenticated;
+/* An allow-list of grantable columns was the first attempt here, and it was
+   the wrong shape. A column-level UPDATE grant is checked against every column
+   in the SET list, and the *whole statement* fails with 42501 if a single one
+   is ungranted — it does not partially apply. So the list had to enumerate
+   every column the app writes, forever, and staying correct through every
+   future feature. It did not survive first contact: `payout_email` and
+   `updated_at` were missing, which took out the booking-settings form and the
+   map pin completely, while looking to the user like a permissions bug.
 
--- Everything an owner may legitimately edit from their own dashboard. Derived
--- from the writes in `expert-actions.ts`; anything absent here is either
--- admin-owned or trigger-owned.
-grant update (
-  shop_name, bio, address, lat, lng, specialties, photos,
-  contact_phone, contact_email,
-  hours, working_days, opening_time, closing_time, closed_on_holidays, timezone,
-  offers_home_visit, offers_in_shop, offers_home_service, offers_pickup_drop,
-  accepts_bookings, booking_lead_hours, booking_horizon_days,
-  auto_accept, response_hours, default_warranty_days
-) on public.fixer_profiles to authenticated;
+   Inverting it fails in the safer direction. Grant the table, then name the
+   columns an owner must never set. A new *feature* column works the moment it
+   is added; a new *sensitive* column is a deliberate one-word addition to the
+   array below. The cost of forgetting is now a gap in a guard we can audit,
+   rather than a dashboard that silently stops saving. */
+
+revoke update on public.fixer_profiles from anon, authenticated;
+grant update on public.fixer_profiles to authenticated;
+
+create or replace function public.guard_fixer_profile_columns()
+returns trigger
+language plpgsql
+set search_path = ''
+as $$
+declare
+  -- Identity and ownership, then earned standing, then enforcement, then money.
+  -- Everything else — name, bio, address, hours, photos, contact details,
+  -- booking preferences, payout_email — is the owner's to edit.
+  protected constant text[] := array[
+    'id', 'owner_id', 'user_id', 'slug', 'created_at',
+    'verified', 'rating_avg', 'rating_count', 'is_hidden',
+    'suspended_at', 'suspended_reason', 'suspended_by',
+    'stripe_account_id'
+  ];
+  col       text;
+  before_j  jsonb;
+  after_j   jsonb;
+begin
+  -- Fail closed: any role that is not a trusted backend role is guarded.
+  -- PostgREST issues `set local role` per request, so an end user arrives as
+  -- `authenticated` or `anon`, while the admin app's service-role client,
+  -- migrations and pg_cron arrive as `service_role`/`postgres` and pass
+  -- straight through. The rating and claim-approval triggers are SECURITY
+  -- DEFINER, so their writes are not the caller's and are unaffected.
+  if current_user in ('service_role', 'postgres', 'supabase_admin') then
+    return new;
+  end if;
+
+  if tg_op = 'INSERT' then
+    -- Coerce rather than reject. The join flow creates shops with the
+    -- service-role client, so nothing reaches this branch today; rejecting
+    -- would break any future legitimate use, whereas forcing the unearned
+    -- columns to their starting values cannot. This is what stops a signed-in
+    -- user from POSTing themselves a verified, five-star, publicly listed shop.
+    new.verified          := false;
+    new.rating_avg        := 0;
+    new.rating_count      := 0;
+    new.is_hidden         := true;
+    new.suspended_at      := null;
+    new.suspended_reason  := null;
+    new.suspended_by      := null;
+    new.stripe_account_id := null;
+    return new;
+  end if;
+
+  before_j := to_jsonb(old);
+  after_j  := to_jsonb(new);
+
+  foreach col in array protected loop
+    if after_j -> col is distinct from before_j -> col then
+      -- 42501 so the dashboard's existing error mapping reports it as a
+      -- permission problem, which is exactly what it is.
+      raise exception 'fixer_profiles.% is not owner-editable', col
+        using errcode = '42501';
+    end if;
+  end loop;
+
+  return new;
+end;
+$$;
+
+drop trigger if exists fixer_profiles_guard_columns on public.fixer_profiles;
+create trigger fixer_profiles_guard_columns
+  before insert or update on public.fixer_profiles
+  for each row execute function public.guard_fixer_profile_columns();
 
 -- anon has no business writing a shop at all.
 revoke insert, delete on public.fixer_profiles from anon;

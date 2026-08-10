@@ -14,6 +14,7 @@ import {
   type PayoutRow,
   type PayoutStatus,
   type ShopAvailabilityRow,
+  type ShopInventoryRow,
   type ShopServiceRow,
   type ShopTimeOffRow,
 } from "@/lib/types/marketplace";
@@ -944,6 +945,50 @@ async function listClientNotes(
 
 export interface ExpertService extends ShopServiceRow {
   category: { id: string; name: string; slug: string } | null;
+}
+
+/**
+ * One stock row with its category joined.
+ *
+ * An item is priced in pence (`unit_price`) and counted in whole units
+ * (`quantity`) — both are plain integers, so the joined category is the only
+ * shape `listShopInventory` has to add.
+ */
+export interface ExpertInventoryItem extends ShopInventoryRow {
+  category: { id: string; name: string; slug: string } | null;
+}
+
+/**
+ * The shop's stock, unlisted rows included.
+ *
+ * Same shape as `listShopServices`: the public page reads only `is_active`
+ * rows while the owner's screen shows the drafts too, and the owner policy
+ * ORs with the public one so no extra filter is needed to see them.
+ */
+export async function listShopInventory(
+  fixerId: string,
+): Promise<ExpertInventoryItem[]> {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from("shop_inventory")
+    .select(
+      `id, fixer_id, category_id, sku, name, description, brand,
+       condition, unit_price, currency, quantity, low_stock_threshold,
+       is_active, sort_order, created_at, updated_at,
+       category:repair_categories!shop_inventory_category_fkey ( id, name, slug )`,
+    )
+    .eq("fixer_id", fixerId)
+    .order("sort_order", { ascending: true })
+    .order("name", { ascending: true })
+    .returns<ExpertInventoryItem[]>();
+
+  if (error) {
+    logReadFailure("[dashboard] expert inventory failed", error);
+    return [];
+  }
+
+  return data ?? [];
 }
 
 /**
