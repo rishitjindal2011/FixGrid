@@ -1,0 +1,18 @@
+{
+  "email": "warranty-probe@example.com",
+  "password": "Probe-Warranty-12345",
+  "bookings": [
+    {
+      "id": "c5ad6a89-cf60-45dc-94c1-6e3a0cb56f8c",
+      "reference": "FIX-PROBE1"
+    },
+    {
+      "id": "4649da2e-8116-45e1-85e5-599e79fc49bc",
+      "reference": "FIX-PROBE2"
+    },
+    {
+      "id": "6ce41b94-3174-405c-928f-2114f5e577ba",
+      "reference": "FIX-PROBE3"
+    }
+  ]
+}

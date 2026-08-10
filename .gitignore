@@ -1,0 +1,26 @@
+node_modules/
+.next/
+out/
+build/
+.DS_Store
+
+# env
+.env
+.env.local
+.env*.local
+
+# logs
+npm-debug.log*
+yarn-error.log*
+*.tsbuildinfo
+next-env.d.ts
+
+# editor
+.vscode/
+.idea/
+
+# MCP server config — holds a Supabase personal access token in an
+# Authorization header. Account-level scope, not project-level, so it must
+# never be committed. See supabase/README-mcp.md for the OAuth alternative
+# that needs no token on disk at all.
+.mcp.json

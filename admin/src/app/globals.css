@@ -1,0 +1,206 @@
+@import "tailwindcss";
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Fix-It Registry — design tokens
+   Direction: workshop enamel + technical schematic.
+   Cool industrial greys, deep machine teal, signal orange reserved strictly
+   for actions and live state. Never decorative.
+
+   Copied verbatim from the consumer app. Not imported from it: the three apps
+   are separate npm projects with separate node_modules, so there is no shared
+   package to import from. When a token changes it changes in three places, and
+   that is the accepted cost of keeping the deploys independent.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+@theme {
+  /* ── Color ─────────────────────────────────────────────────────────────── */
+  --color-bench: #eef1f4; /* page field — cool, not cream */
+  --color-bench-sunk: #e2e7ec; /* recessed wells, table stripes */
+  --color-chalk: #ffffff; /* card surfaces */
+
+  --color-enamel: #123b4a; /* primary ink, headers, machine teal */
+  --color-enamel-lift: #1c5165; /* hover state for enamel surfaces */
+  --color-steel: #5a6b75; /* secondary ink */
+  --color-steel-soft: #8b99a3; /* tertiary ink, placeholders */
+  --color-hairline: #ccd5dc; /* borders, rules */
+
+  --color-signal: #e8590c; /* actions + live state ONLY */
+  --color-signal-lift: #c9490a;
+  --color-signal-wash: #fdf0e7;
+
+  --color-verdigris: #2a8c82; /* verified, open, success */
+  --color-verdigris-wash: #e7f4f2;
+
+  --color-rust: #b42318; /* closed, destructive, errors */
+  --color-rust-wash: #fdeceb;
+
+  /* ── Type ──────────────────────────────────────────────────────────────── */
+  --font-display: var(--font-barlow-condensed), "Arial Narrow", sans-serif;
+  --font-sans: var(--font-public-sans), system-ui, sans-serif;
+  --font-mono: var(--font-plex-mono), ui-monospace, "SFMono-Regular", monospace;
+
+  /* Display scale — condensed faces need more size to hold equal weight */
+  --text-eyebrow: 0.6875rem;
+  --text-eyebrow--line-height: 1;
+  --text-eyebrow--letter-spacing: 0.14em;
+
+  --text-display-sm: 1.75rem;
+  --text-display-sm--line-height: 1.05;
+  --text-display-sm--letter-spacing: -0.005em;
+
+  --text-display: 2.75rem;
+  --text-display--line-height: 0.98;
+  --text-display--letter-spacing: -0.01em;
+
+  --text-display-lg: 4rem;
+  --text-display-lg--line-height: 0.94;
+  --text-display-lg--letter-spacing: -0.015em;
+
+  /* ── Form ──────────────────────────────────────────────────────────────── */
+  --radius-machined: 4px; /* machined, not soft — no pills anywhere */
+
+  --shadow-bench: 0 1px 2px rgb(18 59 74 / 0.06), 0 4px 12px rgb(18 59 74 / 0.05);
+  --shadow-lift: 0 2px 4px rgb(18 59 74 / 0.08), 0 12px 28px rgb(18 59 74 / 0.10);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Base
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+@layer base {
+  :root {
+    color-scheme: light;
+  }
+
+  * {
+    border-color: var(--color-hairline);
+  }
+
+  html {
+    scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    background-color: var(--color-bench);
+    color: var(--color-enamel);
+    font-family: var(--font-sans);
+    font-synthesis-weight: none;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: var(--font-display);
+    font-weight: 600;
+    text-transform: uppercase;
+  }
+
+  /* Quality floor: keyboard focus is always visible and never clipped. */
+  :focus-visible {
+    outline: 2px solid var(--color-signal);
+    outline-offset: 2px;
+    border-radius: 2px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Components
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+@layer components {
+  /* Eyebrow / label — mono, because it classifies rather than narrates. */
+  .eyebrow {
+    font-family: var(--font-mono);
+    font-size: var(--text-eyebrow);
+    letter-spacing: var(--text-eyebrow--letter-spacing);
+    line-height: 1;
+    text-transform: uppercase;
+    color: var(--color-steel);
+  }
+
+  /* Schematic grid — graph paper. Hero surfaces only, never on content. */
+  .schematic {
+    background-image:
+      linear-gradient(to right, rgb(18 59 74 / 0.05) 1px, transparent 1px),
+      linear-gradient(to bottom, rgb(18 59 74 / 0.05) 1px, transparent 1px);
+    background-size: 28px 28px;
+    background-position: center center;
+  }
+
+  .schematic-fade {
+    -webkit-mask-image: radial-gradient(ellipse 90% 70% at 50% 0%, #000 40%, transparent 100%);
+    mask-image: radial-gradient(ellipse 90% 70% at 50% 0%, #000 40%, transparent 100%);
+  }
+
+  /* ── SIGNATURE: the status strip ───────────────────────────────────────────
+     A machine-style readout of live open/closed state. The one bold element;
+     everything around it stays quiet. Here it marks a queue that needs a human:
+     pending claims, open disputes, failed payouts. */
+  .status-dot {
+    display: inline-block;
+    inline-size: 0.5rem;
+    block-size: 0.5rem;
+    border-radius: 9999px;
+    flex: none;
+  }
+
+  .status-dot--open {
+    background-color: var(--color-verdigris);
+    box-shadow: 0 0 0 0 rgb(42 140 130 / 0.55);
+    animation: status-pulse 2.4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+
+  .status-dot--closed {
+    background-color: var(--color-steel-soft);
+  }
+
+  /* Signal-coloured sibling, for a queue that is waiting on this admin right
+     now rather than a shop that is open. Same pulse, orange ring — it sits
+     inside a signal badge, where the verdigris variant would clash. */
+  .status-dot--live {
+    background-color: var(--color-signal);
+    box-shadow: 0 0 0 0 rgb(232 89 12 / 0.55);
+    animation: status-pulse-live 2.4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+
+  @keyframes status-pulse-live {
+    0% {
+      box-shadow: 0 0 0 0 rgb(232 89 12 / 0.5);
+    }
+    70% {
+      box-shadow: 0 0 0 5px rgb(232 89 12 / 0);
+    }
+    100% {
+      box-shadow: 0 0 0 0 rgb(232 89 12 / 0);
+    }
+  }
+
+  @keyframes status-pulse {
+    0% {
+      box-shadow: 0 0 0 0 rgb(42 140 130 / 0.5);
+    }
+    70% {
+      box-shadow: 0 0 0 6px rgb(42 140 130 / 0);
+    }
+    100% {
+      box-shadow: 0 0 0 0 rgb(42 140 130 / 0);
+    }
+  }
+}
