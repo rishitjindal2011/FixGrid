@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
-import { MapContainer, TileLayer, Marker, useMapEvents } from "react-leaflet";
+import { useEffect, useState } from "react";
+import { MapContainer, TileLayer, Marker, useMap, useMapEvents } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 
@@ -26,6 +26,12 @@ interface LocationPickerProps {
   onChange: (lat: number, lng: number) => void;
 }
 
+/** The shape we use out of a Nominatim result. It returns far more. */
+interface NominatimResult {
+  lat: string;
+  lon: string;
+}
+
 export function LocationPicker({ defaultLat, defaultLng, onChange }: LocationPickerProps) {
   const [position, setPosition] = useState<[number, number] | null>(
     defaultLat && defaultLng ? [defaultLat, defaultLng] : null
@@ -36,19 +42,8 @@ export function LocationPicker({ defaultLat, defaultLng, onChange }: LocationPic
 
   const mapCenter: [number, number] = position || [51.505, -0.09]; // Default to London if empty
 
-  function MapEvents() {
-    useMapEvents({
-      click(e) {
-        setPosition([e.latlng.lat, e.latlng.lng]);
-        onChange(e.latlng.lat, e.latlng.lng);
-      },
-    });
-    return null;
-  }
-
-  async function handleSearch(e: React.FormEvent) {
-    e.preventDefault();
-    if (!searchQuery.trim()) return;
+  async function handleSearch() {
+    if (!searchQuery.trim() || isSearching) return;
 
     setIsSearching(true);
     setErrorMsg("");
@@ -57,18 +52,27 @@ export function LocationPicker({ defaultLat, defaultLng, onChange }: LocationPic
       const response = await fetch(
         `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(searchQuery)}`
       );
-      const data = await response.json();
-      
-      if (data && data.length > 0) {
-        const result = data[0];
-        const newLat = parseFloat(result.lat);
-        const newLng = parseFloat(result.lon);
-        setPosition([newLat, newLng]);
-        onChange(newLat, newLng);
-      } else {
+      const data: NominatimResult[] = await response.json();
+      const result = data[0];
+
+      if (!result) {
         setErrorMsg("Location not found");
+        return;
       }
-    } catch (err) {
+
+      const newLat = Number.parseFloat(result.lat);
+      const newLng = Number.parseFloat(result.lon);
+
+      // A malformed result is a failed search, not a pin dropped at (NaN, NaN)
+      // — which Leaflet renders as a silent no-op and the form would submit.
+      if (Number.isNaN(newLat) || Number.isNaN(newLng)) {
+        setErrorMsg("Location not found");
+        return;
+      }
+
+      setPosition([newLat, newLng]);
+      onChange(newLat, newLng);
+    } catch {
       setErrorMsg("Search failed");
     } finally {
       setIsSearching(false);
@@ -77,20 +81,42 @@ export function LocationPicker({ defaultLat, defaultLng, onChange }: LocationPic
 
   return (
     <div className="flex flex-col gap-3 h-[400px]">
-      <form onSubmit={handleSearch} className="flex gap-2">
+      {/*
+        A <div>, not a <form>. This component renders inside `ShopProfileForm`'s
+        form, and HTML forbids nested forms — the browser drops the inner one
+        during parsing, so the server-rendered and client-rendered trees differ
+        and React reports a hydration error.
+
+        Losing the form means losing two things a form gave us for free, so both
+        are put back by hand: the button is explicitly `type="button"` (a bare
+        button inside a form defaults to `type="submit"` and would save the whole
+        shop profile), and Enter in the search box is caught and swallowed before
+        it reaches the outer form.
+      */}
+      <div className="flex gap-2">
         <Input
           type="text"
           placeholder="Search for an address to drop a pin..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key !== "Enter") return;
+            e.preventDefault();
+            void handleSearch();
+          }}
           className="flex-1"
         />
-        <Button type="submit" disabled={isSearching} variant="outline">
+        <Button
+          type="button"
+          onClick={() => void handleSearch()}
+          disabled={isSearching}
+          variant="outline"
+        >
           <Search className="size-4 mr-2" />
           Search
         </Button>
-      </form>
-      
+      </div>
+
       {errorMsg && <p className="text-sm text-rust">{errorMsg}</p>}
 
       <div className="flex-1 relative rounded-machined overflow-hidden border border-hairline z-0">
@@ -100,7 +126,12 @@ export function LocationPicker({ defaultLat, defaultLng, onChange }: LocationPic
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           />
           {position && <Marker position={position} />}
-          <MapEvents />
+          <MapEvents
+            onPick={(lat, lng) => {
+              setPosition([lat, lng]);
+              onChange(lat, lng);
+            }}
+          />
           <CenterUpdater position={position} />
         </MapContainer>
       </div>
@@ -111,9 +142,26 @@ export function LocationPicker({ defaultLat, defaultLng, onChange }: LocationPic
   );
 }
 
+/**
+ * Click-to-drop-a-pin.
+ *
+ * Declared at module scope rather than inside `LocationPicker`. A component
+ * defined in a render body is a brand-new type on every render, so React
+ * unmounts and remounts it each time — which here would tear down and re-register
+ * the map's click handler on every keystroke in the search box.
+ */
+function MapEvents({ onPick }: { onPick: (lat: number, lng: number) => void }) {
+  useMapEvents({
+    click(e) {
+      onPick(e.latlng.lat, e.latlng.lng);
+    },
+  });
+  return null;
+}
+
 // Utility to re-center map when search changes position
 function CenterUpdater({ position }: { position: [number, number] | null }) {
-  const map = useMapEvents({});
+  const map = useMap();
   useEffect(() => {
     if (position) {
       map.setView(position, 15);

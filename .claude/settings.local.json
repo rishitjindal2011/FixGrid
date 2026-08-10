@@ -41,7 +41,17 @@
       "Bash(sed -E 's/=\\(.{6}\\).*/=\\\\1... \\(len shown below\\)/')",
       "Bash(awk -F= '/^NEXT_PUBLIC_SUPABASE_URL=/{print \"URL len:\", length\\($2\\)} /^NEXT_PUBLIC_SUPABASE_ANON_KEY=/{print \"ANON len:\", length\\($2\\)}' .env.local)",
       "Bash(grep -n 'upload\\(\\\\|objectPath\\\\|`\\\\${' src/components/dashboard/evidence-upload.tsx)",
-      "Bash(echo \"exit=$?\")"
+      "Bash(echo \"exit=$?\")",
+      "Bash(rm -f src/app/api/fix_rls/route.ts)",
+      "Bash(rmdir src/app/api/fix_rls)",
+      "Bash(grep -v '^\\\\s*$')",
+      "Bash(grep -nE 'ml-pipeline\\\\\\\\|:[0-9]+:[0-9]+' \"C:\\\\Users\\\\rishit\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\c--Users-rishit-AppData-Local-Claude-3p-local-agent-mode-sessions-416cff57-00000000-local-0556da20-29ac-489f-bb6a-ce5a156de160-outputs-fix-it-registry/6aae0cca-fa22-494c-b084-6b14f0519709/tasks/b52kg3zoe.output\")",
+      "Bash(node -e \"const r=require\\('./lint.json'\\);r.filter\\(f=>f.errorCount\\).forEach\\(f=>console.log\\(f.errorCount, f.filePath.split\\('fix-it-registry'\\).pop\\(\\), '|', f.messages.map\\(m=>m.ruleId\\).join\\(','\\)\\)\\)\")",
+      "Bash(rm -f lint.json)",
+      "mcp__supabase__apply_migration",
+      "mcp__plugin_supabase_supabase__get_advisors",
+      "Bash(echo \"MAIN_EXIT=$?\")",
+      "Bash(echo \"SEO_EXIT=$?\")"
     ]
   }
 }

@@ -1,21 +1,19 @@
 "use client";
 
-import * as React from "react";
 import { useActionState } from "react";
 import { Save } from "lucide-react";
 
 import { SubmitButton } from "@/components/admin/confirm-submit";
-import { Button } from "@/components/ui/button";
-import { Input, Textarea } from "@/components/ui/input";
+import { TextField, TextareaField } from "@/components/admin/field";
 import { updateBlogTemplate } from "@/lib/blog-templates/actions";
-import { type FormState, INITIAL_FORM_STATE } from "@/lib/redirects/state";
+import { type FormState, IDLE_FORM_STATE } from "@/lib/redirects/state";
 import type { BlogTemplateRow } from "@/lib/types/database";
 import { cn } from "@/lib/utils";
 
 export function BlogTemplateForm({ template }: { template: BlogTemplateRow }) {
   const [state, formAction] = useActionState<FormState, FormData>(
     updateBlogTemplate,
-    INITIAL_FORM_STATE,
+    IDLE_FORM_STATE,
   );
 
   return (
@@ -36,43 +34,33 @@ export function BlogTemplateForm({ template }: { template: BlogTemplateRow }) {
         </p>
       ) : null}
 
+      {/*
+        `TextField`/`TextareaField` rather than the bare `ui/input` primitives:
+        `ui/input` exports `Input` and `Select` only — there is no `Textarea`
+        there, which is what broke this build. The field wrappers are also what
+        every other form in this app uses, and they carry the label/hint/error
+        wiring that was being hand-rolled here.
+      */}
       <div className="grid gap-6 lg:grid-cols-[1fr_300px]">
         <div className="flex flex-col gap-6">
-          <div>
-            <label htmlFor="name" className="eyebrow mb-2 block">
-              Template name
-            </label>
-            <Input
-              id="name"
-              name="name"
-              defaultValue={template.name}
-              required
-              aria-invalid={Boolean(state.errors?.name)}
-            />
-            {state.errors?.name ? (
-              <p className="mt-1.5 text-xs text-rust">{state.errors.name}</p>
-            ) : null}
-          </div>
+          <TextField
+            label="Template name"
+            name="name"
+            defaultValue={template.name}
+            required
+            error={state.fieldErrors.name}
+          />
 
-          <div className="flex-1">
-            <label htmlFor="html_template" className="eyebrow mb-2 block">
-              HTML Template
-            </label>
-            <Textarea
-              id="html_template"
-              name="html_template"
-              defaultValue={template.html_template}
-              required
-              className="min-h-[500px] font-mono text-sm leading-relaxed"
-              aria-invalid={Boolean(state.errors?.html_template)}
-            />
-            <p className="mt-1.5 text-xs text-steel-soft">
-              Use {"{{title}}"}, {"{{date}}"}, and {"{{content}}"} as placeholders for the blog post content.
-            </p>
-            {state.errors?.html_template ? (
-              <p className="mt-1.5 text-xs text-rust">{state.errors.html_template}</p>
-            ) : null}
-          </div>
+          <TextareaField
+            label="HTML template"
+            name="html_template"
+            defaultValue={template.html_template}
+            required
+            rows={22}
+            className="flex-1"
+            error={state.fieldErrors.html_template}
+            hint={`Use {{title}}, {{date}} and {{content}} as placeholders for the blog post content.`}
+          />
         </div>
       </div>
 

@@ -249,17 +249,36 @@ export interface Database {
           published_at: string | null;
           created_at: string;
           updated_at: string;
+          template_id: string | null;
         };
         Insert: Omit<
           Database["public"]["Tables"]["blog_posts"]["Row"],
-          "id" | "created_at" | "updated_at" | "published_at"
+          "id" | "created_at" | "updated_at" | "published_at" | "template_id"
         > & {
           id?: string;
           created_at?: string;
           updated_at?: string;
           published_at?: string | null;
+          /** Nullable with no default, so a post can be created before a layout is chosen. */
+          template_id?: string | null;
         };
         Update: Partial<Database["public"]["Tables"]["blog_posts"]["Insert"]>;
+        Relationships: [];
+      };
+
+      blog_templates: {
+        Row: {
+          id: string;
+          name: string;
+          html_template: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: Omit<
+          Database["public"]["Tables"]["blog_templates"]["Row"],
+          "id" | "created_at" | "updated_at"
+        > & { id?: string; created_at?: string; updated_at?: string };
+        Update: Partial<Database["public"]["Tables"]["blog_templates"]["Insert"]>;
         Relationships: [];
       };
     };
@@ -310,6 +329,7 @@ export type SeoRedirectRow = Tables["seo_redirects"]["Row"];
 export type CmsTemplateRow = Tables["cms_templates"]["Row"];
 export type SeoAdminRow = Tables["seo_admins"]["Row"];
 export type BlogPostRow = Tables["blog_posts"]["Row"];
+export type BlogTemplateRow = Tables["blog_templates"]["Row"];
 
 /** A review joined with its author, as returned by the profile page query. */
 export type ReviewWithAuthor = ReviewRow & {

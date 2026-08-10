@@ -269,9 +269,45 @@ update storage.buckets
        allowed_mime_types = array['image/jpeg','image/png','image/webp','image/heic','application/pdf']
  where id = 'booking-attachments';
 
--- Objects are keyed `<booking_id>/<filename>`, so the first path segment is
--- the authorisation subject. `is_booking_party` already encodes "customer or
--- shop owner on this booking" and is what the table policies use.
+/*
+ * The bucket carries two different key shapes, and the policy has to read both:
+ *
+ *   `<booking_id>/completion/<file>`  — completion-panel.tsx:514
+ *   `claims/<booking_id>/<file>`      — claim-form.tsx:230, warranty/[id]:279
+ *
+ * So the authorisation subject is not always the first segment. Taking `[1]`
+ * blindly would cast the literal text 'claims' to uuid and raise 22P02 —
+ * an *error* inside a policy, not a false, which fails the whole query rather
+ * than denying the row. Hence a helper that understands both layouts and
+ * returns NULL for anything it does not recognise.
+ */
+create or replace function public.attachment_booking_id(object_name text)
+returns uuid
+language plpgsql
+stable
+set search_path to 'public'
+as $$
+declare
+  parts     text[] := storage.foldername(object_name);
+  candidate text;
+begin
+  candidate := case when parts[1] = 'claims' then parts[2] else parts[1] end;
+
+  if candidate is null then
+    return null;
+  end if;
+
+  begin
+    return candidate::uuid;
+  exception when invalid_text_representation then
+    -- An unrecognised layout denies rather than throws.
+    return null;
+  end;
+end $$;
+
+-- `is_booking_party` already encodes "customer or shop owner on this booking"
+-- and is what the bookings/messages policies use, so the storage rules and the
+-- table rules cannot drift apart.
 drop policy if exists "booking party reads attachments"   on storage.objects;
 drop policy if exists "booking party uploads attachments" on storage.objects;
 drop policy if exists "booking party removes attachments" on storage.objects;
@@ -280,21 +316,21 @@ create policy "booking party reads attachments"
   on storage.objects for select to authenticated
   using (
     bucket_id = 'booking-attachments'
-    and public.is_booking_party(((storage.foldername(name))[1])::uuid)
+    and public.is_booking_party(public.attachment_booking_id(name))
   );
 
 create policy "booking party uploads attachments"
   on storage.objects for insert to authenticated
   with check (
     bucket_id = 'booking-attachments'
-    and public.is_booking_party(((storage.foldername(name))[1])::uuid)
+    and public.is_booking_party(public.attachment_booking_id(name))
   );
 
 create policy "booking party removes attachments"
   on storage.objects for delete to authenticated
   using (
     bucket_id = 'booking-attachments'
-    and public.is_booking_party(((storage.foldername(name))[1])::uuid)
+    and public.is_booking_party(public.attachment_booking_id(name))
   );
 
 /* ───────────────────────────────────────────────────────────────────────────
@@ -336,5 +372,23 @@ from anon, authenticated;
 revoke insert, update, delete on
   public.blog_posts, public.seo_pages, public.seo_global, public.seo_redirects
 from anon, authenticated;
+
+/* ───────────────────────────────────────────────────────────────────────────
+   7. `repairability_scores` ran with its owner's privileges
+
+   A Postgres view executes as its owner unless `security_invoker` is set, so
+   this one read `inquiries` with RLS bypassed — the reason the advisors flag it
+   at ERROR level.
+
+   The actual exposure today is nil: the view projects only aggregate counts
+   (category_id, brand, model, totals, a rounded score), never `message`,
+   `delivery_address` or `customer_id`; `inquiries` holds zero rows; and no code
+   in src/, admin/src/ or seo-admin/src/ selects from the view at all. But
+   "harmless because the table is empty" stops being true the day it isn't, and
+   `anon` already holds SELECT on `inquiries` directly, so making the view obey
+   the caller's policies costs nothing and removes the bypass.
+   ─────────────────────────────────────────────────────────────────────────── */
+
+alter view public.repairability_scores set (security_invoker = true);
 
 commit;
