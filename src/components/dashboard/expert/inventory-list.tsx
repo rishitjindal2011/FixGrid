@@ -312,7 +312,7 @@ function InventoryRow({
 }
 
 function ActiveToggle({ item, fixerId }: { item: CatalogueInventoryItem; fixerId: string }) {
-  const [state, formAction] = useActionState(toggleInventoryActive, BOOKING_INITIAL_STATE);
+  const [, formAction] = useActionState(toggleInventoryActive, BOOKING_INITIAL_STATE);
 
   return (
     <form action={formAction}>
@@ -345,7 +345,7 @@ function MoveButtons({
   isLast: boolean;
   fixerId: string;
 }) {
-  const [state, formAction] = useActionState(reorderInventoryItem, BOOKING_INITIAL_STATE);
+  const [, formAction] = useActionState(reorderInventoryItem, BOOKING_INITIAL_STATE);
 
   return (
     <form action={formAction} className="flex justify-center gap-1">
