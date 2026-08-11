@@ -64,7 +64,7 @@ export function SiteFooter() {
         </div>
 
         <p className="mt-12 border-t border-hairline pt-6 font-mono text-eyebrow uppercase text-steel-soft">
-          © {new Date().getFullYear()} {SITE_NAME}
+          © {new Date().getFullYear()} {SITE_NAME}. All rights reserved. {SITE_NAME} is owned and operated by Vytron.
         </p>
       </div>
     </footer>
