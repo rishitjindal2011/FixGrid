@@ -460,3 +460,40 @@ export async function getCategories(): Promise<RepairCategoryRow[]> {
 
   return data ?? [];
 }
+
+export interface DirectoryStats {
+  shopCount: number;
+  categoryCount: number;
+  verifiedCount: number;
+}
+
+/**
+ * Live counts for the home-page trust bar.
+ *
+ * Deliberately kept simple — three COUNT queries that Postgres resolves in
+ * milliseconds and that we cache with the page's 15-minute revalidation window.
+ * No RPC, no joins; the numbers are honest and never fabricated.
+ */
+export async function getDirectoryStats(): Promise<DirectoryStats> {
+  const supabase = await createClient();
+
+  const [shopRes, catRes, verRes] = await Promise.all([
+    supabase
+      .from("fixer_profiles")
+      .select("id", { count: "exact", head: true }),
+    supabase
+      .from("repair_categories")
+      .select("id", { count: "exact", head: true }),
+    supabase
+      .from("fixer_profiles")
+      .select("id", { count: "exact", head: true })
+      .eq("verified", true),
+  ]);
+
+  return {
+    shopCount: shopRes.count ?? 0,
+    categoryCount: catRes.count ?? 0,
+    verifiedCount: verRes.count ?? 0,
+  };
+}
+
