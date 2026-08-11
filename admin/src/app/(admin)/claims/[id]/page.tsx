@@ -28,7 +28,7 @@ const STATUS_VARIANT: Record<ClaimStatus, "neutral" | "verified" | "signal" | "d
  * be derived from this request. An env var with a dev fallback keeps the link
  * working locally without hardcoding a production host.
  */
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://vytron.me";
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (

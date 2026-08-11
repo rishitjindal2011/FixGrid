@@ -12,6 +12,8 @@
  * Failing at module load is louder and cheaper to diagnose.
  */
 
+const FALLBACK_ORIGIN = "https://vytron.me";
+
 function resolveAppUrl(): string {
   const raw = process.env.NEXT_PUBLIC_APP_URL?.trim();
 
@@ -22,7 +24,7 @@ function resolveAppUrl(): string {
           "Set it to the consumer app's origin (e.g. https://www.vytron.me).",
       );
     }
-    return "http://localhost:3000";
+    return "https://vytron.me";
   }
 
   let parsed: URL;

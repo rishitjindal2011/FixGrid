@@ -9,7 +9,7 @@
  * five files, we enforce it once, at module load, and fail the build loudly.
  */
 
-const FALLBACK_ORIGIN = "https://www.vytron.me";
+const FALLBACK_ORIGIN = "https://vytron.me";
 
 function resolveOrigin(): string {
   const raw = process.env.NEXT_PUBLIC_SITE_URL?.trim();
@@ -21,7 +21,7 @@ function resolveOrigin(): string {
           "Set it to the canonical origin (e.g. https://www.vytron.me).",
       );
     }
-    return "http://localhost:3000";
+    return "https://vytron.me";
   }
 
   let parsed: URL;

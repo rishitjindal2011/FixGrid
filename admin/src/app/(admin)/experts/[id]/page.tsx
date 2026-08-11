@@ -19,7 +19,7 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://vytron.me";
 
 const STATUS_VARIANT: Partial<Record<BookingStatus, "neutral" | "verified" | "signal" | "danger">> = {
   requested: "signal",
