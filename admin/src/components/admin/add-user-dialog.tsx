@@ -49,7 +49,8 @@ export function AddUserDialog() {
               type="email"
               name="email"
               required
-              placeholder="e.g. alex@fixitregistry.com"
+              autoComplete="off"
+              placeholder="e.g. alex@vytron.me"
             />
           </div>
 

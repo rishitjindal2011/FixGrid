@@ -44,7 +44,7 @@ export function LoginForm({ next }: { next?: string }) {
           required
           autoFocus
           spellCheck={false}
-          placeholder="you@fixitregistry.com"
+          placeholder="you@vytron.me"
         />
       </div>
 
