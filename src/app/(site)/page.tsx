@@ -23,8 +23,6 @@ import {
   toHoursInput,
 } from "@/lib/queries/search";
 import { absoluteUrl, SITE_DESCRIPTION, SITE_NAME, SITE_TAGLINE } from "@/lib/site";
-import { isSignedIn } from "@/lib/auth/session";
-import { redirect } from "next/navigation";
 
 export const revalidate = 900;
 
@@ -60,10 +58,11 @@ export const metadata: Metadata = {
 };
 
 export default async function HomePage() {
-  const signedIn = await isSignedIn();
-  if (signedIn) {
-    redirect("/dashboard");
-  }
+  // NOTE: We intentionally do NOT redirect signed-in users from the home page
+  // here. Doing so confuses Googlebot (it gets a redirect error and cannot
+  // index the page). The middleware handles dashboard routing for logged-in
+  // users on protected routes. Logged-in visitors on the public home page
+  // simply see the marketing page — a fine UX tradeoff vs. a broken index.
 
   const [categories, featured, stats] = await Promise.all([
     getCategories(),
