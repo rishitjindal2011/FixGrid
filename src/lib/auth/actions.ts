@@ -158,6 +158,31 @@ export async function signIn(_prev: AuthState, formData: FormData): Promise<Auth
   redirect(safeNextPath(parsed.data.next)); // throws — nothing below runs
 }
 
+export async function signInWithGoogle(formData: FormData): Promise<void> {
+  const next = formData.get("next");
+  const supabase = await createClient();
+  
+  const redirectTo = `${SITE_ORIGIN}/auth/callback?next=${encodeURIComponent(
+    safeNextPath(typeof next === "string" ? next : undefined)
+  )}`;
+
+  const { data, error } = await supabase.auth.signInWithOAuth({
+    provider: "google",
+    options: {
+      redirectTo,
+    },
+  });
+
+  if (error) {
+    console.error("[auth] Google sign-in failed", { code: error.code, message: error.message });
+    redirect("/login?error=oauth_failed");
+  }
+
+  if (data.url) {
+    redirect(data.url); // redirects to Google consent screen
+  }
+}
+
 /* ── Sign up ──────────────────────────────────────────────────────────────── */
 
 export async function signUp(_prev: AuthState, formData: FormData): Promise<AuthState> {

@@ -4,6 +4,7 @@ import { useActionState } from "react";
 
 import { AuthMessage, AuthLink, Field } from "@/components/auth/auth-shell";
 import { SubmitButton } from "@/components/auth/submit-button";
+import { GoogleSignIn } from "@/components/auth/google-sign-in";
 import { Input } from "@/components/ui/input";
 import { signIn } from "@/lib/auth/actions";
 import { AUTH_INITIAL_STATE } from "@/lib/auth/state";
@@ -24,8 +25,20 @@ export function SignInForm({ next, linkError }: { next?: string; linkError?: boo
       : state;
 
   return (
-    <form action={formAction} className="flex flex-col gap-4" noValidate>
-      {next ? <input type="hidden" name="next" value={next} /> : null}
+    <div className="flex flex-col gap-6">
+      <GoogleSignIn next={next} />
+
+      <div className="relative">
+        <div className="absolute inset-0 flex items-center">
+          <div className="w-full border-t border-signal/20"></div>
+        </div>
+        <div className="relative flex justify-center text-sm">
+          <span className="bg-white px-4 text-steel">Or continue with email</span>
+        </div>
+      </div>
+
+      <form action={formAction} className="flex flex-col gap-4" noValidate>
+        {next ? <input type="hidden" name="next" value={next} /> : null}
 
       <Field label="Email" htmlFor="email">
         <Input
@@ -58,5 +71,6 @@ export function SignInForm({ next, linkError }: { next?: string; linkError?: boo
         <AuthLink href="/forgot-password">Forgot your password?</AuthLink>
       </p>
     </form>
+    </div>
   );
 }
