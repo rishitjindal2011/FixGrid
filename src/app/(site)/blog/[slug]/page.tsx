@@ -6,7 +6,7 @@ import Link from "next/link";
 import { getPublishedBlogPost, getBlogPostForPreview, getPublishedBlogPaths } from "@/lib/queries/blog";
 import { getSeoGlobal } from "@/lib/queries/cms";
 import { absoluteUrl, SITE_NAME } from "@/lib/site";
-import DOMPurify from "isomorphic-dompurify";
+import sanitize from "sanitize-html";
 
 export const revalidate = 300;
 export const dynamicParams = true;
@@ -69,7 +69,7 @@ export default async function BlogPostPage({ params }: PageProps) {
   const { post, isDraft, path } = resolved;
   
   // Sanitize HTML content before rendering
-  const safeContent = DOMPurify.sanitize(post.content || "");
+  const safeContent = sanitize(post.content || "");
 
   const dateString = post.published_at 
     ? new Date(post.published_at).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" }) 
@@ -84,7 +84,7 @@ export default async function BlogPostPage({ params }: PageProps) {
     rawHtml = rawHtml.replace(/\{\{content\}\}/g, safeContent);
     
     // Sanitize the final template with content inside
-    finalHtml = DOMPurify.sanitize(rawHtml, { ADD_ATTR: ['style'] });
+    finalHtml = sanitize(rawHtml, { allowedAttributes: { ...sanitize.defaults.allowedAttributes, '*': ['style'] } });
   }
 
   return (

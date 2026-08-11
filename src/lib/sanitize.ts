@@ -1,4 +1,4 @@
-import DOMPurify from "isomorphic-dompurify";
+import sanitize from "sanitize-html";
 
 /**
  * HTML sanitisation for the `rich_text` CMS block.
@@ -21,32 +21,31 @@ const ALLOWED_TAGS = [
   "code", "pre", "kbd", "abbr", "time",
 ];
 
-const ALLOWED_ATTR = [
-  "href", "target", "rel",
-  "src", "alt", "width", "height", "loading", "decoding",
-  "id", "class", "title",
-  "colspan", "rowspan", "scope",
-  "datetime", "cite", "lang", "dir",
-];
+const ALLOWED_ATTR = {
+  a: ["href", "target", "rel", "title"],
+  img: ["src", "alt", "width", "height", "loading", "decoding", "title"],
+  th: ["colspan", "rowspan", "scope"],
+  td: ["colspan", "rowspan"],
+  time: ["datetime"],
+  q: ["cite"],
+  blockquote: ["cite"],
+  "*": ["id", "class", "lang", "dir"],
+};
 
 /** Sanitise CMS-authored HTML for `dangerouslySetInnerHTML`. */
 export function sanitizeHtml(dirty: string): string {
-  return DOMPurify.sanitize(dirty, {
-    ALLOWED_TAGS,
-    ALLOWED_ATTR,
+  return sanitize(dirty, {
+    allowedTags: ALLOWED_TAGS,
+    allowedAttributes: ALLOWED_ATTR,
     // h1 belongs to the page's hero block. Allowing a second one from body
-    // copy is a real SEO regression, so it is stripped along with anything
-    // that could execute or navigate the frame.
-    FORBID_TAGS: ["h1", "script", "style", "iframe", "form", "input", "button", "object", "embed"],
-    FORBID_ATTR: ["style", "srcset", "formaction", "ping"],
-    ALLOW_DATA_ATTR: false,
-    USE_PROFILES: { html: true },
+    // copy is a real SEO regression, so it is omitted from allowedTags.
+    allowIframeRelativeUrls: false,
   });
 }
 
 /**
  * Force every outbound link in sanitised HTML to open safely.
- * DOMPurify strips `javascript:` URLs; this adds the `rel` hardening that
+ * sanitize-html strips `javascript:` URLs; this adds the `rel` hardening that
  * `target="_blank"` requires.
  */
 export function hardenLinks(html: string): string {
@@ -68,6 +67,6 @@ export function prepareRichText(dirty: string): string {
  * Collapses whitespace so the result is single-line.
  */
 export function toPlainText(dirty: string): string {
-  const stripped = DOMPurify.sanitize(dirty, { ALLOWED_TAGS: [], ALLOWED_ATTR: [] });
+  const stripped = sanitize(dirty, { allowedTags: [], allowedAttributes: {} });
   return stripped.replace(/\s+/g, " ").trim();
 }

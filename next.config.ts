@@ -18,7 +18,6 @@ const supabaseHost = (() => {
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
-  serverExternalPackages: ["isomorphic-dompurify"],
 
   images: {
     remotePatterns: [
