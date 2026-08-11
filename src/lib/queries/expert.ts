@@ -6,6 +6,7 @@ import type {
   RepairCategoryRow,
   ReviewWithAuthor,
 } from "@/lib/types/database";
+import type { PublicInventoryItem } from "@/components/expert/public-inventory";
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
@@ -103,6 +104,35 @@ export async function getAllExpertSlugs(limit = 5000): Promise<Array<{ slug: str
 
   if (error) {
     console.error("[expert] slug enumeration failed", error.message);
+    return [];
+  }
+  return data ?? [];
+}
+
+/**
+ * The public projection of a shop's inventory.
+ *
+ * This reads `is_active = true` implicitly through the RLS policy "listed
+ * inventory readable by all", but explicitly filtering it here is defensive and
+ * lets TypeScript know the shape.
+ */
+export async function getPublicInventory(fixerId: string) {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("shop_inventory")
+    .select(
+      `id, sku, name, description, brand, condition, unit_price, currency,
+       quantity, sort_order, created_at,
+       category:repair_categories!shop_inventory_category_fkey ( id, name, slug )`
+    )
+    .eq("fixer_id", fixerId)
+    .eq("is_active", true)
+    .order("sort_order", { ascending: true })
+    .order("name", { ascending: true })
+    .returns<PublicInventoryItem[]>();
+
+  if (error) {
+    console.error("[expert] public inventory read failed", { fixerId, error: error.message });
     return [];
   }
   return data ?? [];

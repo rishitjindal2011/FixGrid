@@ -13,7 +13,8 @@ import { PhotoGallery } from "@/components/expert/photo-gallery";
 import { ReviewGate } from "@/components/expert/review-gate";
 import { ReviewList } from "@/components/expert/review-list";
 
-import { getAllExpertSlugs, getExpertBySlug } from "@/lib/queries/expert";
+import { getAllExpertSlugs, getExpertBySlug, getPublicInventory } from "@/lib/queries/expert";
+import { PublicInventory } from "@/components/expert/public-inventory";
 import { getShopStatus, type HoursInput } from "@/lib/hours";
 import { buildBreadcrumbs, buildLocalBusiness, type Thing, type WithContext } from "@/lib/seo/jsonld";
 import { absoluteUrl } from "@/lib/site";
@@ -74,8 +75,11 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 export default async function ExpertPage({ params }: PageProps) {
   const { slug } = await params;
+  
   const profile = await getExpertBySlug(slug);
   if (!profile) notFound();
+  
+  const publicInventory = await getPublicInventory(profile.id);
 
   const hours = hoursOf(profile);
   // Computed on the server so the first paint is already correct; the client
@@ -190,7 +194,9 @@ export default async function ExpertPage({ params }: PageProps) {
                     <ReviewList reviews={profile.reviews} />
                   </ReviewGate>
                 }
+                inventory={<PublicInventory items={publicInventory} shopName={profile.shop_name} />}
                 reviewCount={profile.rating_count}
+                inventoryCount={publicInventory.length}
               />
             </div>
           </div>
