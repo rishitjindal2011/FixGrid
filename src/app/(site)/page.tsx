@@ -181,12 +181,12 @@ export default async function HomePage() {
             </Link>
           </div>
 
-          <ul className="mt-6 grid gap-px overflow-hidden rounded-machined border border-hairline bg-hairline sm:grid-cols-2 lg:grid-cols-3">
+          <ul className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {categories.slice(0, 12).map((category) => (
-              <li key={category.id}>
+              <li key={category.id} className="rounded-machined border border-hairline">
                 <Link
                   href={`/search?category=${category.slug}`}
-                  className="group flex h-full flex-col justify-between gap-3 bg-chalk p-5 transition-colors hover:bg-signal-wash"
+                  className="group flex h-full flex-col justify-between gap-3 bg-chalk p-5 transition-colors hover:bg-signal-wash rounded-machined"
                 >
                   <div>
                     <span className="font-display text-base uppercase tracking-[0.04em] text-enamel transition-colors group-hover:text-signal">
