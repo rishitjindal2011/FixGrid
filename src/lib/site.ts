@@ -61,8 +61,7 @@ export const SITE_NAME = "FixGrid";
 export const SITE_TAGLINE = "Find someone who can actually fix it.";
 
 export const SITE_DESCRIPTION =
-  "FixGrid lists verified local repair experts — phones, appliances, bikes, " +
-  "watches and more. Compare hours, ratings and service options, then book directly.";
+  "FixGrid is a directory by Vytron built to help users securely log in, create a profile, and find verified local repair experts.";
 
 /**
  * Build an absolute URL from a site-relative path.
