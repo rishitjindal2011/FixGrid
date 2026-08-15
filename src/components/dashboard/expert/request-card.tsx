@@ -12,11 +12,12 @@ import {
   Smartphone,
 } from "lucide-react";
 
+import { BookingActions } from "@/components/dashboard/booking-actions";
 import { RequestActions } from "@/components/dashboard/expert/request-actions";
 import type { RequestPricing } from "@/components/dashboard/expert/quote-form";
 import { UserAvatar } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { slotEnd, slotStart } from "@/lib/bookings/actions-map";
+import { allowedActions, slotEnd, slotStart } from "@/lib/bookings/actions-map";
 import type { ExpertBooking, ExpertService } from "@/lib/dashboard/expert";
 import {
   formatDateTime,
@@ -369,6 +370,88 @@ export function RequestCard({
  * job it answered has gone quiet, which is otherwise invisible until the
  * request expires.
  */
+/**
+ * A job the customer has accepted, with the button that starts it.
+ *
+ * On the Requests screen rather than only in the schedule because this is where
+ * the shop already is. A confirmed job used to disappear from here the moment the
+ * customer accepted, which meant the one screen the shop lives on could show a
+ * request, and a quote, and then nothing — the work itself had to be started from
+ * a different page. Now the queue carries a job from arrival to bench.
+ *
+ * `allowedActions` supplies the buttons, so this row cannot offer a transition the
+ * state machine would refuse; and since the early-start guard is gone, "Start
+ * work" appears as soon as the job is confirmed rather than when the slot opens.
+ */
+export function ConfirmedRow({
+  booking,
+  timezone,
+  now,
+}: {
+  booking: ExpertBooking;
+  timezone: string;
+  now: Date;
+}) {
+  const start = slotStart(booking.slot);
+  const end = slotEnd(booking.slot);
+  const actions = allowedActions(booking, "shop", now);
+
+  // Only the forward move belongs on a queue row. Cancelling and no-showing are
+  // real actions but they are decisions, and a decision belongs on the job's own
+  // page next to the context for making it — not one mis-tap from a list.
+  const starting = actions.filter((action) => action.to === "in_progress");
+
+  const early = start !== null && now < start;
+
+  return (
+    <li className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 rounded-machined border border-hairline bg-chalk px-4 py-3 shadow-bench">
+      <div className="min-w-0">
+        <p className="flex flex-wrap items-center gap-x-3 gap-y-1">
+          <Link
+            href={`/dashboard/expert/requests/${encodeURIComponent(booking.reference)}`}
+            className="truncate text-sm text-enamel hover:text-signal"
+          >
+            {booking.customer?.display_name ?? "A customer"}
+          </Link>
+          <span className="font-mono text-eyebrow uppercase tracking-[0.14em] text-steel-soft">
+            {booking.reference}
+          </span>
+        </p>
+        <p className="pt-1 text-xs text-steel">
+          {booking.service?.name ?? "Repair"}
+          {start && end ? (
+            <span className="pl-2 font-mono tabular-nums">
+              {formatSlot(start, end, timezone)}
+            </span>
+          ) : null}
+        </p>
+      </div>
+
+      <div className="flex flex-wrap items-center gap-3">
+        {booking.quoted_amount !== null ? (
+          <span className="font-mono text-sm tabular-nums text-enamel">
+            {formatMoney(booking.quoted_amount, booking.currency)}
+          </span>
+        ) : null}
+
+        {/* Named rather than hidden: starting ahead of the slot is allowed, and
+            saying so is what stops it reading as a bug in the schedule. */}
+        <Badge variant={early ? "neutral" : "signal"}>
+          {early && start ? `Booked ${formatRelative(start, now)}` : "Ready to start"}
+        </Badge>
+
+        {starting.length > 0 ? (
+          <BookingActions
+            bookingId={booking.id}
+            reference={booking.reference}
+            actions={starting}
+          />
+        ) : null}
+      </div>
+    </li>
+  );
+}
+
 export function QuotedRow({
   booking,
   timezone,

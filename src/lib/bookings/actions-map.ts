@@ -108,12 +108,19 @@ const CUSTOMER_ACTIONS: Partial<Record<BookingStatus, Omit<BookingAction, "to">>
 /**
  * The actions to render, in the order they should appear.
  *
- * `now` gates the two rules that depend on time rather than status:
- *   • work cannot start before the slot does — a shop tapping "Start work"
- *     the day before is a mis-tap, not an early start;
- *   • a warranty claim cannot be raised after the window closes.
+ * `now` gates the one rule that depends on time rather than status: a warranty
+ * claim cannot be raised after the window closes.
  *
- * Both are re-checked server-side. This function only decides what to draw.
+ * It deliberately does **not** gate starting work. That guard used to exist, on
+ * the grounds that a shop tapping "Start work" the day before was a mis-tap — but
+ * the shop is standing at the bench and we are not. A customer turns up early, or
+ * drops the device off the night before, or the job before this one finished
+ * sooner than expected; in all three the work genuinely is starting and the
+ * dashboard should record it rather than argue. `started_at` is stamped from the
+ * real transition, so an early start is visible in the timeline as exactly that.
+ *
+ * The server never enforced this either — `canTransition` has no clock — so the
+ * guard was UI-only and its removal changes no authorisation.
  */
 export function allowedActions(
   booking: BookingLike,
@@ -125,12 +132,6 @@ export function allowedActions(
   return Object.entries(wording)
     .filter(([to]) => canTransition(booking.status, to as BookingStatus, actor).ok)
     .filter(([to]) => {
-      if (to === "in_progress") {
-        const start = slotStart(booking.slot);
-        // No parseable slot: allow it and let the server decide.
-        return start === null || now >= start;
-      }
-
       if (to === "disputed") {
         const expires = booking.warranty_expires_at
           ? new Date(booking.warranty_expires_at)

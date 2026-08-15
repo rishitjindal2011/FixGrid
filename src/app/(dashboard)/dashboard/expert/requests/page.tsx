@@ -5,6 +5,7 @@ import { CalendarClock, CheckCircle2, Inbox, Wrench } from "lucide-react";
 
 import { EmptyState } from "@/components/dashboard/empty-state";
 import {
+  ConfirmedRow,
   QuotedRow,
   RequestCard,
   buildPricingIndex,
@@ -56,9 +57,14 @@ export default async function ExpertRequestsPage() {
 
   const now = new Date();
 
-  const [requests, quoted, services] = await Promise.all([
+  const [requests, quoted, confirmed, services] = await Promise.all([
     listPendingRequests(shop.id),
     listExpertBookings(shop.id, { statuses: ["accepted"], limit: 20 }),
+    // Accepted by the customer and not yet started. These used to vanish from
+    // this screen the moment they were confirmed, which meant the queue could
+    // show a request and a quote and then nothing — the work had to be started
+    // from another page. Now the job stays here until it is on the bench.
+    listExpertBookings(shop.id, { statuses: ["confirmed"], limit: 20 }),
     listShopServices(shop.id),
   ]);
 
@@ -127,6 +133,39 @@ export default async function ExpertRequestsPage() {
           </ol>
         )}
       </section>
+
+      {/*
+        Placed above the quoted list on purpose. These are jobs the customer has
+        already agreed to and paid a fee towards — they are worth more than a
+        quote still waiting on an answer, so they sit nearer the top.
+      */}
+      {confirmed.length > 0 ? (
+        <section>
+          <SectionHeader
+            title="Ready to start"
+            action={
+              <Badge variant="verified">
+                <span className="font-mono tabular-nums">{confirmed.length}</span>
+                confirmed
+              </Badge>
+            }
+          />
+          <ul className="flex flex-col gap-2">
+            {confirmed.map((booking) => (
+              <ConfirmedRow
+                key={booking.id}
+                booking={booking}
+                timezone={shop.timezone}
+                now={now}
+              />
+            ))}
+          </ul>
+          <p className="pt-3 text-xs leading-relaxed text-steel">
+            The customer has accepted your price and the slot is yours. You can start
+            any of these now — you do not have to wait for the booked time.
+          </p>
+        </section>
+      ) : null}
 
       {quoted.length > 0 ? (
         <section>
