@@ -6,7 +6,7 @@ import Link from "next/link";
 import { AlertTriangle, CalendarCheck, CheckCircle2, Clock, ShieldCheck } from "lucide-react";
 
 import { SlotPicker } from "@/components/dashboard/slot-picker";
-import { BookingFaultPhotos, BookingSubmitSpinner } from "@/components/dashboard/booking-fault-photos";
+import { BookingFaultPhotos } from "@/components/dashboard/booking-fault-photos";
 import { Button } from "@/components/ui/button";
 import { Input, Select } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -19,7 +19,7 @@ import {
   type SlotRule,
 } from "@/lib/bookings/slots";
 import { BOOKING_INITIAL_STATE } from "@/lib/bookings/state";
-import { formatDuration, formatPriceRange, formatSlot } from "@/lib/format";
+import { formatDuration, formatMoney, formatPriceRange, formatSlot } from "@/lib/format";
 import {
   DELIVERY_MODE_LABELS,
   type DeliveryMode,
@@ -107,6 +107,15 @@ export interface BookingFormProps {
   fallbackDurationMinutes: number;
   /** The shop's `default_warranty_days`, for services that do not set their own. */
   defaultWarrantyDays: number;
+  /**
+   * The platform fee in paise, resolved server-side by `resolve_booking_fee`.
+   *
+   * Passed in rather than computed here because the fee depends on a category
+   * chain the client cannot see, and because the number the customer is shown has
+   * to be the number the server charges. `createBooking` resolves it again on
+   * submit — this prop is for display, never for the amount.
+   */
+  platformFeeMinor: number;
 }
 
 /** Radio value meaning "type a new one". Not a uuid, so it cannot collide. */
@@ -123,6 +132,7 @@ export function BookingForm({
   slotSource,
   fallbackDurationMinutes,
   defaultWarrantyDays,
+  platformFeeMinor,
   addresses,
 }: BookingFormProps) {
   const router = useRouter();
@@ -336,8 +346,28 @@ export function BookingForm({
           </div>
         </dl>
 
+        <p className="flex items-start justify-between gap-3 rounded-machined border border-hairline bg-chalk px-3 py-2.5 text-sm">
+          <span className="text-steel">
+            Booking fee
+            <span className="block pt-0.5 text-xs leading-relaxed text-steel-soft">
+              Taken from your balance when you send this request. The repair itself is
+              quoted by the shop and charged separately.
+            </span>
+          </span>
+          <span className="shrink-0 font-mono tabular-nums text-enamel">
+            {formatMoney(platformFeeMinor)}
+          </span>
+        </p>
+
+        {/*
+          This used to read "Nothing is charged now", which stopped being true the
+          moment the fee became real. The repair is still not charged now — that
+          part is unchanged and worth keeping — but saying nothing is would be
+          a lie the customer discovers in their statement.
+        */}
         <p className="text-xs leading-relaxed text-steel-soft">
-          Nothing is charged now. The shop confirms the price before any work starts.
+          The repair price is not charged now. The shop confirms it before any work
+          starts.
         </p>
       </Panel>
 

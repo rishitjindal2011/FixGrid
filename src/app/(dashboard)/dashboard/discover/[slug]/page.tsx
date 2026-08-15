@@ -152,6 +152,32 @@ function parseRange(literal: string): { start: string; end: string } | null {
   return { start, end };
 }
 
+/**
+ * What this shop's bookings cost the customer in platform fee.
+ *
+ * Read here purely so the form can show the number before the customer commits.
+ * `createBooking` resolves it again on submit and charges *that* value — the two
+ * calls hit the same function, but a fee repriced between page load and submit
+ * must be honoured as it stands at submit, not as it was rendered.
+ *
+ * Falls back to zero on failure, matching `createBooking`: showing ₹0 next to a
+ * fee we then fail to take is better than refusing to render a booking form.
+ */
+async function resolveBookingFee(fixerId: string): Promise<number> {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .rpc("resolve_booking_fee", { p_fixer_id: fixerId, p_service_id: null })
+    .maybeSingle<{ category_id: string | null; fee_minor: number }>();
+
+  if (error) {
+    console.error("[discover] fee lookup failed", error.message);
+    return 0;
+  }
+
+  return Math.max(0, data?.fee_minor ?? 0);
+}
+
 /** The `offers_*` flags, as the enum the form and the schema both speak. */
 function shopDeliveryModes(profile: FixerProfileRow): DeliveryMode[] {
   const modes: DeliveryMode[] = [];
@@ -194,9 +220,10 @@ export default async function BookExpertPage({
   const windowEnd = new Date(now.getTime() + WINDOW_DAYS * 24 * 60 * 60 * 1000);
 
   // Both feed the form below and neither depends on the other.
-  const [busyIso, addresses] = await Promise.all([
+  const [busyIso, addresses, platformFeeMinor] = await Promise.all([
     listBusyPeriods(profile.id, now, windowEnd),
     listAddresses(user.id),
+    resolveBookingFee(profile.id),
   ]);
 
   const acceptsBookings = profile.accepts_bookings ?? true;
@@ -315,6 +342,7 @@ export default async function BookExpertPage({
               slotSource={slotSource}
               fallbackDurationMinutes={DEFAULTS.durationMinutes}
               defaultWarrantyDays={profile.default_warranty_days ?? DEFAULTS.warrantyDays}
+              platformFeeMinor={platformFeeMinor}
               addresses={addresses}
             />
           ) : (

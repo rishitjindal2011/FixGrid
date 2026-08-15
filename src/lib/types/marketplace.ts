@@ -277,6 +277,14 @@ export interface BookingRow {
   customer_id: string;
   fixer_id: string;
   service_id: string | null;
+  /**
+   * The category the platform fee was resolved from, frozen at creation.
+   *
+   * Null when the booking resolved to no category — no service chosen and the
+   * shop has no category links — in which case the fallback fee applied and
+   * there is no category to name. See `resolve_booking_fee`.
+   */
+  category_id: string | null;
   status: BookingStatus;
   delivery_mode: DeliveryMode;
   /** `tstzrange` text form. Use `parseRange` in `src/lib/bookings/range.ts`. */

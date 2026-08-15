@@ -13,6 +13,7 @@ import {
   notifyRescheduleRequested,
 } from "@/lib/notifications/booking";
 import { createClient } from "@/lib/supabase/server";
+import { chargeToPlatform, creditFromPlatform } from "@/lib/wallet/server";
 import type { AppDatabase } from "@/lib/types/supabase";
 import type { BookingStatus, DisputeResolution } from "@/lib/types/marketplace";
 
@@ -403,10 +404,64 @@ export async function createBooking(
   const responseHours = shop?.response_hours ?? 24;
   const expiresAt = new Date(Date.now() + responseHours * 60 * 60 * 1000).toISOString();
 
+  /*
+   * The platform fee, resolved and then frozen onto the row.
+   *
+   * `resolve_booking_fee` owns the fallback chain (service category → shop's own
+   * category → ₹50). Snapshotting the result means repricing a category later
+   * cannot rewrite this invoice — the same reasoning `billing.ts` applies to its
+   * price snapshot.
+   *
+   * A failure here is not fatal. Falling back to a zero fee books the repair and
+   * costs us the fee; refusing the booking costs the customer their repair and
+   * the shop the job. The first is recoverable from the logs, so it is the one to
+   * choose — but it is logged loudly, because a silent zero-fee booking is
+   * revenue quietly going missing.
+   */
+  const { data: feeRow, error: feeError } = await supabase
+    .rpc("resolve_booking_fee", {
+      p_fixer_id: input.fixerId,
+      p_service_id: input.serviceId || null,
+    })
+    .maybeSingle<{ category_id: string | null; fee_minor: number }>();
+
+  if (feeError) {
+    console.error("[bookings] fee resolution failed — booking at zero fee", {
+      fixerId: input.fixerId,
+      code: feeError.code,
+      message: feeError.message,
+    });
+  }
+
+  const feeMinor = Math.max(0, feeRow?.fee_minor ?? 0);
+  const categoryId = feeRow?.category_id ?? null;
+
   const needsAddress =
     input.deliveryMode === "home_visit" || input.deliveryMode === "pickup_drop";
   if (needsAddress && !input.addressLine1) {
     return FAILED("Add the address the shop should come to.");
+  }
+
+  /*
+   * Take the fee before the booking exists, not after.
+   *
+   * Ordered this way because the two failure modes are not equally bad. Charging
+   * first and failing to insert leaves a fee with no booking, which is visible in
+   * the customer's own statement and refundable. Inserting first and failing to
+   * charge leaves a live booking the shop will work on for free, which nobody
+   * notices until the earnings figures are wrong. So the recoverable direction
+   * goes first, and the refund below covers it.
+   */
+  if (feeMinor > 0) {
+    const charge = await chargeToPlatform({
+      kind: "fee",
+      amountMinor: feeMinor,
+      from: { kind: "user", ownerId: user.id },
+      memo: "Booking platform fee",
+      fallbackError: "That request could not be sent — the fee could not be taken.",
+    });
+
+    if (!charge.ok) return FAILED(charge.error);
   }
 
   // PostgREST serialises a tstzrange as its literal text form. `[start,end)` —
@@ -419,6 +474,8 @@ export async function createBooking(
       customer_id: user.id,
       fixer_id: input.fixerId,
       service_id: input.serviceId || null,
+      category_id: categoryId,
+      platform_fee: feeMinor,
       delivery_mode: input.deliveryMode,
       status: "requested",
       slot,
@@ -445,6 +502,32 @@ export async function createBooking(
       details: error.details,
       hint: error.hint,
     });
+
+    /*
+     * Give the fee back. The customer is not paying for a booking that does not
+     * exist.
+     *
+     * If this refund itself fails there is nothing further to try from here, so
+     * it is logged with the amount and the person's id — enough for an operator
+     * to post the correction by hand from the admin console.
+     */
+    if (feeMinor > 0) {
+      const refund = await creditFromPlatform({
+        kind: "refund",
+        amountMinor: feeMinor,
+        to: { kind: "user", ownerId: user.id },
+        memo: "Booking fee returned — request could not be sent",
+      });
+
+      if (!refund.ok) {
+        console.error("[bookings] ORPHANED FEE — refund failed, needs manual correction", {
+          userId: user.id,
+          amountMinor: feeMinor,
+          reason: refund.error,
+        });
+      }
+    }
+
     return FAILED(explain(error.code, "That request could not be sent."));
   }
 

@@ -190,6 +190,16 @@ interface MarketplaceFunctions {
     Args: { p_entries: unknown };
     Returns: undefined;
   };
+  /**
+   * The platform fee for a prospective booking, and the category it came from.
+   *
+   * Returns both together because `createBooking` stores both, and two separate
+   * lookups could disagree about which category was picked.
+   */
+  resolve_booking_fee: {
+    Args: { p_fixer_id: string; p_service_id?: string | null };
+    Returns: Array<{ category_id: string | null; fee_minor: number }>;
+  };
 }
 
 /**
