@@ -112,34 +112,6 @@ async function resolveActor(
 }
 
 /**
- * Does this user run this shop?
- *
- * Mirrors the `owns_shop()` RLS helper, and exists for the same reason
- * `assertOwnership` does in `@/lib/dashboard/expert-actions`: the policy behind
- * the write refuses it with 42501, which `explain` can only render as the
- * generic "you do not have permission". True, but it tells a shop owner nothing
- * about why the form they were just shown cannot work.
- *
- * Distinct from `resolveActor` above, which answers "which side of an existing
- * booking is this" and would return `customer` here on the first line — the
- * customer id on a booking being created is always the caller's own.
- */
-async function ownsShop(
-  supabase: Awaited<ReturnType<typeof createClient>>,
-  userId: string,
-  fixerId: string,
-): Promise<boolean> {
-  const { data } = await supabase
-    .from("fixer_profiles")
-    .select("id")
-    .eq("id", fixerId)
-    .eq("owner_id", userId)
-    .maybeSingle();
-
-  return data !== null;
-}
-
-/**
  * "49.99" → 4999. Rejects anything with more than two decimal places rather
  * than rounding it, because silently turning £49.999 into £50.00 is the kind of
  * bug that only surfaces in an invoice dispute.
@@ -403,11 +375,30 @@ export async function createBooking(
     return FAILED("That slot is in the past — pick another time.");
   }
 
+  /*
+   * One read, two answers, both off the same row.
+   *
+   * `response_hours` sets how long the shop has to reply before the request
+   * expires. `owner_id` decides whether the request is legal at all: the
+   * `customer requests booking` policy carries `not owns_shop(fixer_id)`,
+   * because a shop owner booking their own shop would corrupt its earnings
+   * figures and hand them a self-reviewable completed job.
+   */
   const { data: shop } = await supabase
     .from("fixer_profiles")
-    .select("response_hours")
+    .select("response_hours, owner_id")
     .eq("id", input.fixerId)
-    .maybeSingle<{ response_hours: number }>();
+    .maybeSingle<{ response_hours: number; owner_id: string | null }>();
+
+  // Checked here as well as in the policy so the refusal explains itself.
+  // Reaching the policy returns 42501, which `explain` can only render as a bare
+  // "you do not have permission" — on a form that looked ready to submit.
+  if (shop?.owner_id === user.id) {
+    return FAILED(
+      "This is your own shop, so you cannot book a repair with it. " +
+        "Customer requests arrive in your shop dashboard under Requests.",
+    );
+  }
 
   const responseHours = shop?.response_hours ?? 24;
   const expiresAt = new Date(Date.now() + responseHours * 60 * 60 * 1000).toISOString();
@@ -416,18 +407,6 @@ export async function createBooking(
     input.deliveryMode === "home_visit" || input.deliveryMode === "pickup_drop";
   if (needsAddress && !input.addressLine1) {
     return FAILED("Add the address the shop should come to.");
-  }
-
-  // The `customer requests booking` policy carries `not owns_shop(fixer_id)` —
-  // a shop owner booking their own shop would corrupt its earnings figures and
-  // hand them a self-reviewable completed job. Checked here as well so the
-  // refusal explains itself: reaching the policy returns 42501, which renders as
-  // a bare "you do not have permission" on a form that looked ready to submit.
-  if (await ownsShop(supabase, user.id, input.fixerId)) {
-    return FAILED(
-      "This is your own shop, so you cannot book a repair with it. " +
-        "Customer requests arrive in your shop dashboard under Requests.",
-    );
   }
 
   // PostgREST serialises a tstzrange as its literal text form. `[start,end)` —
