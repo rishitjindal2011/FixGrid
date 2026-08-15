@@ -95,6 +95,10 @@ export const NAV_SECTIONS: NavSection[] = [
   {
     title: "Your account",
     items: [
+      // Above Payments on purpose: the balance is what a booking spends, so
+      // somebody who has just been told they have too little goes looking for
+      // this one, not for their invoice history.
+      { href: "/dashboard/wallet", label: "Wallet", icon: Wallet, match: "/dashboard/wallet" },
       { href: "/dashboard/billing", label: "Payments", icon: CreditCard, match: "/dashboard/billing" },
       { href: "/dashboard/reviews", label: "Reviews", icon: Star, match: "/dashboard/reviews" },
       {

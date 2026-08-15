@@ -1,17 +1,16 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import type { Metadata } from "next";
-import { Banknote, FileText, Receipt, RotateCcw, ShieldCheck } from "lucide-react";
+import { Banknote, FileText, Receipt, RotateCcw, ShieldCheck, Wallet } from "lucide-react";
 
 import { EmptyState } from "@/components/dashboard/empty-state";
 import { InvoiceTable, RefundTable } from "@/components/dashboard/invoice-table";
 import { PageHeader, SectionHeader } from "@/components/dashboard/page-header";
 import { StatTile } from "@/components/dashboard/stat-tile";
-import { WalletPanel } from "@/components/dashboard/wallet-panel";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { getCurrentUser } from "@/lib/auth/session";
-import { getWallet, listLedger } from "@/lib/wallet/server";
+import { getWallet } from "@/lib/wallet/server";
 import {
   getBillingSummary,
   listInvoices,
@@ -46,13 +45,12 @@ export default async function BillingPage() {
 
   const now = new Date();
 
-  const [summary, invoices, refunds, warranties, wallet, ledger] = await Promise.all([
+  const [summary, invoices, refunds, warranties, wallet] = await Promise.all([
     getBillingSummary(user.id, now),
     listInvoices(user.id),
     listRefunds(user.id),
     listWarranties(user.id, now),
     getWallet("user", user.id),
-    listLedger("user", user.id, 25),
   ]);
 
   // The summary carries no currency of its own — it is a fold over invoices
@@ -104,13 +102,22 @@ export default async function BillingPage() {
         />
       </div>
 
-      <WalletPanel
-        wallet={wallet}
-        lines={ledger}
-        title="Your balance"
-        description="Bookings, platform fees and refunds settle against this. Top-ups are handled by our team while card payments are being set up."
-        emptyLabel="Nothing has moved through your balance yet. It fills up as you book repairs."
-      />
+      {/*
+        A tile, not the full statement. `/dashboard/wallet` owns the balance and
+        its activity now — two pages rendering the same ledger is how they end up
+        disagreeing about it. This is the link across, and it is the first tile
+        because it is the only figure here that is money still available to spend.
+      */}
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <StatTile
+          label="Balance"
+          value={formatMoney(wallet.balanceMinor, wallet.currency)}
+          hint="Tap to top up"
+          icon={Wallet}
+          href="/dashboard/wallet"
+          emphasis={wallet.balanceMinor <= 0}
+        />
+      </div>
 
       <EscrowTracker held={held} now={now} />
 

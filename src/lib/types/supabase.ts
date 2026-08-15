@@ -32,6 +32,7 @@ import type {
   DisputeRow,
   LedgerEntryRow,
   WalletRow,
+  WalletTopUpRow,
   MessageAttachmentRow,
   MessageRow,
   MessageThreadRow,
@@ -247,6 +248,7 @@ export interface AppDatabase {
       payouts: TableOf<PayoutRow>;
       ledger_entries: TableOf<LedgerEntryRow>;
       wallets: TableOf<WalletRow>;
+      wallet_topups: TableOf<WalletTopUpRow>;
       disputes: TableOf<DisputeRow>;
       dispute_messages: TableOf<DisputeMessageRow>;
       dispute_evidence: TableOf<DisputeEvidenceRow>;
