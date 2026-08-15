@@ -81,7 +81,7 @@ export default async function ExpertEarningsPage() {
   // The stats carry no currency of their own — they are folds over rows that may
   // in principle mix currencies. Taking the newest ledger row's makes the tiles
   // agree with the tables beneath them, and GBP is the schema default.
-  const currency = transactions[0]?.currency ?? payouts[0]?.currency ?? "GBP";
+  const currency = transactions[0]?.currency ?? payouts[0]?.currency ?? "INR";
 
   const customerNames = new Map(
     bookings.flatMap((booking) =>

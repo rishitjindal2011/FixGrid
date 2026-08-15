@@ -3,67 +3,78 @@
  *
  * Two rules the whole system depends on:
  *
- *   1. **Money is integer pence.** Every amount crossing this boundary is a
- *      whole number of minor units. `4999` is £49.99. Nothing here accepts a
- *      decimal amount, because accepting one would invite a float upstream.
+ *   1. **Money is an integer count of minor units.** Every amount crossing this
+ *      boundary is a whole number of paise. `4999` is ₹49.99. Nothing here
+ *      accepts a decimal amount, because accepting one would invite a float
+ *      upstream.
  *
  *   2. **Dates render in a stated timezone**, never in the runtime's. A server
  *      component formatting a slot with the machine's local zone produces
  *      whatever the deploy region happens to be, then hydrates to the user's
  *      and mismatches. Every function here takes the zone explicitly — the
  *      shop's for slots, the customer's for their own history.
+ *
+ * The currency is INR and the locale for money is `en-IN`, which matters for
+ * more than the symbol: Indian digit grouping is 2-2-3, so ₹1,00,000 rather
+ * than ₹100,000. Getting that wrong reads as a foreign site.
+ *
+ * Note the date helpers below still use `en-GB` and fall back to
+ * `Europe/London`. That is deliberate and separate: the date *format* (8 August
+ * 2026) is already right, and the timezone fallback is load-bearing in
+ * `src/lib/bookings/slots.ts`, so moving it is a scheduling change rather than a
+ * formatting one.
  */
 
 /**
- * Format integer pence as currency. `4999` → "£49.99", `5000` → "£50".
+ * Format an integer paise amount as currency. `4999` → "₹49.99", `5000` → "₹50".
  *
  * Whole amounts drop the ".00" because dense tables of round numbers read
- * better without it. Non-whole amounts always show both digits — pence are
+ * better without it. Non-whole amounts always show both digits — paise are
  * never rounded away, since a total that doesn't add up is worse than a wide
  * column.
  */
 export function formatMoney(
-  pence: number | null | undefined,
-  currency = "GBP",
+  minor: number | null | undefined,
+  currency = "INR",
 ): string {
-  if (pence === null || pence === undefined) return "—";
+  if (minor === null || minor === undefined) return "—";
 
-  const digits = pence % 100 === 0 ? 0 : 2;
+  const digits = minor % 100 === 0 ? 0 : 2;
 
-  return new Intl.NumberFormat("en-GB", {
+  return new Intl.NumberFormat("en-IN", {
     style: "currency",
     currency,
     minimumFractionDigits: digits,
     maximumFractionDigits: digits,
-  }).format(pence / 100);
+  }).format(minor / 100);
 }
 
 /**
- * Money rounded to whole pounds — for chart axes and headline stat tiles,
+ * Money rounded to whole rupees — for chart axes and headline stat tiles,
  * where two decimal places are noise. Never use it on an invoice line.
  */
 export function formatMoneyRounded(
-  pence: number | null | undefined,
-  currency = "GBP",
+  minor: number | null | undefined,
+  currency = "INR",
 ): string {
-  if (pence === null || pence === undefined) return "—";
+  if (minor === null || minor === undefined) return "—";
 
-  return new Intl.NumberFormat("en-GB", {
+  return new Intl.NumberFormat("en-IN", {
     style: "currency",
     currency,
     maximumFractionDigits: 0,
-  }).format(pence / 100);
+  }).format(minor / 100);
 }
 
 /**
  * A price as the catalogue advertises it, respecting `price_type`.
- * `quote` deliberately shows no number at all rather than a misleading "£0".
+ * `quote` deliberately shows no number at all rather than a misleading "₹0".
  */
 export function formatPriceRange(
   priceType: "fixed" | "from" | "quote",
   min: number | null,
   max: number | null,
-  currency = "GBP",
+  currency = "INR",
 ): string {
   if (priceType === "quote") return "Quote on inspection";
   if (min === null) return "Quote on inspection";

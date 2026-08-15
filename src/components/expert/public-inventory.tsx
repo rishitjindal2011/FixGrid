@@ -16,6 +16,7 @@ import {
   type InventorySort,
 } from "@/lib/inventory/filter";
 import { INVENTORY_CONDITION_LABELS } from "@/lib/types/marketplace";
+import { formatMoney } from "@/lib/format";
 
 export interface PublicInventoryItem {
   id: string;
@@ -198,7 +199,7 @@ export function PublicInventory({
                     {item.unit_price === null ? (
                       <span className="text-steel-soft text-sm uppercase tracking-wide">Ask</span>
                     ) : (
-                      `£${(item.unit_price / 100).toFixed(2)}`
+                      formatMoney(item.unit_price)
                     )}
                   </div>
                 </div>

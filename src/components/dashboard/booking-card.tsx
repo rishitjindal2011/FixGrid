@@ -41,7 +41,7 @@ export function BookingCard({
   const ModeIcon = MODE_ICON[booking.delivery_mode];
 
   // The quote once it exists, the final price once the job is done. Before
-  // either, no number at all — "£0" would read as free.
+  // either, no number at all — "₹0" would read as free.
   const amount = booking.final_amount ?? booking.quoted_amount;
 
   return (

@@ -148,7 +148,7 @@ export function DisputeResolution({
           {needsAmount ? (
             <div className="flex flex-col gap-1">
               <label htmlFor="refundAmount" className="eyebrow text-steel">
-                Refund amount (£)
+                Refund amount (₹)
               </label>
               <Input
                 id="refundAmount"
@@ -201,7 +201,7 @@ export function DisputeResolution({
                   {needsAmount && amount ? (
                     <>
                       {" "}
-                      with a refund of <strong className="font-mono">£{amount}</strong>
+                      with a refund of <strong className="font-mono">₹{amount}</strong>
                     </>
                   ) : null}
                   . This is final.

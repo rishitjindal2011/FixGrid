@@ -55,7 +55,7 @@ export default async function BillingPage() {
   // that may in principle mix currencies. Taking the newest invoice's currency
   // makes the tiles agree with the table directly beneath them, and GBP is the
   // schema default when there are no invoices at all.
-  const currency = invoices[0]?.currency ?? "GBP";
+  const currency = invoices[0]?.currency ?? "INR";
 
   const held = heldJobs(invoices, warranties);
 
@@ -169,7 +169,7 @@ interface HeldJob {
  * fifth query: `listWarranties` already knows which windows are open and
  * `listInvoices` already knows what each job came to, and the two are keyed on
  * the same booking id. A warranty with no matching invoice is dropped — with no
- * amount there is nothing to hold, and a £0 bar would read as money released.
+ * amount there is nothing to hold, and a ₹0 bar would read as money released.
  */
 function heldJobs(invoices: Invoice[], warranties: WarrantyEntry[]): HeldJob[] {
   const byBooking = new Map(invoices.map((invoice) => [invoice.bookingId, invoice]));

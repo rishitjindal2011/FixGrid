@@ -23,8 +23,8 @@ export function AnalyticsCharts({ data }: { data: TimeSeriesPoint[] }) {
       return {
         ...d,
         displayDate: dateObj.toLocaleDateString("en-US", { month: "short", day: "numeric" }),
-        gmvPounds: d.gmv / 100,
-        feesPounds: d.fees / 100,
+        gmvRupees: d.gmv / 100,
+        feesRupees: d.fees / 100,
       };
     });
   }, [data]);
@@ -92,15 +92,15 @@ export function AnalyticsCharts({ data }: { data: TimeSeriesPoint[] }) {
                 axisLine={false}
                 tickLine={false}
                 tick={{ fontSize: 12, fill: "#64748B" }}
-                tickFormatter={(val) => `£${val}`}
+                tickFormatter={(val) => `₹${val}`}
               />
               <Tooltip
                 contentStyle={{ borderRadius: "4px", border: "1px solid #E2E8F0", fontSize: "14px" }}
-                formatter={(value: number) => [`£${value.toFixed(2)}`, undefined]}
+                formatter={(value: number) => [`₹${value.toFixed(2)}`, undefined]}
               />
               <Area
                 type="monotone"
-                dataKey="gmvPounds"
+                dataKey="gmvRupees"
                 name="Gross Volume"
                 stroke="#1E293B"
                 fillOpacity={1}
@@ -108,7 +108,7 @@ export function AnalyticsCharts({ data }: { data: TimeSeriesPoint[] }) {
               />
               <Area
                 type="monotone"
-                dataKey="feesPounds"
+                dataKey="feesRupees"
                 name="Platform Fees"
                 stroke="#059669"
                 fillOpacity={1}

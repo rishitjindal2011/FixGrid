@@ -136,7 +136,7 @@ function toView(row: DisputeJoinRow, customerName: string): DisputeRowView {
     bookingId: row.booking_id,
     reference: row.bookings?.reference ?? "",
     bookingStatus: row.bookings?.status ?? "disputed",
-    currency: row.bookings?.currency ?? "GBP",
+    currency: row.bookings?.currency ?? "INR",
     finalPence: row.bookings?.final_amount ?? row.bookings?.quoted_amount ?? null,
 
     customerId: row.bookings?.customer_id ?? row.raised_by,

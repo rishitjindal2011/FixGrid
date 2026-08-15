@@ -31,6 +31,7 @@ import type {
   DisputeMessageRow,
   DisputeRow,
   LedgerEntryRow,
+  WalletRow,
   MessageAttachmentRow,
   MessageRow,
   MessageThreadRow,
@@ -174,6 +175,21 @@ interface MarketplaceFunctions {
       Pick<UserRowFull, "id" | "display_name" | "full_name" | "avatar_url" | "phone">
     >;
   };
+  /**
+   * The only way money moves. See `src/lib/wallet/server.ts`.
+   *
+   * `Args` is deliberately loose — the function takes a jsonb array of legs, and
+   * describing that shape in the client's type would duplicate `LedgerLeg` in a
+   * form the client cannot check anyway. The strong typing lives on `LedgerLeg`
+   * and on the zero-sum assertion `post_ledger` makes for itself.
+   *
+   * `Returns: undefined` because the function returns `void`: it either commits
+   * every leg or raises, so there is nothing to read back.
+   */
+  post_ledger: {
+    Args: { p_entries: unknown };
+    Returns: undefined;
+  };
 }
 
 /**
@@ -220,6 +236,7 @@ export interface AppDatabase {
       refunds: TableOf<RefundRow>;
       payouts: TableOf<PayoutRow>;
       ledger_entries: TableOf<LedgerEntryRow>;
+      wallets: TableOf<WalletRow>;
       disputes: TableOf<DisputeRow>;
       dispute_messages: TableOf<DisputeMessageRow>;
       dispute_evidence: TableOf<DisputeEvidenceRow>;

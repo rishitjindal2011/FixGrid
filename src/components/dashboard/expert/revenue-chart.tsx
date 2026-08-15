@@ -82,7 +82,7 @@ const GROSS_OPACITY = 0.22;
 
 export function RevenueChart({
   data,
-  currency = "GBP",
+  currency = "INR",
   currentMonth,
 }: {
   data: RevenuePoint[];
@@ -138,7 +138,7 @@ export function RevenueChart({
                   tick={AXIS_TICK}
                   tickLine={false}
                   axisLine={false}
-                  // Rounded to whole pounds: an axis is a sense of scale, and
+                  // Rounded to whole rupees: an axis is a sense of scale, and
                   // pence on it are noise. The tooltip carries the exact figure.
                   tickFormatter={(value) => formatMoneyRounded(Number(value), currency)}
                 />

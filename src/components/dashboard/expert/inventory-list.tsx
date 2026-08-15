@@ -35,6 +35,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Input, Select } from "@/components/ui/input";
+import { formatMoney } from "@/lib/format";
 import { Switch } from "@/components/ui/switch";
 import {
   Table,
@@ -274,7 +275,7 @@ function InventoryRow({
         {item.unit_price === null ? (
           <span className="text-steel-soft">Ask</span>
         ) : (
-          `£${(item.unit_price / 100).toFixed(2)}`
+          formatMoney(item.unit_price)
         )}
       </TableCell>
 

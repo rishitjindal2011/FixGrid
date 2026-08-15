@@ -41,14 +41,14 @@ import { formatMoney } from "@/lib/format";
  *
  *   • **Money waiting.** The dialog, defaulted to the whole balance.
  *
- * The amount is posted as the pounds string the shop typed. `requestPayout` owns
- * the conversion to integer pence and rejects a third decimal rather than
+ * The amount is posted as the rupees string the shop typed. `requestPayout` owns
+ * the conversion to integer paise and rejects a third decimal rather than
  * rounding it — doing it in both places is how the two drift apart.
  */
 export function WithdrawDialog({
   fixerId,
   availablePence,
-  currency = "GBP",
+  currency = "INR",
   payoutEmail,
 }: {
   fixerId: string;
@@ -125,9 +125,9 @@ function WithdrawForm({
   const [state, formAction, pending] = useActionState(requestPayout, BOOKING_INITIAL_STATE);
   const amountId = React.useId();
 
-  // Exact, not rounded: the balance is already integer pence, so two decimal
+  // Exact, not rounded: the balance is already integer paise, so two decimal
   // places reproduce it precisely and the server's parser accepts it as typed.
-  const availablePounds = (availablePence / 100).toFixed(2);
+  const availableRupees = (availablePence / 100).toFixed(2);
 
   if (state.success) {
     return (
@@ -181,7 +181,7 @@ function WithdrawForm({
         </dl>
 
         <div className="flex flex-col gap-1.5">
-          <Label htmlFor={amountId}>Amount in pounds</Label>
+          <Label htmlFor={amountId}>Amount in rupees</Label>
           <Input
             id={amountId}
             name="amount"
@@ -192,13 +192,13 @@ function WithdrawForm({
             // and strips what the browser dislikes, which loses the two-decimal
             // rule the server enforces. The pattern gives the same refusal here.
             pattern="\d+(\.\d{1,2})?"
-            defaultValue={availablePounds}
+            defaultValue={availableRupees}
             aria-describedby={`${amountId}-hint`}
             className="font-mono tabular-nums"
           />
           <p id={`${amountId}-hint`} className="text-xs text-steel">
-            Up to {formatMoney(availablePence, currency)}. Pounds and pence, like{" "}
-            <span className="font-mono">{availablePounds}</span>.
+            Up to {formatMoney(availablePence, currency)}. Rupees and paise, like{" "}
+            <span className="font-mono">{availableRupees}</span>.
           </p>
         </div>
 

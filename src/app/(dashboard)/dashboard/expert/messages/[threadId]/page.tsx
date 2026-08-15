@@ -178,7 +178,7 @@ export default async function ExpertThreadPage({
  *
  * `final_amount` wins because a job that came in over or under the quote
  * settles at the final figure; falling back to the quote stops a job that has
- * not been finalised yet from reading as £0.
+ * not been finalised yet from reading as ₹0.
  */
 function grossPence(booking: {
   quoted_amount: number | null;

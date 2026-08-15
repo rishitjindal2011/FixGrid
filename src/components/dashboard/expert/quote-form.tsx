@@ -64,14 +64,14 @@ export function needsQuote(pricing: RequestPricing | null): boolean {
 }
 
 /**
- * Integer pence as the pounds string a money input expects. `4999` → "49.99".
+ * Integer paise as the rupees string a money input expects. `4999` → "49.99".
  *
- * The only pence→pounds conversion in this screen, and it goes one way: the
- * server turns it back with `poundsToPence`, which rejects a third decimal
+ * The only paise→rupees conversion in this screen, and it goes one way: the
+ * server turns it back with `rupeesToPaise`, which rejects a third decimal
  * rather than rounding it. Two decimals here, always, so that round trip is
  * exact.
  */
-export function penceToPoundsInput(pence: number): string {
+export function paiseToRupeesInput(pence: number): string {
   return (pence / 100).toFixed(2);
 }
 
@@ -114,7 +114,7 @@ export function QuoteForm({
   // number there would invent one.
   const suggested =
     pricing && pricing.priceType === "from" && pricing.minPence !== null
-      ? penceToPoundsInput(pricing.minPence)
+      ? paiseToRupeesInput(pricing.minPence)
       : undefined;
 
   if (state.success) {
@@ -180,7 +180,7 @@ export function QuoteForm({
 
         <div className="flex flex-col gap-1.5">
           <label htmlFor={amountId} className="eyebrow">
-            Your price — pounds
+            Your price — rupees
           </label>
           <Input
             id={amountId}
@@ -192,13 +192,13 @@ export function QuoteForm({
             placeholder="49.99"
             // Mirrors the server's own test, so a stray third decimal is caught
             // before a round-trip rather than after one.
-            pattern="£?\d+(\.\d{1,2})?"
-            title="Pounds and pence, like 49.99"
+            pattern="₹?\d+(\.\d{1,2})?"
+            title="Rupees and paise, like 49.99"
             aria-describedby={amountHintId}
             className="font-mono tabular-nums"
           />
           <p id={amountHintId} className="text-xs leading-relaxed text-steel">
-            Pounds and pence, like 49.99. Two decimal places at most — a longer figure is
+            Rupees and paise, like 49.99. Two decimal places at most — a longer figure is
             refused rather than rounded. Our fee comes out of this, not on top of it.
           </p>
         </div>

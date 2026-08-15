@@ -30,8 +30,8 @@ import type { BookingStatus, DisputeResolution } from "@/lib/types/marketplace";
  *   1. **Return, never throw.** Every action resolves to a `BookingActionState`.
  *      A thrown error inside a form action surfaces as an unhandled rejection
  *      and loses the message the person needed to read.
- *   2. **Money arrives in pounds from a form and is stored as integer pence.**
- *      The conversion happens once, here, in `poundsToPence`.
+ *   2. **Money arrives in rupees from a form and is stored as integer paise.**
+ *      The conversion happens once, here, in `rupeesToPaise`.
  *   3. **The migration may not have been run.** A missing table returns a
  *      diagnosable sentence rather than a stack trace.
  */
@@ -113,11 +113,11 @@ async function resolveActor(
 
 /**
  * "49.99" → 4999. Rejects anything with more than two decimal places rather
- * than rounding it, because silently turning £49.999 into £50.00 is the kind of
+ * than rounding it, because silently turning ₹49.999 into ₹50.00 is the kind of
  * bug that only surfaces in an invoice dispute.
  */
-function poundsToPence(input: string): number | null {
-  const trimmed = input.trim().replace(/^£/, "").replace(/,/g, "");
+function rupeesToPaise(input: string): number | null {
+  const trimmed = input.trim().replace(/^₹/, "").replace(/,/g, "");
   if (!/^\d+(\.\d{1,2})?$/.test(trimmed)) return null;
   return Math.round(Number(trimmed) * 100);
 }
@@ -149,7 +149,7 @@ const TransitionSchema = z.object({
   bookingId: z.string().uuid("That booking could not be found."),
   to: z.enum(BOOKING_STATUSES),
   reason: z.string().trim().max(2000).optional(),
-  /** Pounds, from the quote form. Only meaningful on `requested → accepted`. */
+  /** Rupees, from the quote form. Only meaningful on `requested → accepted`. */
   quote: z.string().trim().optional(),
 });
 
@@ -237,9 +237,9 @@ export async function transitionBooking(
   }
 
   if (quote) {
-    const pence = poundsToPence(quote);
+    const pence = rupeesToPaise(quote);
     if (pence === null) {
-      return FAILED("Enter the quote as an amount in pounds, like 49.99.");
+      return FAILED("Enter the quote as an amount in rupees, like 49.99.");
     }
     patch.quoted_amount = pence;
   }

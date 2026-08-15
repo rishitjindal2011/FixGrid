@@ -40,7 +40,7 @@ import { logReadFailure } from "@/lib/dashboard/errors";
  * table this file touches may not exist yet — the migration is a separate,
  * manual step — so the profile read (which predates the migration) is kept apart
  * from the enrichment reads (which do not). A missing `shop_services` costs the
- * page its "from £x" line; it must never cost the page its shops.
+ * page its "from ₹x" line; it must never cost the page its shops.
  */
 
 /* ── Filter shape ─────────────────────────────────────────────────────────── */
@@ -91,7 +91,7 @@ export const DISCOVER_PARAM_KEYS = {
   bbox: "bbox",
 } as const;
 
-/** £10,000. Above this the filter is meaningless — no repair is listed there. */
+/** ₹10,000. Above this the filter is meaningless — no repair is listed there. */
 const MAX_PRICE_PENCE = 1_000_000;
 
 /** How many shops the directory shows before the "refine your filters" nudge. */

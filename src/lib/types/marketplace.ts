@@ -450,8 +450,38 @@ export interface PayoutRow {
 
 export type LedgerKind = "charge" | "fee" | "refund" | "payout" | "adjustment";
 
+/**
+ * A party's balance. One row per wallet, keyed `(owner_kind, owner_id)`.
+ *
+ * `balance_minor` is a cache of `sum(ledger_entries.amount)` for this wallet,
+ * maintained by the `ledger_entries_apply_balance` trigger — the same
+ * arrangement `rating_avg` has on `fixer_profiles`, and for the same reason: so
+ * a balance read is one row rather than an aggregate over a growing ledger.
+ * Nothing writes it directly; see `src/lib/wallet/server.ts`.
+ */
+export interface WalletRow {
+  id: string;
+  /** `platform` is the house, and always carries the nil uuid as its owner. */
+  owner_kind: "user" | "shop" | "platform";
+  /** `users.id` or `fixer_profiles.id`. No FK — a wallet outlives its owner row. */
+  owner_id: string;
+  /** Paise. Only the platform wallet may be negative. */
+  balance_minor: number;
+  currency: string;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface LedgerEntryRow {
   id: string;
+  /**
+   * The wallet this entry moves. Null for a row that touches no balance —
+   * `ledger_entries` predates wallets, so the column is additive.
+   *
+   * Explicit rather than inferred from `customer_id`/`fixer_id` below: an entry
+   * can name both parties, which would leave "whose balance moved" ambiguous.
+   */
+  wallet_id: string | null;
   booking_id: string | null;
   payment_id: string | null;
   payout_id: string | null;

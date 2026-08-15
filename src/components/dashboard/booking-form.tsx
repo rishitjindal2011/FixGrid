@@ -49,7 +49,7 @@ import { cn } from "@/lib/utils";
  * Supabase import precisely so it can run on both sides of the boundary.
  */
 
-/** A service as this form needs it — pence and minutes, never pounds or hours. */
+/** A service as this form needs it — paise and minutes, never rupees or hours. */
 export interface BookingFormService {
   id: string;
   name: string;

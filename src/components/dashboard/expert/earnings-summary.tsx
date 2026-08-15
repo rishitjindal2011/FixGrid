@@ -21,7 +21,7 @@ import { cn, pluralize } from "@/lib/utils";
 export function EarningsSummary({
   earnings,
   stats,
-  currency = "GBP",
+  currency = "INR",
   withdraw,
 }: {
   earnings: EarningsBucket[];

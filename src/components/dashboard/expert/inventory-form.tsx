@@ -37,7 +37,7 @@ import {
  * no reset code and no effect. On success the fields are *replaced* by a
  * confirmation — a second press of Save would otherwise add the same part twice.
  *
- * Price is typed in POUNDS and stored as integer pence, converted once in
+ * Price is typed in RUPEES and stored as integer paise, converted once in
  * `upsertInventoryItem`, which refuses a third decimal rather than rounding it.
  * Hence `type="text" inputMode="decimal"` and not `type="number"`, whose stepper
  * produces values the server is obliged to reject.
@@ -81,8 +81,8 @@ const CONDITION_ORDER: readonly InventoryCondition[] = [
 /** A new item starts flagged at 2 — enough warning to reorder before zero. */
 const NEW_ITEM_THRESHOLD = 2;
 
-/** Pence back into the pounds string the form edits. Null renders empty. */
-function poundsField(pence: number | null): string {
+/** Paise back into the rupees string the form edits. Null renders empty. */
+function rupeesField(pence: number | null): string {
   return pence === null ? "" : (pence / 100).toFixed(2);
 }
 
@@ -259,7 +259,7 @@ function InventoryFields({
                   name="price"
                   type="text"
                   inputMode="decimal"
-                  defaultValue={poundsField(item?.unit_price ?? null)}
+                  defaultValue={rupeesField(item?.unit_price ?? null)}
                   placeholder="49.99"
                   className="font-mono tabular-nums"
                   aria-describedby={id("priceHint")}

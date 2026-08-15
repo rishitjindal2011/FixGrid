@@ -28,7 +28,7 @@ import { logReadFailure } from "@/lib/dashboard/errors";
  * reads as uncollected. That is the truth, not a bug, and the summary below is
  * worded so the page can say so.
  *
- * Money is integer pence throughout. Nothing in this file divides by 100 —
+ * Money is integer paise throughout. Nothing in this file divides by 100 —
  * rendering is `formatMoney`'s job, and a float escaping into a total is the one
  * error that cannot be corrected downstream.
  *
@@ -181,7 +181,7 @@ function toInvoice(booking: InvoiceBookingRow, payment: PaymentSummaryRow | unde
   // `final_amount` is what the job actually came to; `quoted_amount` is what was
   // agreed before work started. A completed booking should carry the first, but
   // falling back keeps a shop that forgot to adjust the price from producing a
-  // £0 invoice.
+  // ₹0 invoice.
   const snapshotService = booking.final_amount ?? booking.quoted_amount ?? 0;
 
   // A payment's `amount` is gross — fee and tax included — so the service line
@@ -283,7 +283,7 @@ export async function getInvoice(
     slot: booking.slot,
     bookingStatus: booking.status,
     // Zero-value lines are dropped: a shop that charges no VAT should not have
-    // to explain a "£0 VAT" row to its customer.
+    // to explain a "₹0 VAT" row to its customer.
     lines: [
       { label: booking.service?.name ?? "Repair", amountPence: invoice.servicePence },
       { label: "Platform fee", amountPence: invoice.platformFeePence },

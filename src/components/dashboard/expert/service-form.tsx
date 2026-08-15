@@ -41,7 +41,7 @@ import {
  * so "remount instead of resync" is the only shape available — and it is also
  * the correct one.
  *
- * Prices are typed in POUNDS and stored as integer pence. The conversion
+ * Prices are typed in RUPEES and stored as integer paise. The conversion
  * happens once, server-side in `upsertService`, which rejects a third decimal
  * rather than rounding it; this form therefore uses a text input with a decimal
  * keypad hint rather than `type="number"`, whose stepper would happily produce
@@ -91,8 +91,8 @@ const DELIVERY_MODE_ORDER: readonly DeliveryMode[] = [
 const NEW_SERVICE_WARRANTY_DAYS = 90;
 const NEW_SERVICE_DURATION_MINUTES = 60;
 
-/** Pence back into the pounds string the form edits. Null renders empty. */
-function poundsField(pence: number | null): string {
+/** Paise back into the rupees string the form edits. Null renders empty. */
+function rupeesField(pence: number | null): string {
   return pence === null ? "" : (pence / 100).toFixed(2);
 }
 
@@ -266,12 +266,12 @@ function ServiceFields({
                     type="text"
                     inputMode="decimal"
                     required
-                    defaultValue={poundsField(service?.price_min ?? null)}
+                    defaultValue={rupeesField(service?.price_min ?? null)}
                     placeholder="49.99"
                     aria-describedby={id("priceHint")}
                   />
                   <p id={id("priceHint")} className="text-xs text-steel-soft">
-                    Pounds and pence, like <span className="font-mono">49.99</span>.
+                    Rupees and paise, like <span className="font-mono">49.99</span>.
                   </p>
                 </div>
 
@@ -283,7 +283,7 @@ function ServiceFields({
                       name="priceMax"
                       type="text"
                       inputMode="decimal"
-                      defaultValue={poundsField(service?.price_max ?? null)}
+                      defaultValue={rupeesField(service?.price_max ?? null)}
                       placeholder="89.99"
                       aria-describedby={id("priceMaxHint")}
                     />

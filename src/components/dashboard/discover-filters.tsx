@@ -54,7 +54,7 @@ const RATING_CHOICES = [
 
 /**
  * Price ceilings in **pence**, because that is the unit the parameter carries
- * and the schema stores. Bands rather than a free number field keep pounds out
+ * and the schema stores. Bands rather than a free number field keep rupees out
  * of the URL entirely, so there is nowhere for a decimal to creep in.
  */
 const PRICE_CHOICES = [2_500, 5_000, 10_000, 25_000, 50_000] as const;

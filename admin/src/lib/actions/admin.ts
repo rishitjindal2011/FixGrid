@@ -136,8 +136,8 @@ async function gate(
 }
 
 /** `"49.99"` → `4999`. Rejects more than two decimal places rather than rounding. */
-function poundsToPence(value: string): number | null {
-  const trimmed = value.trim().replace(/^£/, "");
+function rupeesToPaise(value: string): number | null {
+  const trimmed = value.trim().replace(/^₹/, "");
   if (!/^\d+(\.\d{1,2})?$/.test(trimmed)) return null;
   return Math.round(Number(trimmed) * 100);
 }
@@ -360,9 +360,9 @@ export async function resolveDispute(
     const raw = parsed.data.refundAmount ?? "";
     if (!raw) return FAILED("Enter the refund amount.");
 
-    refundPence = poundsToPence(raw);
+    refundPence = rupeesToPaise(raw);
     if (refundPence === null) {
-      return FAILED("That refund amount is not a valid figure — use pounds and pence, e.g. 49.99.");
+      return FAILED("That refund amount is not a valid figure — use rupees and paise, e.g. 49.99.");
     }
     if (refundPence <= 0) return FAILED("A refund has to be more than zero.");
   }

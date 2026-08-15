@@ -10,7 +10,7 @@ import { formatMoney } from "@/lib/format";
  * `refundedPence` is not part of the breakdown itself but is owed by the same
  * figures: an invoice that was refunded still carries its original total, and
  * the person looking at it should not have to subtract to see what happened.
- * The refund line renders only when it is non-zero, because a "£0 refunded"
+ * The refund line renders only when it is non-zero, because a "₹0 refunded"
  * row on every paid invoice is noise.
  */
 export function CostBreakdown({
@@ -18,7 +18,7 @@ export function CostBreakdown({
   platformFeePence,
   taxPence,
   totalPence,
-  currency = "GBP",
+  currency = "INR",
   refundedPence = 0,
 }: {
   /** The repair itself, before fee and tax. */
@@ -33,7 +33,7 @@ export function CostBreakdown({
     <dl className="flex flex-col gap-2">
       <Row label="Service" value={formatMoney(servicePence, currency)} />
       <Row label="Platform fee" value={formatMoney(platformFeePence, currency)} />
-      {/* A shop that charges no VAT must not be asked to explain a £0 row. */}
+      {/* A shop that charges no VAT must not be asked to explain a ₹0 row. */}
       {taxPence > 0 ? (
         <Row label="VAT" value={formatMoney(taxPence, currency)} />
       ) : null}

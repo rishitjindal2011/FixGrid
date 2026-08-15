@@ -85,7 +85,7 @@ export function ExpertCard({
         <div className="flex items-baseline gap-1.5">
           <dt className="eyebrow">From</dt>
           <dd className="font-mono text-sm tabular-nums text-enamel">
-            {/* No priced services is not "£0" — it is a shop that quotes on
+            {/* No priced services is not "₹0" — it is a shop that quotes on
                 inspection, which is a legitimate way to sell a repair. */}
             {expert.priceFromPence === null
               ? "On quote"

@@ -33,8 +33,8 @@ import { logReadFailure } from "@/lib/dashboard/errors";
  *   1. **Return, never throw.** Every action resolves to a `BookingActionState`.
  *      A thrown error inside a form action surfaces as an unhandled rejection
  *      and loses the message the person needed to read.
- *   2. **Money arrives in pounds from a form and is stored as integer pence.**
- *      The conversion happens once, in `poundsToPence`, and rejects a third
+ *   2. **Money arrives in rupees from a form and is stored as integer paise.**
+ *      The conversion happens once, in `rupeesToPaise`, and rejects a third
  *      decimal rather than rounding it away.
  *   3. **The migration may not have been run.** A missing table returns a
  *      diagnosable sentence rather than a stack trace.
@@ -47,7 +47,7 @@ import { logReadFailure } from "@/lib/dashboard/errors";
  *
  * The helpers below are deliberate near-copies of the ones in
  * `@/lib/bookings/actions`. A `"use server"` module may only export async
- * functions, so `explain`, `poundsToPence` and `checked` cannot be imported
+ * functions, so `explain`, `rupeesToPaise` and `checked` cannot be imported
  * from there without exporting them as server endpoints — which would publish
  * three string utilities as routes.
  */
@@ -142,11 +142,11 @@ async function assertOwnership(
 
 /**
  * "49.99" → 4999. Rejects anything with more than two decimal places rather
- * than rounding it, because silently turning £49.999 into £50.00 is the kind of
+ * than rounding it, because silently turning ₹49.999 into ₹50.00 is the kind of
  * bug that only surfaces in an invoice dispute.
  */
-function poundsToPence(input: string): number | null {
-  const trimmed = input.trim().replace(/^£/, "").replace(/,/g, "");
+function rupeesToPaise(input: string): number | null {
+  const trimmed = input.trim().replace(/^₹/, "").replace(/,/g, "");
   if (!/^\d+(\.\d{1,2})?$/.test(trimmed)) return null;
   return Math.round(Number(trimmed) * 100);
 }
@@ -764,15 +764,15 @@ export async function upsertService(
       return FAILED("Set a price, or switch this service to quote on inspection.");
     }
 
-    priceMin = poundsToPence(input.priceMin);
-    if (priceMin === null) return FAILED("Enter the price in pounds, like 49.99.");
+    priceMin = rupeesToPaise(input.priceMin);
+    if (priceMin === null) return FAILED("Enter the price in rupees, like 49.99.");
 
     // Only `fixed` renders a range. `from` advertises a floor and
     // `formatPriceRange` ignores its upper bound, so storing one here would be
     // a number nobody ever sees and an edit form would show it back as fact.
     if (input.priceType === "fixed" && input.priceMax) {
-      priceMax = poundsToPence(input.priceMax);
-      if (priceMax === null) return FAILED("Enter the upper price in pounds, like 89.99.");
+      priceMax = rupeesToPaise(input.priceMax);
+      if (priceMax === null) return FAILED("Enter the upper price in rupees, like 89.99.");
       if (priceMax < priceMin) return FAILED("The upper price cannot be below the lower one.");
     }
   }
@@ -788,7 +788,7 @@ export async function upsertService(
     description: input.description ?? null,
     category_id: input.categoryId ?? null,
     price_type: input.priceType,
-    // `quote` nulls both rather than storing 0 — £0.00 is a price a customer
+    // `quote` nulls both rather than storing 0 — ₹0.00 is a price a customer
     // would read as free, and `formatPriceRange` only says "quote on
     // inspection" when there is genuinely no number.
     price_min: priceMin,
@@ -1099,7 +1099,7 @@ function explainInventory(code: string | undefined, fallback: string): string {
  * One action rather than two because the validation is identical and the two
  * halves would drift — the create form and the edit form are the same form,
  * exactly as with `upsertService`. Quantity, threshold and price are read with
- * `bounded`/`poundsToPence` instead of being part of the Zod shape because
+ * `bounded`/`rupeesToPaise` instead of being part of the Zod shape because
  * `z.coerce.number()` turns a missing form field into `Number(null)` — zero —
  * and a form that forgot an input would save a silently wrong count.
  */
@@ -1144,13 +1144,13 @@ export async function upsertInventoryItem(
   let unitPrice: number | null = null;
 
   // Blank is a real answer here, unlike quantity: an item priced on request
-  // stores null and the public panel says "Ask us" rather than "£0.00".
+  // stores null and the public panel says "Ask us" rather than "₹0.00".
   const priceRaw = formData.get("price");
   if (typeof priceRaw === "string" && priceRaw.trim() !== "") {
-    unitPrice = poundsToPence(priceRaw);
-    if (unitPrice === null) return FAILED("Enter the price in pounds, like 49.99.");
+    unitPrice = rupeesToPaise(priceRaw);
+    if (unitPrice === null) return FAILED("Enter the price in rupees, like 49.99.");
     if (unitPrice > 1000000) {
-      return FAILED("Enter a price up to £10,000.");
+      return FAILED("Enter a price up to ₹10,000.");
     }
   }
 
@@ -1808,8 +1808,8 @@ export async function requestPayout(
   }
 
   const { fixerId } = parsed.data;
-  const pence = poundsToPence(parsed.data.amount);
-  if (pence === null) return FAILED("Enter the amount in pounds, like 250.00.");
+  const pence = rupeesToPaise(parsed.data.amount);
+  if (pence === null) return FAILED("Enter the amount in rupees, like 250.00.");
   if (pence <= 0) return FAILED("Enter an amount above zero.");
 
   const { supabase, user } = await currentUser();
@@ -1884,8 +1884,8 @@ export async function sendQuote(
   }
 
   const { bookingId, note } = parsed.data;
-  const pence = poundsToPence(parsed.data.amount);
-  if (pence === null) return FAILED("Enter the quote in pounds, like 49.99.");
+  const pence = rupeesToPaise(parsed.data.amount);
+  if (pence === null) return FAILED("Enter the quote in rupees, like 49.99.");
   if (pence <= 0) return FAILED("Enter a quote above zero.");
 
   const { supabase, user } = await currentUser();

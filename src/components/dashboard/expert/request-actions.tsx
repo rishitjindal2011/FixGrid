@@ -8,7 +8,7 @@ import { ProposeTimeDialog } from "@/components/dashboard/expert/propose-time-di
 import {
   QuoteForm,
   needsQuote,
-  penceToPoundsInput,
+  paiseToRupeesInput,
   type RequestPricing,
 } from "@/components/dashboard/expert/quote-form";
 import { Button } from "@/components/ui/button";
@@ -96,7 +96,7 @@ function AcceptOutright({
       <input type="hidden" name="bookingId" value={bookingId} />
       <input type="hidden" name="to" value="confirmed" />
       {pricePence !== null ? (
-        <input type="hidden" name="quote" value={penceToPoundsInput(pricePence)} />
+        <input type="hidden" name="quote" value={paiseToRupeesInput(pricePence)} />
       ) : null}
 
       <Button

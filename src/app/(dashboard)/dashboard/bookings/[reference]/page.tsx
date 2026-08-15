@@ -235,7 +235,7 @@ export default async function BookingDetailPage({
 
   // `final_amount` is what the job came to, `quoted_amount` what was agreed
   // before it started. With neither there is no price yet, and rendering a
-  // breakdown that sums to £0 would read as "free" rather than "not priced".
+  // breakdown that sums to ₹0 would read as "free" rather than "not priced".
   const servicePence = booking.final_amount ?? booking.quoted_amount;
   const totalPence =
     servicePence === null

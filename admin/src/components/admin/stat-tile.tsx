@@ -6,9 +6,9 @@ import { cn } from "@/lib/utils";
  * One headline number.
  *
  * `value` is a pre-formatted string, not a number, because the caller knows
- * whether it is money (`formatMoney`, integer pence) or a count
+ * whether it is money (`formatMoney`, integer paise) or a count
  * (`formatCount`). Formatting inside would mean guessing, and a stat tile that
- * renders `4999` for £49.99 is the kind of bug nobody notices for a month.
+ * renders `4999` for ₹49.99 is the kind of bug nobody notices for a month.
  *
  * `tone` is not decoration. `signal` means this number is a queue waiting on
  * the person reading it — pending claims, open disputes. A tile that is merely
