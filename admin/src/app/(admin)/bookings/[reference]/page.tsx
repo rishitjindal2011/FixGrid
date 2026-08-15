@@ -3,9 +3,15 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { ArrowLeft, Scale } from "lucide-react";
 
+import { AttachmentGallery } from "@/components/admin/attachment-gallery";
 import { PageHeader } from "@/components/admin/page-header";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import {
+  BOOKING_ATTACHMENTS_BUCKET,
+  listBookingAttachments,
+  signStoragePaths,
+} from "@/lib/attachments";
 import { getBooking } from "@/lib/queries/bookings";
 import { formatDateTime, formatDuration, formatMoney, slotStart } from "@/lib/format";
 import {
@@ -55,6 +61,12 @@ export default async function BookingDetailPage({
 
   const booking = await getBooking(reference);
   if (!booking) notFound();
+
+  const attachments = await listBookingAttachments(booking.id);
+  const signedAttachments = await signStoragePaths(
+    BOOKING_ATTACHMENTS_BUCKET,
+    attachments.map((item) => item.storagePath),
+  );
 
   const start = slotStart(booking.slot);
   const address = [
@@ -159,6 +171,29 @@ export default async function BookingDetailPage({
               ) : null}
             </dl>
           </section>
+
+          {attachments.length > 0 ? (
+            <section className="rounded-machined border border-hairline bg-chalk p-4 shadow-bench">
+              <h2 className="mb-3 font-display text-sm uppercase tracking-wide text-enamel">
+                Photos
+              </h2>
+              <AttachmentGallery
+                items={attachments.filter((item) => item.kind === "fault")}
+                signed={signedAttachments}
+                emptyLabel="No fault photos."
+              />
+              {attachments.some((item) => item.kind === "completion") ? (
+                <div className="pt-4">
+                  <h3 className="eyebrow mb-2 text-steel">After the repair</h3>
+                  <AttachmentGallery
+                    items={attachments.filter((item) => item.kind === "completion")}
+                    signed={signedAttachments}
+                    emptyLabel="No completion photos."
+                  />
+                </div>
+              ) : null}
+            </section>
+          ) : null}
 
           <section className="rounded-machined border border-hairline bg-chalk p-4 shadow-bench">
             <h2 className="mb-3 font-display text-sm uppercase tracking-wide text-enamel">

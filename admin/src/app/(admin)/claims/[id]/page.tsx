@@ -3,10 +3,18 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { ArrowLeft, ExternalLink } from "lucide-react";
 
+import { AttachmentGallery } from "@/components/admin/attachment-gallery";
 import { ClaimActions } from "@/components/admin/claim-actions";
 import { PageHeader } from "@/components/admin/page-header";
 import { Badge } from "@/components/ui/badge";
 import { getSession } from "@/lib/auth/session";
+import {
+  CLAIM_EVIDENCE_BUCKET,
+  claimEvidenceNotes,
+  parseClaimEvidencePaths,
+  signStoragePaths,
+  type StoredAttachment,
+} from "@/lib/attachments";
 import { getClaim } from "@/lib/queries/claims";
 import { formatDateTime, formatRelative } from "@/lib/format";
 import type { ClaimStatus } from "@/lib/types/marketplace";
@@ -48,6 +56,22 @@ export default async function ClaimDetailPage({
 
   const [claim, session] = await Promise.all([getClaim(id), getSession()]);
   if (!claim) notFound();
+
+  const evidencePaths = parseClaimEvidencePaths(claim.evidence);
+  const evidenceNotes = claimEvidenceNotes(claim.evidence, evidencePaths);
+  const claimAttachments: StoredAttachment[] = evidencePaths.map((path, index) => ({
+    id: `claim-evidence-${index}`,
+    storagePath: path,
+    fileName: path.split("/").pop() ?? path,
+    mimeType: null,
+    sizeBytes: 0,
+    kind: "evidence",
+    createdAt: claim.createdAt,
+  }));
+  const signedClaimEvidence =
+    evidencePaths.length > 0
+      ? await signStoragePaths(CLAIM_EVIDENCE_BUCKET, evidencePaths)
+      : new Map<string, string | null>();
 
   const canDecide = session !== null && session.role !== "viewer";
   const decided = claim.status !== "pending";
@@ -174,14 +198,21 @@ export default async function ClaimDetailPage({
             <h2 className="mb-2 font-display text-sm uppercase tracking-wide text-enamel">
               Evidence given
             </h2>
-            {claim.evidence ? (
-              <p className="whitespace-pre-wrap text-sm text-enamel">{claim.evidence}</p>
-            ) : (
+            {evidenceNotes ? (
+              <p className="mb-4 whitespace-pre-wrap text-sm text-enamel">{evidenceNotes}</p>
+            ) : null}
+            {claimAttachments.length > 0 ? (
+              <AttachmentGallery
+                items={claimAttachments}
+                signed={signedClaimEvidence}
+                emptyLabel="No files attached."
+              />
+            ) : !evidenceNotes ? (
               <p className="text-sm text-steel">
                 No evidence was supplied. That is not disqualifying on its own, but it is worth a
                 phone call before handing over a listing.
               </p>
-            )}
+            ) : null}
           </section>
 
           {decided ? (

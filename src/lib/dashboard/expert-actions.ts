@@ -7,6 +7,7 @@ import { canTransition } from "@/lib/bookings/machine";
 import type { BookingActionState } from "@/lib/bookings/state";
 import { getExpertStats } from "@/lib/dashboard/expert";
 import { formatMoney } from "@/lib/format";
+import { notifyQuoteSent } from "@/lib/notifications/booking";
 import { createClient } from "@/lib/supabase/server";
 import { WEEKDAYS, WEEKDAY_LABELS, type Weekday } from "@/lib/types/database";
 import type {
@@ -1948,6 +1949,10 @@ export async function sendQuote(
   revalidatePath("/dashboard/expert/requests");
   revalidatePath("/dashboard/bookings");
   revalidatePath(`/dashboard/bookings/${booking.reference}`);
+
+  void notifyQuoteSent(bookingId).catch((error) =>
+    console.error("[notifications] quote failed", error),
+  );
 
   return OK(`Quote for ${formatMoney(pence)} sent.`);
 }

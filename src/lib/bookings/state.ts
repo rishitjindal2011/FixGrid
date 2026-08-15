@@ -11,6 +11,8 @@ export interface BookingActionState {
   success: boolean;
   /** Confirmation copy on success — "Quote sent", "Saved". */
   message?: string;
+  bookingId?: string;
+  reference?: string;
 }
 
 export const BOOKING_INITIAL_STATE: BookingActionState = {

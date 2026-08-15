@@ -5,6 +5,13 @@ import { z } from "zod";
 
 import { canTransition, type TransitionActor } from "@/lib/bookings/machine";
 import type { BookingActionState, SavedExpertState } from "@/lib/bookings/state";
+import {
+  notifyBookingCreated,
+  notifyBookingTransition,
+  notifyDisputeOpened,
+  notifyNewMessage,
+  notifyRescheduleRequested,
+} from "@/lib/notifications/booking";
 import { createClient } from "@/lib/supabase/server";
 import type { AppDatabase } from "@/lib/types/supabase";
 import type { BookingStatus, DisputeResolution } from "@/lib/types/marketplace";
@@ -295,6 +302,13 @@ export async function transitionBooking(
   revalidatePath("/dashboard/expert");
   revalidatePath("/dashboard/expert/requests");
 
+  void notifyBookingTransition({
+    bookingId,
+    from: booking.status,
+    to,
+    actor,
+  }).catch((error) => console.error("[notifications] transition failed", error));
+
   return OK("Booking updated.");
 }
 
@@ -389,6 +403,15 @@ export async function createBooking(
     return FAILED("That slot is in the past — pick another time.");
   }
 
+  const { data: shop } = await supabase
+    .from("fixer_profiles")
+    .select("response_hours")
+    .eq("id", input.fixerId)
+    .maybeSingle<{ response_hours: number }>();
+
+  const responseHours = shop?.response_hours ?? 24;
+  const expiresAt = new Date(Date.now() + responseHours * 60 * 60 * 1000).toISOString();
+
   const needsAddress =
     input.deliveryMode === "home_visit" || input.deliveryMode === "pickup_drop";
   if (needsAddress && !input.addressLine1) {
@@ -420,6 +443,7 @@ export async function createBooking(
       delivery_mode: input.deliveryMode,
       status: "requested",
       slot,
+      expires_at: expiresAt,
       device_details: input.deviceDetails,
       customer_notes: input.customerNotes || null,
       address_line1: input.addressLine1 || null,
@@ -427,8 +451,8 @@ export async function createBooking(
       address_city: input.addressCity || null,
       address_postcode: input.addressPostcode || null,
     })
-    .select("reference")
-    .maybeSingle<{ reference: string }>();
+    .select("id, reference")
+    .maybeSingle<{ id: string; reference: string }>();
 
   if (error) {
     // Logged as well as returned. `explain` deliberately flattens several causes
@@ -476,11 +500,21 @@ export async function createBooking(
   revalidatePath("/dashboard");
   revalidatePath("/dashboard/bookings");
 
-  return OK(
-    data?.reference
+  if (data?.id) {
+    void notifyBookingCreated(data.id).catch((error) =>
+      console.error("[notifications] booking created failed", error),
+    );
+  }
+
+  return {
+    error: null,
+    success: true,
+    message: data?.reference
       ? `Request sent — reference ${data.reference}.`
       : "Request sent to the shop.",
-  );
+    bookingId: data?.id,
+    reference: data?.reference,
+  };
 }
 
 const RescheduleSchema = z.object({
@@ -577,6 +611,14 @@ export async function requestReschedule(
   revalidatePath("/dashboard/messages");
   revalidatePath("/dashboard/expert/requests");
 
+  void notifyRescheduleRequested({
+    bookingId,
+    actor,
+    proposedStart: start,
+    proposedEnd: end,
+    note,
+  }).catch((error) => console.error("[notifications] reschedule failed", error));
+
   return OK("New time proposed.");
 }
 
@@ -656,6 +698,12 @@ export async function sendMessage(
   if (error) {
     return FAILED(explain(error.code, "That message could not be sent."));
   }
+
+  void notifyNewMessage({
+    threadId: parsed.data.threadId,
+    senderId: user.id,
+    preview: parsed.data.body,
+  }).catch((err) => console.error("[notifications] message failed", err));
 
   revalidatePath("/dashboard/messages");
   revalidatePath(`/dashboard/messages/${parsed.data.threadId}`);
@@ -797,6 +845,10 @@ export async function openDispute(
 
   revalidatePath("/dashboard/warranty");
   revalidatePath(`/dashboard/bookings/${booking.reference}`);
+
+  void notifyDisputeOpened(bookingId).catch((error) =>
+    console.error("[notifications] dispute failed", error),
+  );
 
   return OK("Claim opened. We will be in touch.");
 }
