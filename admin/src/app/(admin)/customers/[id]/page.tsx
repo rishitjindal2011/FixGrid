@@ -5,8 +5,11 @@ import { ArrowLeft, Store } from "lucide-react";
 
 import { PageHeader } from "@/components/admin/page-header";
 import { StatTile } from "@/components/admin/stat-tile";
+import { TopUpWalletDialog } from "@/components/admin/top-up-wallet-dialog";
 import { Badge } from "@/components/ui/badge";
+import { getSession } from "@/lib/auth/session";
 import { getCustomer } from "@/lib/queries/customers";
+import { getWalletBalance } from "@/lib/wallet";
 import { formatDateTime, formatMoney, formatRelative } from "@/lib/format";
 import type { BookingStatus } from "@/lib/types/marketplace";
 
@@ -40,8 +43,18 @@ export default async function CustomerDetailPage({
 }) {
   const { id } = await params;
 
-  const customer = await getCustomer(id);
+  // The balance and the session are independent of the customer read, so all
+  // three go together rather than as three serialised round-trips.
+  const [customer, wallet, session] = await Promise.all([
+    getCustomer(id),
+    getWalletBalance("user", id),
+    getSession(),
+  ]);
   if (!customer) notFound();
+
+  // Top-ups are owner-only. The action re-checks this for itself — hiding the
+  // button is a courtesy so an editor is not offered something that will refuse.
+  const canTopUp = session?.role === "owner";
 
   return (
     <div className="flex flex-col gap-6">
@@ -63,9 +76,27 @@ export default async function CustomerDetailPage({
             ? customer.fullName
             : undefined
         }
+        actions={
+          canTopUp ? (
+            <TopUpWalletDialog
+              ownerKind="user"
+              ownerId={id}
+              ownerName={customer.displayName}
+              balanceMinor={wallet.balanceMinor}
+            />
+          ) : null
+        }
       />
 
       <div className="grid gap-3 sm:grid-cols-4">
+        <StatTile
+          label="Balance"
+          value={formatMoney(wallet.balanceMinor)}
+          // The one figure on this page that is money the customer still has,
+          // rather than money already spent. Everything a booking charges comes
+          // out of it, so a zero here explains a failed booking.
+          hint="Available to spend"
+        />
         <StatTile label="Bookings" value={String(customer.bookingCount)} />
         <StatTile label="Spent" value={formatMoney(customer.totalSpentPence)} />
         <StatTile
