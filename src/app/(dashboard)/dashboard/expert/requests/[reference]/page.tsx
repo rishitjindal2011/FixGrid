@@ -5,6 +5,7 @@ import type { Metadata } from "next";
 import {
   ArrowLeft,
   Building2,
+  Camera,
   Car,
   History,
   Home,
@@ -16,6 +17,7 @@ import {
   Wrench,
 } from "lucide-react";
 
+import { AttachmentGallery } from "@/components/dashboard/attachment-gallery";
 import {
   PrivateNoteEditor,
   RequestActions,
@@ -48,6 +50,11 @@ import {
   formatRelative,
   formatSlot,
 } from "@/lib/format";
+import {
+  BOOKING_ATTACHMENTS_BUCKET,
+  listBookingAttachments,
+  signStoragePaths,
+} from "@/lib/attachments/server";
 import { createClient } from "@/lib/supabase/server";
 import {
   BOOKING_STATUS_LABELS,
@@ -192,11 +199,17 @@ export default async function ExpertRequestDetailPage({
   // would confirm which references exist.
   if (!booking) notFound();
 
-  const [note, client, rating] = await Promise.all([
+  const [note, client, rating, attachments] = await Promise.all([
     getBookingNote(booking.id),
     getClient(shop.id, booking.customer_id),
     readCustomerRating(shop.id, booking.customer_id),
+    listBookingAttachments(booking.id),
   ]);
+
+  const signedAttachments = await signStoragePaths(
+    BOOKING_ATTACHMENTS_BUCKET,
+    attachments.map((item) => item.storagePath),
+  );
 
   const pricing = booking.service_id
     ? (buildPricingIndex(services).get(booking.service_id) ?? null)
@@ -317,6 +330,26 @@ export default async function ExpertRequestDetailPage({
               </Field>
             </dl>
           </Panel>
+
+          {attachments.length > 0 ? (
+            <Panel title="Photos of the fault" icon={Camera}>
+              <AttachmentGallery
+                items={attachments.filter((item) => item.kind === "fault")}
+                signed={signedAttachments}
+                emptyLabel="No fault photos attached."
+              />
+              {attachments.some((item) => item.kind === "completion") ? (
+                <div className="pt-4">
+                  <p className="eyebrow pb-2">After the repair</p>
+                  <AttachmentGallery
+                    items={attachments.filter((item) => item.kind === "completion")}
+                    signed={signedAttachments}
+                    emptyLabel="No completion photos."
+                  />
+                </div>
+              ) : null}
+            </Panel>
+          ) : null}
 
           <Panel title="When and where">
             <dl className="grid gap-4 sm:grid-cols-2">

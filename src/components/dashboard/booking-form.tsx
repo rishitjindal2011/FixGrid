@@ -1,15 +1,17 @@
 "use client";
 
 import * as React from "react";
-import { useActionState } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { AlertTriangle, CalendarCheck, CheckCircle2, Clock, ShieldCheck } from "lucide-react";
 
 import { SlotPicker } from "@/components/dashboard/slot-picker";
+import { BookingFaultPhotos, BookingSubmitSpinner } from "@/components/dashboard/booking-fault-photos";
 import { Button } from "@/components/ui/button";
 import { Input, Select } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { createBooking } from "@/lib/bookings/actions";
+import { uploadBookingFaultPhotos } from "@/lib/bookings/attachments-client";
 import {
   generateSlots,
   groupSlotsByDay,
@@ -123,7 +125,30 @@ export function BookingForm({
   defaultWarrantyDays,
   addresses,
 }: BookingFormProps) {
-  const [state, formAction, pending] = useActionState(createBooking, BOOKING_INITIAL_STATE);
+  const router = useRouter();
+  const [state, setState] = React.useState(BOOKING_INITIAL_STATE);
+  const [pending, setPending] = React.useState(false);
+  const [faultPhotos, setFaultPhotos] = React.useState<File[]>([]);
+
+  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setPending(true);
+    setState(BOOKING_INITIAL_STATE);
+
+    const formData = new FormData(event.currentTarget);
+    const result = await createBooking(BOOKING_INITIAL_STATE, formData);
+
+    if (result.success && result.bookingId && faultPhotos.length > 0) {
+      await uploadBookingFaultPhotos(result.bookingId, faultPhotos);
+    }
+
+    setState(result);
+    setPending(false);
+
+    if (result.success && result.reference) {
+      router.push(`/dashboard/bookings/${encodeURIComponent(result.reference)}`);
+    }
+  }
 
   const [serviceId, setServiceId] = React.useState(services[0]?.id ?? "");
   const [modeChoice, setModeChoice] = React.useState<DeliveryMode | null>(null);
@@ -237,7 +262,7 @@ export function BookingForm({
   }
 
   return (
-    <form action={formAction} className="flex flex-col gap-4">
+    <form onSubmit={handleSubmit} className="flex flex-col gap-4">
       <input type="hidden" name="fixerId" value={fixerId} />
       <input type="hidden" name="serviceId" value={service?.id ?? ""} />
       <input type="hidden" name="deliveryMode" value={deliveryMode} />
@@ -536,6 +561,10 @@ export function BookingForm({
             maxLength={2000}
             placeholder="Parking, access, a deadline you are working to."
           />
+        </Field>
+
+        <Field id="booking-photos" label="Photos of the fault (optional)">
+          <BookingFaultPhotos files={faultPhotos} onChange={setFaultPhotos} disabled={pending} />
         </Field>
       </Panel>
 

@@ -1,12 +1,18 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
-import { ArrowLeft, Paperclip } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 
+import { AttachmentGallery } from "@/components/admin/attachment-gallery";
 import { DisputeResolution } from "@/components/admin/dispute-resolution";
 import { PageHeader } from "@/components/admin/page-header";
 import { Badge } from "@/components/ui/badge";
 import { getSession } from "@/lib/auth/session";
+import {
+  BOOKING_ATTACHMENTS_BUCKET,
+  signStoragePaths,
+  type StoredAttachment,
+} from "@/lib/attachments";
 import { getDispute } from "@/lib/queries/disputes";
 import { formatDateTime, formatMoney, formatRelative } from "@/lib/format";
 import {
@@ -46,6 +52,23 @@ export default async function DisputeDetailPage({
 
   const [dispute, session] = await Promise.all([getDispute(id), getSession()]);
   if (!dispute) notFound();
+
+  const disputeAttachments: StoredAttachment[] = dispute.evidence.map((file) => ({
+    id: file.id,
+    storagePath: file.storage_path,
+    fileName: file.file_name,
+    mimeType: file.mime_type,
+    sizeBytes: file.size_bytes ?? 0,
+    kind: "evidence",
+    createdAt: file.created_at,
+  }));
+  const signedDisputeEvidence =
+    disputeAttachments.length > 0
+      ? await signStoragePaths(
+          BOOKING_ATTACHMENTS_BUCKET,
+          disputeAttachments.map((item) => item.storagePath),
+        )
+      : new Map<string, string | null>();
 
   const canResolve = session !== null && session.role !== "viewer";
   const decided = dispute.status === "resolved" || dispute.status === "withdrawn";
@@ -116,28 +139,12 @@ export default async function DisputeDetailPage({
             </dl>
           </section>
 
-          {dispute.evidence.length > 0 ? (
+          {disputeAttachments.length > 0 ? (
             <section className="rounded-machined border border-hairline bg-chalk p-4 shadow-bench">
               <h2 className="mb-3 font-display text-sm uppercase tracking-wide text-enamel">
                 Evidence
               </h2>
-              <ul className="flex flex-col gap-2">
-                {dispute.evidence.map((file) => (
-                  <li
-                    key={file.id}
-                    className="flex items-center justify-between gap-3 border-b border-hairline pb-2 last:border-b-0 last:pb-0"
-                  >
-                    <span className="flex items-center gap-2 text-sm text-enamel">
-                      <Paperclip aria-hidden className="size-4 text-steel" />
-                      {file.file_name ?? "Attachment"}
-                    </span>
-                    {/* A path inside the private bucket, not a URL. Rendering the
-                        file itself needs a signed URL, which this app does not
-                        mint yet — the path is shown so it can be found manually. */}
-                    <span className="font-mono text-xs text-steel-soft">{file.storage_path}</span>
-                  </li>
-                ))}
-              </ul>
+              <AttachmentGallery items={disputeAttachments} signed={signedDisputeEvidence} />
             </section>
           ) : null}
 
