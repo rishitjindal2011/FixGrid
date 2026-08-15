@@ -24,6 +24,7 @@ import { CostBreakdown } from "@/components/dashboard/cost-breakdown";
 import { RescheduleDialog } from "@/components/dashboard/reschedule-dialog";
 import { StatusBadge } from "@/components/dashboard/status-badge";
 import { Button } from "@/components/ui/button";
+import { attachmentHrefs } from "@/lib/attachments/server";
 import { getCurrentUser } from "@/lib/auth/session";
 import { allowedActions, slotEnd, slotStart, statusExplainer } from "@/lib/bookings/actions-map";
 import {
@@ -38,7 +39,6 @@ import {
   formatDuration,
   formatSlot,
 } from "@/lib/format";
-import { createClient } from "@/lib/supabase/server";
 import {
   DELIVERY_MODE_LABELS,
   type AttachmentKind,
@@ -49,10 +49,6 @@ export const metadata: Metadata = {
   title: "Booking",
   robots: { index: false, follow: false },
 };
-
-const BUCKET = "booking-attachments";
-/** Long enough to read the page, short enough that a copied URL dies quickly. */
-const SIGNED_URL_TTL_SECONDS = 300;
 
 const MODE_ICON: Record<DeliveryMode, typeof Building2> = {
   in_shop: Building2,
@@ -73,49 +69,6 @@ const ATTACHMENT_LABELS: Record<AttachmentKind, string> = {
  * already on the bench, so proposing a different morning for it is nonsense.
  */
 const RESCHEDULABLE = new Set(["requested", "accepted", "confirmed"]);
-
-/**
- * Signed URLs for the job's photos, one round-trip for all of them.
- *
- * The bucket is private, so a stored path is not fetchable on its own. Every
- * failure — bucket not provisioned, storage disabled, a path that no longer
- * resolves — maps to a null URL and a filename chip. A photo that will not
- * render must not take the booking page with it.
- */
-async function signAttachments(
-  attachments: BookingAttachment[],
-): Promise<Map<string, string | null>> {
-  const signed = new Map<string, string | null>();
-  if (attachments.length === 0) return signed;
-
-  for (const item of attachments) signed.set(item.storagePath, null);
-
-  try {
-    const supabase = await createClient();
-    const { data, error } = await supabase.storage
-      .from(BUCKET)
-      .createSignedUrls(
-        attachments.map((item) => item.storagePath),
-        SIGNED_URL_TTL_SECONDS,
-      );
-
-    if (error) {
-      console.error("[bookings] attachment signing failed", error.message);
-      return signed;
-    }
-
-    for (const row of data ?? []) {
-      if (row.path && row.signedUrl) signed.set(row.path, row.signedUrl);
-    }
-  } catch (error) {
-    console.error(
-      "[bookings] storage unavailable",
-      error instanceof Error ? error.message : error,
-    );
-  }
-
-  return signed;
-}
 
 /**
  * An instant as a `datetime-local` value in the shop's zone.
@@ -190,9 +143,9 @@ function AttachmentTile({
   const isImage = (item.mimeType ?? "").startsWith("image/");
   const label = item.fileName ?? ATTACHMENT_LABELS[item.kind];
 
-  // `unoptimized` deliberately: the optimiser would cache a derivative keyed on
-  // a URL whose signature expires in five minutes, so every view is a miss, and
-  // the signed host is not in `next.config.ts` remote patterns.
+  // `unoptimized` deliberately: the route requires the caller's session cookie,
+  // and the image optimiser fetches server-side without one — it would get a 404
+  // and render a broken tile.
   if (url && isImage) {
     return (
       <a
@@ -271,10 +224,12 @@ export default async function BookingDetailPage({
   const start = slotStart(booking.slot);
   const end = slotEnd(booking.slot);
 
-  const [thread, signed] = await Promise.all([
-    getThreadForBooking(booking.id),
-    signAttachments(booking.attachments),
-  ]);
+  const thread = await getThreadForBooking(booking.id);
+
+  // URLs on this origin, served by `/dashboard/attachments/booking/[id]`. No
+  // signing round-trip, no token in the address bar, and no five-minute expiry
+  // to explain to somebody who bookmarked a photo of their own cracked screen.
+  const attachmentUrls = attachmentHrefs("booking", booking.attachments);
 
   const actions = allowedActions(booking, "customer", now);
 
@@ -407,7 +362,7 @@ export default async function BookingDetailPage({
                   <AttachmentTile
                     key={item.id}
                     item={item}
-                    url={signed.get(item.storagePath) ?? null}
+                    url={attachmentUrls.get(item.id) ?? null}
                   />
                 ))}
               </div>

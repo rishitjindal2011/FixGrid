@@ -9,8 +9,7 @@ import { PageHeader } from "@/components/admin/page-header";
 import { Badge } from "@/components/ui/badge";
 import { getSession } from "@/lib/auth/session";
 import {
-  BOOKING_ATTACHMENTS_BUCKET,
-  signStoragePaths,
+  attachmentHrefs,
   type StoredAttachment,
 } from "@/lib/attachments";
 import { getDispute } from "@/lib/queries/disputes";
@@ -64,11 +63,8 @@ export default async function DisputeDetailPage({
   }));
   const signedDisputeEvidence =
     disputeAttachments.length > 0
-      ? await signStoragePaths(
-          BOOKING_ATTACHMENTS_BUCKET,
-          disputeAttachments.map((item) => item.storagePath),
-        )
-      : new Map<string, string | null>();
+      ? attachmentHrefs("evidence", disputeAttachments)
+      : new Map<string, string>();
 
   const canResolve = session !== null && session.role !== "viewer";
   const decided = dispute.status === "resolved" || dispute.status === "withdrawn";
@@ -144,7 +140,7 @@ export default async function DisputeDetailPage({
               <h2 className="mb-3 font-display text-sm uppercase tracking-wide text-enamel">
                 Evidence
               </h2>
-              <AttachmentGallery items={disputeAttachments} signed={signedDisputeEvidence} />
+              <AttachmentGallery items={disputeAttachments} hrefs={signedDisputeEvidence} />
             </section>
           ) : null}
 

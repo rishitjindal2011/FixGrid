@@ -4,7 +4,6 @@ import { createAdminClient } from "@/lib/supabase/admin";
 
 export const BOOKING_ATTACHMENTS_BUCKET = "booking-attachments";
 export const CLAIM_EVIDENCE_BUCKET = "shop-claims-evidence";
-const SIGNED_URL_TTL_SECONDS = 300;
 
 export type AttachmentKind = "fault" | "completion" | "evidence";
 
@@ -46,36 +45,28 @@ export async function listBookingAttachments(bookingId: string): Promise<StoredA
   return (data ?? []).map(mapAttachment);
 }
 
-export async function signStoragePaths(
-  bucket: string,
-  paths: string[],
-): Promise<Map<string, string | null>> {
-  const signed = new Map<string, string | null>();
-  if (paths.length === 0) return signed;
+/**
+ * Which route serves a given kind of file, under `admin/src/app/api/attachments/`.
+ *
+ * Replaces `signStoragePaths`, which minted five-minute signed `supabase.co`
+ * URLs. Those put a bearer token for *somebody else's* booking photos in the
+ * reviewer's address bar, could not be revoked once issued, and left the link
+ * dead after the TTL. These URLs carry no credential and re-check the admin
+ * session on every request.
+ *
+ * Claim evidence is absent deliberately: it has no row id to key on, so those
+ * hrefs are built from a claim id and a position by the claims page itself.
+ */
+export type AttachmentRoute = "booking" | "evidence";
 
-  for (const path of paths) signed.set(path, null);
-
-  try {
-    const { data, error } = await createAdminClient()
-      .storage.from(bucket)
-      .createSignedUrls(paths, SIGNED_URL_TTL_SECONDS);
-
-    if (error) {
-      console.error("[attachments] signing failed", error.message);
-      return signed;
-    }
-
-    for (const row of data ?? []) {
-      if (row.path && row.signedUrl) signed.set(row.path, row.signedUrl);
-    }
-  } catch (error) {
-    console.error(
-      "[attachments] storage unavailable",
-      error instanceof Error ? error.message : error,
-    );
-  }
-
-  return signed;
+/** Attachment row id → URL on this origin. */
+export function attachmentHrefs(
+  route: AttachmentRoute,
+  items: readonly { id: string }[],
+): Map<string, string> {
+  return new Map(
+    items.map((item) => [item.id, `/api/attachments/${route}/${item.id}`]),
+  );
 }
 
 /** Parse storage paths embedded in shop_claims.evidence text. */

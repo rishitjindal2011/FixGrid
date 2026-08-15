@@ -9,10 +9,8 @@ import { PageHeader } from "@/components/admin/page-header";
 import { Badge } from "@/components/ui/badge";
 import { getSession } from "@/lib/auth/session";
 import {
-  CLAIM_EVIDENCE_BUCKET,
   claimEvidenceNotes,
   parseClaimEvidencePaths,
-  signStoragePaths,
   type StoredAttachment,
 } from "@/lib/attachments";
 import { getClaim } from "@/lib/queries/claims";
@@ -59,6 +57,12 @@ export default async function ClaimDetailPage({
 
   const evidencePaths = parseClaimEvidencePaths(claim.evidence);
   const evidenceNotes = claimEvidenceNotes(claim.evidence, evidencePaths);
+  /*
+   * Claim evidence is addressed by position, not by row id — the paths are
+   * bullet lines inside `shop_claims.evidence`, so there is no row to point at.
+   * The index is all the route needs: it resolves it against this claim's own
+   * list server-side, so the storage path never travels through the browser.
+   */
   const claimAttachments: StoredAttachment[] = evidencePaths.map((path, index) => ({
     id: `claim-evidence-${index}`,
     storagePath: path,
@@ -68,10 +72,12 @@ export default async function ClaimDetailPage({
     kind: "evidence",
     createdAt: claim.createdAt,
   }));
-  const signedClaimEvidence =
-    evidencePaths.length > 0
-      ? await signStoragePaths(CLAIM_EVIDENCE_BUCKET, evidencePaths)
-      : new Map<string, string | null>();
+  const signedClaimEvidence = new Map<string, string>(
+    claimAttachments.map((item, index) => [
+      item.id,
+      `/api/attachments/claim/${id}/${index}`,
+    ]),
+  );
 
   const canDecide = session !== null && session.role !== "viewer";
   const decided = claim.status !== "pending";
@@ -204,7 +210,7 @@ export default async function ClaimDetailPage({
             {claimAttachments.length > 0 ? (
               <AttachmentGallery
                 items={claimAttachments}
-                signed={signedClaimEvidence}
+                hrefs={signedClaimEvidence}
                 emptyLabel="No files attached."
               />
             ) : !evidenceNotes ? (

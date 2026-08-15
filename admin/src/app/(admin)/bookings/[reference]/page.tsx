@@ -8,9 +8,8 @@ import { PageHeader } from "@/components/admin/page-header";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
-  BOOKING_ATTACHMENTS_BUCKET,
+  attachmentHrefs,
   listBookingAttachments,
-  signStoragePaths,
 } from "@/lib/attachments";
 import { getBooking } from "@/lib/queries/bookings";
 import { formatDateTime, formatDuration, formatMoney, slotStart } from "@/lib/format";
@@ -63,10 +62,11 @@ export default async function BookingDetailPage({
   if (!booking) notFound();
 
   const attachments = await listBookingAttachments(booking.id);
-  const signedAttachments = await signStoragePaths(
-    BOOKING_ATTACHMENTS_BUCKET,
-    attachments.map((item) => item.storagePath),
-  );
+  // Served from this origin by `/api/attachments/booking/[id]`, which re-checks
+  // the admin session per request. These are a customer's own photos on somebody
+  // else's booking, so a signed URL pasted into a ticket is the exact thing to
+  // avoid producing.
+  const attachmentUrls = attachmentHrefs("booking", attachments);
 
   const start = slotStart(booking.slot);
   const address = [
@@ -179,7 +179,7 @@ export default async function BookingDetailPage({
               </h2>
               <AttachmentGallery
                 items={attachments.filter((item) => item.kind === "fault")}
-                signed={signedAttachments}
+                hrefs={attachmentUrls}
                 emptyLabel="No fault photos."
               />
               {attachments.some((item) => item.kind === "completion") ? (
@@ -187,7 +187,7 @@ export default async function BookingDetailPage({
                   <h3 className="eyebrow mb-2 text-steel">After the repair</h3>
                   <AttachmentGallery
                     items={attachments.filter((item) => item.kind === "completion")}
-                    signed={signedAttachments}
+                    hrefs={attachmentUrls}
                     emptyLabel="No completion photos."
                   />
                 </div>

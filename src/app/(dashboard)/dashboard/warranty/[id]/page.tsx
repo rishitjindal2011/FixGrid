@@ -13,64 +13,16 @@ import {
   RESOLUTION_LABELS,
 } from "@/components/dashboard/warranty-card";
 import { Button } from "@/components/ui/button";
+import { attachmentHrefs } from "@/lib/attachments/server";
 import { getCurrentUser } from "@/lib/auth/session";
 import { getDispute } from "@/lib/dashboard/warranty";
 import { formatDateLong, formatMoney, formatRelative } from "@/lib/format";
-import { createClient } from "@/lib/supabase/server";
 import { BOOKING_STATUS_LABELS, type DisputeEvidenceRow } from "@/lib/types/marketplace";
 
 export const metadata: Metadata = {
   title: "Warranty claim",
   robots: { index: false, follow: false },
 };
-
-const BUCKET = "booking-attachments";
-/** Long enough to read the page, short enough that a copied URL dies quickly. */
-const SIGNED_URL_TTL_SECONDS = 300;
-
-/**
- * Signed URLs for the evidence, one round-trip for all of them.
- *
- * The bucket is private, so a stored path is not fetchable on its own. Every
- * failure here — bucket not provisioned, storage disabled, a path that no
- * longer resolves — maps to a null URL and a filename chip instead of a
- * thumbnail. Evidence that will not render must not take the claim page with
- * it; the customer still needs to read the thread.
- */
-async function signEvidence(
-  evidence: DisputeEvidenceRow[],
-): Promise<Map<string, string | null>> {
-  const signed = new Map<string, string | null>();
-  if (evidence.length === 0) return signed;
-
-  for (const item of evidence) signed.set(item.storage_path, null);
-
-  try {
-    const supabase = await createClient();
-    const { data, error } = await supabase.storage
-      .from(BUCKET)
-      .createSignedUrls(
-        evidence.map((item) => item.storage_path),
-        SIGNED_URL_TTL_SECONDS,
-      );
-
-    if (error) {
-      console.error("[warranty] evidence signing failed", error.message);
-      return signed;
-    }
-
-    for (const row of data ?? []) {
-      if (row.path && row.signedUrl) signed.set(row.path, row.signedUrl);
-    }
-  } catch (error) {
-    console.error(
-      "[warranty] storage unavailable",
-      error instanceof Error ? error.message : error,
-    );
-  }
-
-  return signed;
-}
 
 function EvidenceTile({
   item,
@@ -82,15 +34,15 @@ function EvidenceTile({
   const isImage = (item.mime_type ?? "").startsWith("image/");
   const label = item.file_name ?? "Evidence";
 
-  // `unoptimized` deliberately: the optimiser would cache a derivative keyed on
-  // a URL whose signature expires in five minutes, so every view is a cache
-  // miss, and the signed host is not in `next.config.ts` remote patterns.
+  // `unoptimized` deliberately: the route requires the caller's session cookie,
+  // and the image optimiser fetches server-side without one — it would get a 404
+  // and render a broken tile.
   if (url && isImage) {
     return (
       <a
         href={url}
         target="_blank"
-        rel="noreferrer"
+        rel="noreferrer noopener"
         className="group block overflow-hidden rounded-machined border border-hairline bg-bench"
       >
         <Image
@@ -190,7 +142,11 @@ export default async function ClaimPage({
   }
 
   const now = new Date();
-  const signed = await signEvidence(claim.evidence);
+  // URLs on this origin, served by `/dashboard/attachments/evidence/[id]`, which
+  // re-checks `is_dispute_party` on every request. Previously these were signed
+  // `supabase.co` URLs — a token in the address bar on the most sensitive files
+  // a customer uploads.
+  const evidenceUrls = attachmentHrefs("evidence", claim.evidence);
 
   const outcome = claim.desiredOutcome
     ? (DESIRED_OUTCOME_LABELS[claim.desiredOutcome] ?? claim.desiredOutcome)
@@ -261,7 +217,7 @@ export default async function ClaimPage({
                     <EvidenceTile
                       key={item.id}
                       item={item}
-                      url={signed.get(item.storage_path) ?? null}
+                      url={evidenceUrls.get(item.id) ?? null}
                     />
                   ))}
                 </div>

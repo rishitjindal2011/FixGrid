@@ -14,6 +14,13 @@ import type { AppDatabase } from "@/lib/types/supabase";
  *   • proxy.ts          — redirect lookups before a session exists
  *   • draft-mode reads  — must see status = 'draft'
  *   • scripts/seed-*    — bulk authoring
+ *
+ * Note what is NOT on that list: the attachment routes under
+ * `app/(dashboard)/dashboard/attachments/`. They authorise through an RLS-backed
+ * row read and then download with the *user's* client, so Storage's own policies
+ * stay in force as a second gate. The admin console has no Supabase identity to
+ * offer and does use this client for the same job — see
+ * `admin/src/app/api/attachments/`.
  */
 export function createAdminClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;

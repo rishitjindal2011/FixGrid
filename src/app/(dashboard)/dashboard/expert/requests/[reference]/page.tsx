@@ -51,9 +51,8 @@ import {
   formatSlot,
 } from "@/lib/format";
 import {
-  BOOKING_ATTACHMENTS_BUCKET,
+  attachmentHrefs,
   listBookingAttachments,
-  signStoragePaths,
 } from "@/lib/attachments/server";
 import { createClient } from "@/lib/supabase/server";
 import {
@@ -206,10 +205,10 @@ export default async function ExpertRequestDetailPage({
     listBookingAttachments(booking.id),
   ]);
 
-  const signedAttachments = await signStoragePaths(
-    BOOKING_ATTACHMENTS_BUCKET,
-    attachments.map((item) => item.storagePath),
-  );
+  // Served from this origin by `/dashboard/attachments/booking/[id]`, which
+  // re-authorises per request through `is_booking_party` — so the shop sees the
+  // customer's fault photos without a Supabase token ever reaching the browser.
+  const attachmentUrls = attachmentHrefs("booking", attachments);
 
   const pricing = booking.service_id
     ? (buildPricingIndex(services).get(booking.service_id) ?? null)
@@ -335,7 +334,7 @@ export default async function ExpertRequestDetailPage({
             <Panel title="Photos of the fault" icon={Camera}>
               <AttachmentGallery
                 items={attachments.filter((item) => item.kind === "fault")}
-                signed={signedAttachments}
+                hrefs={attachmentUrls}
                 emptyLabel="No fault photos attached."
               />
               {attachments.some((item) => item.kind === "completion") ? (
@@ -343,7 +342,7 @@ export default async function ExpertRequestDetailPage({
                   <p className="eyebrow pb-2">After the repair</p>
                   <AttachmentGallery
                     items={attachments.filter((item) => item.kind === "completion")}
-                    signed={signedAttachments}
+                    hrefs={attachmentUrls}
                     emptyLabel="No completion photos."
                   />
                 </div>

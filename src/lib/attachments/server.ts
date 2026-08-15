@@ -5,8 +5,6 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import type { AttachmentKind } from "@/lib/types/marketplace";
 
 export const BOOKING_ATTACHMENTS_BUCKET = "booking-attachments";
-export const CLAIM_EVIDENCE_BUCKET = "shop-claims-evidence";
-const SIGNED_URL_TTL_SECONDS = 300;
 
 export interface StoredAttachment {
   id: string;
@@ -66,48 +64,29 @@ export async function listBookingAttachmentsAdmin(bookingId: string): Promise<St
   return (data ?? []).map(mapAttachment);
 }
 
-export async function signStoragePaths(
-  bucket: string,
-  paths: string[],
-  useAdmin = false,
-): Promise<Map<string, string | null>> {
-  const signed = new Map<string, string | null>();
-  if (paths.length === 0) return signed;
+/**
+ * Which route serves a given kind of file. Both live under
+ * `src/app/(dashboard)/dashboard/attachments/`, and each authorises through the
+ * RLS policy on its own table — so this choice decides which policy applies and
+ * is never taken from user input.
+ */
+export type AttachmentRoute = "booking" | "evidence";
 
-  for (const path of paths) signed.set(path, null);
-
-  try {
-    const supabase = useAdmin ? createAdminClient().storage : (await createClient()).storage;
-    const { data, error } = await supabase.from(bucket).createSignedUrls(paths, SIGNED_URL_TTL_SECONDS);
-
-    if (error) {
-      console.error("[attachments] signing failed", error.message);
-      return signed;
-    }
-
-    for (const row of data ?? []) {
-      if (row.path && row.signedUrl) signed.set(row.path, row.signedUrl);
-    }
-  } catch (error) {
-    console.error(
-      "[attachments] storage unavailable",
-      error instanceof Error ? error.message : error,
-    );
-  }
-
-  return signed;
-}
-
-/** Parse storage paths embedded in shop_claims.evidence text. */
-export function parseClaimEvidencePaths(evidence: string | null): string[] {
-  if (!evidence) return [];
-
-  return evidence
-    .split("\n")
-    .map((line) => line.trim())
-    .filter((line) => line.startsWith("• "))
-    .map((line) => line.slice(2).trim())
-    .filter(Boolean);
+/**
+ * The gallery's `hrefs` map: attachment row id → URL on this origin.
+ *
+ * Replaces `signStoragePaths`, which minted five-minute signed `supabase.co`
+ * URLs. Those put a bearer token in the address bar, could not be revoked once
+ * issued, and left the link dead after the TTL. These URLs carry no credential
+ * and are re-authorised on every request.
+ */
+export function attachmentHrefs(
+  route: AttachmentRoute,
+  items: readonly { id: string }[],
+): Map<string, string> {
+  return new Map(
+    items.map((item) => [item.id, `/dashboard/attachments/${route}/${item.id}`]),
+  );
 }
 
 function mapAttachment(row: AttachmentRow): StoredAttachment {

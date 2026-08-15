@@ -4,6 +4,24 @@ import { FileText, Paperclip } from "lucide-react";
 import type { AttachmentKind, StoredAttachment } from "@/lib/attachments";
 import { cn } from "@/lib/utils";
 
+/**
+ * Attachment tiles.
+ *
+ * `hrefs` maps an attachment's **row id** to a URL on this console's own origin,
+ * served by `/api/attachments/…`. It used to map a *storage path* to a signed
+ * `supabase.co` URL; the prop was renamed rather than re-pointed so that every
+ * call site had to be revisited. Silently swapping the meaning of a map's keys is
+ * the kind of change that keeps compiling and stops working.
+ *
+ * Claim evidence has no row of its own, so the claims page keys its map on the
+ * synthetic ids it builds and points them at `/api/attachments/claim/…`. The
+ * gallery does not care which route an href names, only that the caller decided
+ * it — the component never constructs a URL from a storage path.
+ *
+ * An id with no entry renders as an inert chip rather than an error: evidence
+ * that will not load must not take down the claim being reviewed.
+ */
+
 const KIND_LABELS: Record<AttachmentKind, string> = {
   fault: "What was wrong",
   completion: "After the repair",
@@ -12,12 +30,13 @@ const KIND_LABELS: Record<AttachmentKind, string> = {
 
 export function AttachmentGallery({
   items,
-  signed,
+  hrefs,
   className,
   emptyLabel = "No photos attached.",
 }: {
   items: StoredAttachment[];
-  signed: Map<string, string | null>;
+  /** Attachment id → URL on this origin. */
+  hrefs: Map<string, string>;
   className?: string;
   emptyLabel?: string;
 }) {
@@ -28,7 +47,7 @@ export function AttachmentGallery({
   return (
     <div className={cn("grid gap-2 sm:grid-cols-3", className)}>
       {items.map((item) => (
-        <AttachmentTile key={item.id} item={item} url={signed.get(item.storagePath) ?? null} />
+        <AttachmentTile key={item.id} item={item} url={hrefs.get(item.id) ?? null} />
       ))}
     </div>
   );
@@ -57,6 +76,11 @@ function AttachmentTile({
         rel="noreferrer noopener"
         className="group block overflow-hidden rounded-machined border border-hairline bg-bench"
       >
+        {/*
+          `unoptimized` because the route requires the admin session cookie and
+          the image optimiser fetches server-side without one — it would get a
+          404 and render a broken tile.
+        */}
         <Image
           src={url}
           alt={label}

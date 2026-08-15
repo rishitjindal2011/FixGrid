@@ -5,6 +5,21 @@ import type { StoredAttachment } from "@/lib/attachments/server";
 import type { AttachmentKind } from "@/lib/types/marketplace";
 import { cn } from "@/lib/utils";
 
+/**
+ * Attachment tiles.
+ *
+ * `hrefs` maps an attachment's **row id** to a URL on our own origin, served by
+ * `/dashboard/attachments/{booking,evidence}/[id]`. It used to map a *storage
+ * path* to a signed `supabase.co` URL; the prop was renamed rather than
+ * re-pointed so that every call site had to be revisited. Silently swapping the
+ * meaning of a map's keys is the kind of change that keeps compiling and stops
+ * working.
+ *
+ * An id with no entry renders as an inert chip. That happens when a caller has
+ * no route to offer for a given kind of file, and it is deliberately not an
+ * error: a missing photo must not take down the booking it belongs to.
+ */
+
 const KIND_LABELS: Record<AttachmentKind, string> = {
   fault: "What was wrong",
   completion: "After the repair",
@@ -13,12 +28,13 @@ const KIND_LABELS: Record<AttachmentKind, string> = {
 
 export function AttachmentGallery({
   items,
-  signed,
+  hrefs,
   className,
   emptyLabel = "No photos attached.",
 }: {
   items: StoredAttachment[];
-  signed: Map<string, string | null>;
+  /** Attachment row id → URL on this origin. */
+  hrefs: Map<string, string>;
   className?: string;
   emptyLabel?: string;
 }) {
@@ -29,7 +45,7 @@ export function AttachmentGallery({
   return (
     <div className={cn("grid gap-2 sm:grid-cols-3", className)}>
       {items.map((item) => (
-        <AttachmentTile key={item.id} item={item} url={signed.get(item.storagePath) ?? null} />
+        <AttachmentTile key={item.id} item={item} url={hrefs.get(item.id) ?? null} />
       ))}
     </div>
   );
@@ -58,6 +74,11 @@ function AttachmentTile({
         rel="noreferrer noopener"
         className="group block overflow-hidden rounded-machined border border-hairline bg-bench"
       >
+        {/*
+          `unoptimized` because the route requires the caller's session cookie
+          and the image optimiser fetches server-side without one — it would get
+          a 404 and the tile would render broken.
+        */}
         <Image
           src={url}
           alt={label}
