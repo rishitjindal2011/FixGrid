@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import type { Metadata } from "next";
-import { ArrowLeft, BadgeCheck, MapPin, Phone, Timer } from "lucide-react";
+import { ArrowLeft, BadgeCheck, MapPin, Phone, Store, Timer } from "lucide-react";
 
 import {
   BookingForm,
@@ -203,6 +203,18 @@ export default async function BookExpertPage({
   const responseHours = profile.response_hours ?? DEFAULTS.responseHours;
   const leadHours = profile.booking_lead_hours ?? DEFAULTS.leadHours;
 
+  /*
+   * You cannot be your own customer.
+   *
+   * The `customer requests booking` policy carries `not owns_shop(fixer_id)`, so
+   * an owner submitting this form is refused by the database with 42501 — which
+   * reaches them as "You do not have permission to do that." on a form that was
+   * fully interactive right up to the submit. `is_hidden` is already excluded in
+   * `getExpertForBooking` for a version of this reason; ownership is the other
+   * half of it, and the profile row is already in hand so it costs no read.
+   */
+  const ownsThisShop = profile.owner_id !== null && profile.owner_id === user.id;
+
   const services: BookingFormService[] = expert.services.map((row) => ({
     id: row.id,
     name: row.name,
@@ -277,7 +289,23 @@ export default async function BookExpertPage({
 
       <div className="grid gap-6 lg:grid-cols-5 lg:items-start">
         <div className="lg:col-span-3">
-          {acceptsBookings ? (
+          {ownsThisShop ? (
+            <EmptyState
+              icon={Store}
+              title="This is your shop"
+              description={`You run ${profile.shop_name}, so you cannot book a repair with it. Requests from customers arrive in your shop dashboard.`}
+              action={
+                <div className="flex flex-wrap items-center justify-center gap-2">
+                  <Button asChild variant="primary" size="sm">
+                    <Link href="/dashboard/expert/requests">View incoming requests</Link>
+                  </Button>
+                  <Button asChild variant="outline" size="sm">
+                    <Link href="/dashboard/discover">Find another expert</Link>
+                  </Button>
+                </div>
+              }
+            />
+          ) : acceptsBookings ? (
             <BookingForm
               fixerId={profile.id}
               shopName={profile.shop_name}

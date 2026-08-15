@@ -105,6 +105,34 @@ async function resolveActor(
 }
 
 /**
+ * Does this user run this shop?
+ *
+ * Mirrors the `owns_shop()` RLS helper, and exists for the same reason
+ * `assertOwnership` does in `@/lib/dashboard/expert-actions`: the policy behind
+ * the write refuses it with 42501, which `explain` can only render as the
+ * generic "you do not have permission". True, but it tells a shop owner nothing
+ * about why the form they were just shown cannot work.
+ *
+ * Distinct from `resolveActor` above, which answers "which side of an existing
+ * booking is this" and would return `customer` here on the first line — the
+ * customer id on a booking being created is always the caller's own.
+ */
+async function ownsShop(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  userId: string,
+  fixerId: string,
+): Promise<boolean> {
+  const { data } = await supabase
+    .from("fixer_profiles")
+    .select("id")
+    .eq("id", fixerId)
+    .eq("owner_id", userId)
+    .maybeSingle();
+
+  return data !== null;
+}
+
+/**
  * "49.99" → 4999. Rejects anything with more than two decimal places rather
  * than rounding it, because silently turning £49.999 into £50.00 is the kind of
  * bug that only surfaces in an invoice dispute.
@@ -367,6 +395,18 @@ export async function createBooking(
     return FAILED("Add the address the shop should come to.");
   }
 
+  // The `customer requests booking` policy carries `not owns_shop(fixer_id)` —
+  // a shop owner booking their own shop would corrupt its earnings figures and
+  // hand them a self-reviewable completed job. Checked here as well so the
+  // refusal explains itself: reaching the policy returns 42501, which renders as
+  // a bare "you do not have permission" on a form that looked ready to submit.
+  if (await ownsShop(supabase, user.id, input.fixerId)) {
+    return FAILED(
+      "This is your own shop, so you cannot book a repair with it. " +
+        "Customer requests arrive in your shop dashboard under Requests.",
+    );
+  }
+
   // PostgREST serialises a tstzrange as its literal text form. `[start,end)` —
   // half-open, so a job ending at 10:00 does not collide with one starting then.
   const slot = `[${start.toISOString()},${end.toISOString()})`;
@@ -391,6 +431,17 @@ export async function createBooking(
     .maybeSingle<{ reference: string }>();
 
   if (error) {
+    // Logged as well as returned. `explain` deliberately flattens several causes
+    // into one sentence for the customer, but 42501 alone can mean a policy
+    // refusal or a missing table grant, and neither is distinguishable from the
+    // UI. Without this the only record of a failed booking is the sentence the
+    // customer read and dismissed.
+    console.error("[bookings] create failed", {
+      code: error.code,
+      message: error.message,
+      details: error.details,
+      hint: error.hint,
+    });
     return FAILED(explain(error.code, "That request could not be sent."));
   }
 

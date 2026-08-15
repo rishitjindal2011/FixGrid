@@ -17,6 +17,8 @@ import {
   listDiscoverExperts,
   parseDiscoverParams,
 } from "@/lib/dashboard/discover";
+import { getCurrentUser } from "@/lib/auth/session";
+import { getOwnedShop } from "@/lib/dashboard/owned-shop";
 import { getCategories } from "@/lib/queries/search";
 import { createClient } from "@/lib/supabase/server";
 
@@ -128,10 +130,27 @@ export default async function DiscoverPage({
   const filters = parseDiscoverParams(await searchParams);
   const activeCount = countActiveDiscoverFilters(filters);
 
-  const [experts, categories] = await Promise.all([
+  const user = await getCurrentUser();
+
+  const [experts, categories, ownedShop] = await Promise.all([
     listDiscoverExperts(filters),
     getCategories(),
+    user ? getOwnedShop(user.id) : Promise.resolve(null),
   ]);
+
+  /*
+   * Your own shop is not a search result.
+   *
+   * `search_fixers` has no notion of who is asking, so an owner browsing the
+   * directory sees their own listing with a Book button on it — and the
+   * `customer requests booking` policy refuses that insert with 42501, which
+   * reaches them as a bare "You do not have permission to do that." The booking
+   * page turns this away too; removing the card is what stops them walking into
+   * it in the first place.
+   */
+  const visible = ownedShop
+    ? experts.filter((expert) => expert.id !== ownedShop.id)
+    : experts;
 
   const filtered = activeCount > 0;
 
@@ -166,8 +185,8 @@ export default async function DiscoverPage({
         <section aria-label="Shops">
           <div className="flex flex-wrap items-baseline justify-between gap-2 pb-3">
             <p className="text-sm text-steel" aria-live="polite">
-              <span className="font-mono tabular-nums text-enamel">{experts.length}</span>{" "}
-              {experts.length === 1 ? "shop" : "shops"}
+              <span className="font-mono tabular-nums text-enamel">{visible.length}</span>{" "}
+              {visible.length === 1 ? "shop" : "shops"}
               {filtered ? (
                 <>
                   {" "}
@@ -179,7 +198,9 @@ export default async function DiscoverPage({
             </p>
 
             {/* Named rather than implied: a full page of results at the cap
-                looks identical to a complete list, and narrowing is the fix. */}
+                looks identical to a complete list, and narrowing is the fix.
+                Measured against the unfiltered count on purpose — dropping the
+                owner's own card must not read as "there is no more to see". */}
             {experts.length >= DISCOVER_RESULT_LIMIT ? (
               <p className="text-xs text-steel-soft">
                 Showing the first {DISCOVER_RESULT_LIMIT}. Narrow the filters to see more.
@@ -187,9 +208,9 @@ export default async function DiscoverPage({
             ) : null}
           </div>
 
-          {experts.length > 0 ? (
+          {visible.length > 0 ? (
             <ul className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-              {experts.map((expert) => (
+              {visible.map((expert) => (
                 <li key={expert.id} className="flex">
                   <ExpertCard expert={expert} toggleSaved={toggleSavedExpert} />
                 </li>
