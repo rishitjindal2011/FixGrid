@@ -6,9 +6,10 @@ import { headers } from "next/headers";
 import { z } from "zod";
 
 import { createClient } from "@/lib/supabase/server";
+import { authCallbackUrl } from "@/lib/auth/origin";
 import { safeNextPath } from "@/lib/auth/paths";
 import type { AuthState } from "@/lib/auth/state";
-import { SITE_ORIGIN } from "@/lib/site";
+import { CANONICAL_ORIGIN } from "@/lib/site";
 
 /**
  * Visitor authentication (Supabase Auth, email + password).
@@ -161,10 +162,8 @@ export async function signIn(_prev: AuthState, formData: FormData): Promise<Auth
 export async function signInWithGoogle(formData: FormData): Promise<void> {
   const next = formData.get("next");
   const supabase = await createClient();
-  
-  const redirectTo = `${SITE_ORIGIN}/auth/callback?next=${encodeURIComponent(
-    safeNextPath(typeof next === "string" ? next : undefined)
-  )}`;
+
+  const redirectTo = await authCallbackUrl(typeof next === "string" ? next : undefined);
 
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: "google",
@@ -205,7 +204,7 @@ export async function signUp(_prev: AuthState, formData: FormData): Promise<Auth
     options: {
       // Read by the `handle_new_user` trigger to populate `public.users`.
       data: { display_name: parsed.data.displayName },
-      emailRedirectTo: `${SITE_ORIGIN}/auth/callback?next=${encodeURIComponent(
+      emailRedirectTo: `${CANONICAL_ORIGIN}/auth/callback?next=${encodeURIComponent(
         safeNextPath(parsed.data.next),
       )}`,
     },
@@ -272,7 +271,7 @@ export async function requestPasswordReset(
 
   const supabase = await createClient();
   const { error } = await supabase.auth.resetPasswordForEmail(parsed.data.email, {
-    redirectTo: `${SITE_ORIGIN}/auth/callback?next=${encodeURIComponent("/reset-password")}`,
+    redirectTo: `${CANONICAL_ORIGIN}/auth/callback?next=${encodeURIComponent("/reset-password")}`,
   });
 
   // Logged, not surfaced — the caller gets SENT either way.

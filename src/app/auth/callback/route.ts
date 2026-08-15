@@ -1,12 +1,12 @@
 import { type EmailOtpType } from "@supabase/supabase-js";
+import { revalidatePath } from "next/cache";
 import { NextResponse, type NextRequest } from "next/server";
 
-import { createClient } from "@/lib/supabase/server";
 import { safeNextPath } from "@/lib/auth/paths";
+import { createRouteHandlerClient } from "@/lib/supabase/server";
 
 /**
- * Landing point for every emailed auth link: signup confirmation, password
- * recovery, email change.
+ * Landing point for every emailed auth link and OAuth PKCE callback.
  *
  * Supabase sends one of two shapes depending on project configuration, and both
  * are live in the wild, so both are handled:
@@ -14,13 +14,10 @@ import { safeNextPath } from "@/lib/auth/paths";
  *   • `?code=…`                  — PKCE. Exchanged for a session.
  *   • `?token_hash=…&type=…`     — the newer email-link format, verified as OTP.
  *
- * A Route Handler is the right home for this because it can write cookies. The
- * session must be established *before* the redirect, or `/reset-password` would
- * load with no session and refuse the update.
- *
- * On failure we land on `/login` with a flag rather than rendering an error
- * page: the user's next move is to sign in or request a fresh link either way,
- * and an expired link is the overwhelmingly common cause.
+ * Session cookies must be written onto the redirect response itself. Using
+ * `cookies()` from `next/headers` and then returning a fresh `NextResponse`
+ * drops them, which is why OAuth could create an auth.users row while the UI
+ * still showed signed-out.
  */
 export async function GET(request: NextRequest) {
   const { searchParams, origin } = request.nextUrl;
@@ -48,7 +45,8 @@ export async function GET(request: NextRequest) {
     return redirectTo(origin, "/login?error=link_invalid");
   }
 
-  const supabase = await createClient();
+  const response = NextResponse.redirect(new URL(next, origin));
+  const supabase = createRouteHandlerClient(request, response);
 
   const { error } = code
     ? await supabase.auth.exchangeCodeForSession(code)
@@ -65,7 +63,8 @@ export async function GET(request: NextRequest) {
     return redirectTo(origin, "/login?error=link_invalid");
   }
 
-  return redirectTo(origin, next);
+  revalidatePath("/", "layout");
+  return response;
 }
 
 /**

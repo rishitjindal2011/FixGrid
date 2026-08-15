@@ -116,7 +116,17 @@ function createSupabaseClient(request: NextRequest, response: NextResponse) {
 export const PATHNAME_HEADER = "x-pathname";
 
 export async function proxy(request: NextRequest) {
-  const { pathname, search } = request.nextUrl;
+  const { pathname, search, searchParams } = request.nextUrl;
+
+  /* ── 0. OAuth PKCE recovery ───────────────────────────────────────────── */
+
+  // Supabase falls back to Site URL when redirectTo is not allowlisted, landing
+  // on `/?code=…` instead of `/auth/callback`. Forward the code so it is exchanged.
+  if (pathname !== "/auth/callback" && searchParams.has("code") && !searchParams.has("error")) {
+    const callback = new URL("/auth/callback", request.nextUrl.origin);
+    callback.search = search;
+    return NextResponse.redirect(callback);
+  }
 
   /* ── 1. Redirects ─────────────────────────────────────────────────────── */
 

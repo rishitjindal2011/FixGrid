@@ -56,9 +56,19 @@ export async function getCurrentUser(): Promise<CurrentUser | null> {
     // transiently — falling back keeps the header rendering.
     displayName:
       profile?.display_name?.trim() ||
+      (typeof user.user_metadata?.full_name === "string"
+        ? user.user_metadata.full_name.trim()
+        : "") ||
+      (typeof user.user_metadata?.display_name === "string"
+        ? user.user_metadata.display_name.trim()
+        : "") ||
       user.email?.split("@")[0] ||
       "Customer",
-    avatarUrl: profile?.avatar_url ?? null,
+    avatarUrl:
+      profile?.avatar_url ??
+      (typeof user.user_metadata?.avatar_url === "string"
+        ? user.user_metadata.avatar_url
+        : null),
   };
 }
 

@@ -1,5 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
+import type { NextRequest, NextResponse } from "next/server";
 import type { AppDatabase } from "@/lib/types/supabase";
 
 /**
@@ -29,6 +30,37 @@ export async function createClient() {
             // Called from a Server Component, where the response headers are
             // already sealed. Session refresh is handled in `src/proxy.ts`, so
             // this is safe to swallow.
+          }
+        },
+      },
+    },
+  );
+}
+
+/**
+ * Supabase client for Route Handlers that must write session cookies onto a
+ * specific `NextResponse` (OAuth callback, etc.).
+ *
+ * Using `cookies()` alone and then returning `NextResponse.redirect()` drops
+ * the session cookies — the browser never receives them and the user stays
+ * signed out even after a successful code exchange.
+ */
+export function createRouteHandlerClient(
+  request: NextRequest,
+  response: NextResponse,
+) {
+  return createServerClient<AppDatabase>(
+    requireEnv("NEXT_PUBLIC_SUPABASE_URL"),
+    requireEnv("NEXT_PUBLIC_SUPABASE_ANON_KEY"),
+    {
+      cookies: {
+        getAll() {
+          return request.cookies.getAll();
+        },
+        setAll(cookiesToSet) {
+          for (const { name, value, options } of cookiesToSet) {
+            request.cookies.set(name, value);
+            response.cookies.set(name, value, options);
           }
         },
       },

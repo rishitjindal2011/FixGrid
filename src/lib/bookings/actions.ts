@@ -864,19 +864,31 @@ export async function completeOnboarding(
   const { supabase, user } = await currentUser();
   if (!user) return FAILED("Your session has expired. Sign in again.");
 
-  const { error } = await supabase.from("users").upsert(
-    {
-      id: user.id,
-      full_name: parsed.data.fullName,
-      phone: parsed.data.phone,
-      preferred_contact: parsed.data.preferredContact,
-      onboarded_at: new Date().toISOString(),
-    },
-    { onConflict: "id" },
-  );
+  const payload = {
+    full_name: parsed.data.fullName,
+    phone: parsed.data.phone,
+    preferred_contact: parsed.data.preferredContact,
+    onboarded_at: new Date().toISOString(),
+  };
+
+  // `upsert` requires INSERT privilege, which migration 009 deliberately
+  // withholds from `authenticated` — only the `handle_new_user` trigger may
+  // insert. A normal Google/email signup already has a row; update it.
+  const { data, error } = await supabase
+    .from("users")
+    .update(payload)
+    .eq("id", user.id)
+    .select("id")
+    .maybeSingle();
 
   if (error) {
     return FAILED(explain(error.code, "Those details could not be saved."));
+  }
+
+  if (!data) {
+    return FAILED(
+      "Your profile row is missing. Sign out and back in, or contact support if this keeps happening.",
+    );
   }
 
   // The gate is read by the dashboard layout, so the whole subtree has to
