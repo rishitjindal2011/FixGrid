@@ -38,6 +38,7 @@ import type {
   RefundRow,
   ShopAvailabilityRow,
   ShopClaimRow,
+  ShopBillRow,
   ShopServiceRow,
   UserProfileRow,
 } from "@/lib/types/marketplace";
@@ -170,6 +171,7 @@ export interface AdminDatabase {
       payouts: TableOf<PayoutRow>;
       ledger_entries: TableOf<LedgerEntryRow>;
       wallets: TableOf<WalletRow>;
+      shop_bills: TableOf<ShopBillRow>;
       disputes: TableOf<DisputeRow>;
       dispute_messages: TableOf<DisputeMessageRow>;
       dispute_evidence: TableOf<DisputeEvidenceRow>;

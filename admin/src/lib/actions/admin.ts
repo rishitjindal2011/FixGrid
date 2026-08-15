@@ -839,6 +839,190 @@ export async function setUserRole(
   return OK(`${data.display_name ?? "That account"} is now ${parsed.data.role}.`);
 }
 
+/* ── Bills and rebates ────────────────────────────────────────────────────── */
+
+/** The platform's share back to the shop, as a percentage of the verified bill. */
+const REBATE_PERCENT = 5;
+
+const BillDecisionSchema = z.object({
+  billId: z.string().uuid("That bill could not be found."),
+  note: z.string().trim().max(2000, "Keep the note under 2000 characters.").optional(),
+});
+
+/**
+ * Approve a bill and pay the shop its 5%.
+ *
+ * The one action in this file that moves money *outward*, which is why two guards
+ * matter more here than anywhere else:
+ *
+ *   • **The rebate is capped at the booking's own final amount.** A shop files the
+ *     bill itself, so without a cap a ₹500 job can carry a ₹10,00,000 bill and
+ *     collect ₹50,000. The stamped `rebate_minor` records what was actually paid,
+ *     so a bill that got capped is visible afterwards rather than silently
+ *     adjusted.
+ *   • **The status transition is conditional.** `.eq("status", "pending")` means
+ *     two reviewers pressing approve at once produce one credit, not two — the
+ *     same guard `resolveDispute` uses. The credit only runs if this call is the
+ *     one that claimed the row.
+ *
+ * Editor-level, matching claim and dispute decisions. The amount is bounded by
+ * the job rather than by the reviewer's judgement, which is what makes that
+ * acceptable — unlike `topUpWallet`, this cannot mint an arbitrary figure.
+ */
+export async function approveBill(
+  _prev: AdminActionState,
+  formData: FormData,
+): Promise<AdminActionState> {
+  const allowed = await gate("editor");
+  if ("error" in allowed) return FAILED(allowed.error);
+
+  const parsed = BillDecisionSchema.safeParse({
+    billId: formData.get("billId"),
+    note: formData.get("note") ?? undefined,
+  });
+  if (!parsed.success) {
+    return FAILED(parsed.error.issues[0]?.message ?? "That bill could not be approved.");
+  }
+
+  const supabase = createAdminClient();
+
+  const { data: bill, error: readError } = await supabase
+    .from("shop_bills")
+    .select("id, fixer_id, amount_minor, status, booking_id, bookings!inner(final_amount, reference)")
+    .eq("id", parsed.data.billId)
+    .maybeSingle<{
+      id: string;
+      fixer_id: string;
+      amount_minor: number;
+      status: string;
+      booking_id: string;
+      bookings: { final_amount: number | null; reference: string };
+    }>();
+
+  if (readError) {
+    logWriteFailure("approveBill:read", readError);
+    return FAILED(explain(readError, "That bill could not be loaded."));
+  }
+  if (!bill) return FAILED("That bill could not be found.");
+  if (bill.status !== "pending") {
+    return FAILED("That bill has already been decided.");
+  }
+
+  // Cap. `final_amount` is written by `submitBill` from this same figure, so they
+  // normally agree — they diverge only if the bill was edited or the job repriced,
+  // and then the smaller number is the honest basis.
+  const jobAmount = bill.bookings.final_amount ?? bill.amount_minor;
+  const basis = Math.min(bill.amount_minor, jobAmount);
+  const rebate = Math.floor((basis * REBATE_PERCENT) / 100);
+
+  if (rebate <= 0) {
+    return FAILED("That bill is too small to earn a rebate.");
+  }
+
+  const { data: claimed, error: claimError } = await supabase
+    .from("shop_bills")
+    .update({
+      status: "approved",
+      rebate_minor: rebate,
+      reviewed_by: allowed.session.adminId,
+      reviewed_at: new Date().toISOString(),
+      review_note: parsed.data.note || null,
+    })
+    .eq("id", bill.id)
+    .eq("status", "pending")
+    .select("id")
+    .maybeSingle<{ id: string }>();
+
+  if (claimError) {
+    logWriteFailure("approveBill", claimError);
+    return FAILED(explain(claimError, "That bill could not be approved."));
+  }
+  if (!claimed) {
+    return FAILED("That bill has already been decided by someone else.");
+  }
+
+  const credit = await creditWallet({
+    kind: "rebate",
+    amountMinor: rebate,
+    to: { kind: "shop", ownerId: bill.fixer_id },
+    memo: `${REBATE_PERCENT}% rebate on bill for ${bill.bookings.reference}`,
+  });
+
+  if (!credit.ok) {
+    /* Walk the approval back. The shop is not left with an approved bill and no
+       money — and because the row returns to `pending`, a reviewer can simply try
+       again once whatever failed is fixed. */
+    await supabase
+      .from("shop_bills")
+      .update({ status: "pending", rebate_minor: null, reviewed_at: null })
+      .eq("id", bill.id);
+
+    console.error("[admin] rebate credit failed — approval reverted", {
+      billId: bill.id,
+      rebate,
+    });
+
+    return FAILED("The rebate could not be paid, so the bill is still pending.");
+  }
+
+  revalidatePath("/bills");
+  revalidatePath(`/experts/${bill.fixer_id}`);
+
+  const capped = basis < bill.amount_minor;
+  return OK(
+    `${formatMoney(rebate)} paid to the shop.` +
+      (capped ? ` Capped at the job's own ${formatMoney(jobAmount)}.` : ""),
+  );
+}
+
+/** Reject a bill. Pays nothing, and the reason is required — the shop sees it. */
+export async function rejectBill(
+  _prev: AdminActionState,
+  formData: FormData,
+): Promise<AdminActionState> {
+  const allowed = await gate("editor");
+  if ("error" in allowed) return FAILED(allowed.error);
+
+  const parsed = BillDecisionSchema.extend({
+    note: z
+      .string()
+      .trim()
+      .min(10, "Say why this bill was rejected — the shop sees this.")
+      .max(2000, "Keep the note under 2000 characters."),
+  }).safeParse({
+    billId: formData.get("billId"),
+    note: formData.get("note"),
+  });
+  if (!parsed.success) {
+    return FAILED(parsed.error.issues[0]?.message ?? "That bill could not be rejected.");
+  }
+
+  const supabase = createAdminClient();
+
+  const { data, error } = await supabase
+    .from("shop_bills")
+    .update({
+      status: "rejected",
+      reviewed_by: allowed.session.adminId,
+      reviewed_at: new Date().toISOString(),
+      review_note: parsed.data.note,
+    })
+    .eq("id", parsed.data.billId)
+    .eq("status", "pending")
+    .select("id")
+    .maybeSingle<{ id: string }>();
+
+  if (error) {
+    logWriteFailure("rejectBill", error);
+    return FAILED(explain(error, "That bill could not be rejected."));
+  }
+  if (!data) return FAILED("That bill has already been decided.");
+
+  revalidatePath("/bills");
+
+  return OK("Bill rejected.");
+}
+
 /* ── Wallets ──────────────────────────────────────────────────────────────── */
 
 const TopUpSchema = z.object({

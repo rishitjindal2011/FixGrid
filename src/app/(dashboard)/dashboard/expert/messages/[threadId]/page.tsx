@@ -188,15 +188,18 @@ function grossPence(booking: {
 }
 
 /**
- * What a payout on this job would actually carry: gross less the platform's
- * cut. Floored at zero — a fee larger than the price is a reconciliation
- * problem for the ledger, not a negative number to put in a confirmation
- * dialog.
+ * What a payout on this job would actually carry.
+ *
+ * The full bill. The platform fee is charged to the customer on top of the repair,
+ * not withheld from the shop, so subtracting it here was double-counting it — see
+ * the note on `netPence` in `src/lib/dashboard/expert.ts`. Kept as a function so
+ * the two definitions stay findable together rather than one being a bare
+ * expression that nobody notices when the model changes again.
  */
 function netPence(booking: {
   quoted_amount: number | null;
   final_amount: number | null;
   platform_fee: number;
 }): number {
-  return Math.max(0, grossPence(booking) - booking.platform_fee);
+  return Math.max(0, grossPence(booking));
 }

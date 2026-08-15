@@ -435,6 +435,25 @@ export type WalletRow = {
   updated_at: string;
 };
 
+/** One bill per completed booking, and the 5% rebate decided against it. */
+export type ShopBillRow = {
+  id: string;
+  booking_id: string;
+  fixer_id: string;
+  /** Paise. What the customer was billed; also the job’s final_amount. */
+  amount_minor: number;
+  currency: string;
+  storage_path: string | null;
+  status: "pending" | "approved" | "rejected";
+  /** What was credited. Null until approved; below amount_minor if capped. */
+  rebate_minor: number | null;
+  reviewed_by: string | null;
+  reviewed_at: string | null;
+  review_note: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
 export type LedgerEntryRow = {
   id: string;
   /** The wallet this entry moves. Null for a row that touches no balance. */

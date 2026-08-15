@@ -199,7 +199,8 @@ export function QuoteForm({
           />
           <p id={amountHintId} className="text-xs leading-relaxed text-steel">
             Rupees and paise, like 49.99. Two decimal places at most — a longer figure is
-            refused rather than rounded. Our fee comes out of this, not on top of it.
+            refused rather than rounded. This is what you keep: our fee is charged to the
+            customer on top, not taken out of your price.
           </p>
         </div>
 

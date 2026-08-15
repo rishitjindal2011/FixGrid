@@ -328,9 +328,23 @@ function grossPence(row: AmountFields): number {
   return row.final_amount ?? row.quoted_amount ?? 0;
 }
 
-/** What the shop actually receives: gross less the platform's cut. */
+/**
+ * What the shop actually receives.
+ *
+ * The same as gross, and that is the point. The platform fee is charged to the
+ * *customer* on top of the repair — `createBooking` debits their wallet for it —
+ * so subtracting it here as well was taking it twice: once in cash from the
+ * customer and again by shrinking what the shop was owed. It was invisible while
+ * `platform_fee` was always 0, and became a silent deduction the moment
+ * per-category fees started being written.
+ *
+ * Kept as a named function rather than inlining `grossPence` because the shop's
+ * income does grow beyond the bill — the 5% bill rebate is credited straight to
+ * their wallet — and this is where any future adjustment to *what a job pays*
+ * belongs.
+ */
 function netPence(row: AmountFields): number {
-  return grossPence(row) - row.platform_fee;
+  return grossPence(row);
 }
 
 /* ── Date bucketing ───────────────────────────────────────────────────────── */
@@ -718,7 +732,9 @@ export async function listTransactions(
     grossPence: row.amount,
     feePence: row.platform_fee,
     taxPence: row.tax_amount,
-    netPence: row.amount - row.platform_fee,
+    // Not `amount - platform_fee`. The fee on a payment row is what the customer
+    // was charged on top; it is not withheld from the shop. See `netPence` above.
+    netPence: row.amount,
     currency: row.currency,
     capturedAt: row.captured_at,
     createdAt: row.created_at,

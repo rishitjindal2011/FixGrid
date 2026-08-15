@@ -46,6 +46,7 @@ import type {
   ShopClaimRow,
   ShopInventoryRow,
   ShopNoticeRow,
+  ShopBillRow,
   ShopServiceRow,
   ShopTimeOffRow,
   UserAddressRow,
@@ -249,6 +250,7 @@ export interface AppDatabase {
       ledger_entries: TableOf<LedgerEntryRow>;
       wallets: TableOf<WalletRow>;
       wallet_topups: TableOf<WalletTopUpRow>;
+      shop_bills: TableOf<ShopBillRow>;
       disputes: TableOf<DisputeRow>;
       dispute_messages: TableOf<DisputeMessageRow>;
       dispute_evidence: TableOf<DisputeEvidenceRow>;

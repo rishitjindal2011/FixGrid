@@ -508,6 +508,34 @@ export interface WalletTopUpRow {
   completed_at: string | null;
 }
 
+/**
+ * One bill per completed booking, and the 5% rebate decided against it.
+ *
+ * The shop files it; only the admin decides it. There is no update policy on this
+ * table, so `status`, `rebate_minor` and the `reviewed_*` columns are
+ * service-role only — the same posture `disputes` takes to keep a resolution out
+ * of the claimant’s hands.
+ */
+export interface ShopBillRow {
+  id: string;
+  booking_id: string;
+  fixer_id: string;
+  /** Paise. What the customer was billed for the work; also the job’s final_amount. */
+  amount_minor: number;
+  currency: string;
+  /** Optional photo of the paper bill, in the private `shop-bills` bucket. */
+  storage_path: string | null;
+  status: "pending" | "approved" | "rejected";
+  /** What was actually credited. Null until approved; below amount_minor if capped. */
+  rebate_minor: number | null;
+  /** `seo_admins.id`. No FK — that table belongs to the admin app. */
+  reviewed_by: string | null;
+  reviewed_at: string | null;
+  review_note: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface LedgerEntryRow {
   /**
    * The wallet this entry moves. Null for a row that touches no balance —

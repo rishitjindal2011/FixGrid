@@ -1956,3 +1956,113 @@ export async function sendQuote(
 
   return OK(`Quote for ${formatMoney(pence)} sent.`);
 }
+
+/* ── Bills and the 5% rebate ──────────────────────────────────────────────── */
+
+const BillSchema = z.object({
+  bookingId: z.string().uuid("That booking could not be found."),
+  amount: z.string().trim().min(1, "Enter what the job came to."),
+  storagePath: z.string().trim().max(400).optional(),
+});
+
+/**
+ * File the bill for a finished job.
+ *
+ * Two things at once, and they belong together:
+ *
+ *   1. **It sets `bookings.final_amount`.** Nothing in the app wrote that column
+ *      before this action existed — every earnings figure fell back to the quote,
+ *      so a job that came in over or under its estimate was reported at the
+ *      estimate. The bill is what the work actually came to, so the bill *is* the
+ *      final amount rather than a second number sitting beside it.
+ *   2. **It queues the 5% rebate for review.** The row lands `pending`. Nothing is
+ *      credited here — approval happens in the admin console, because a shop that
+ *      could approve its own bill could write itself a cheque.
+ *
+ * Filed after completion rather than as part of it. That is what the shop
+ * actually does: finish the work, then total it up.
+ */
+export async function submitBill(
+  _prev: BookingActionState,
+  formData: FormData,
+): Promise<BookingActionState> {
+  const parsed = BillSchema.safeParse({
+    bookingId: formData.get("bookingId"),
+    amount: formData.get("amount"),
+    storagePath: formData.get("storagePath") ?? undefined,
+  });
+
+  if (!parsed.success) {
+    return FAILED(parsed.error.issues[0]?.message ?? "Check the amount and try again.");
+  }
+
+  const minor = rupeesToPaise(parsed.data.amount);
+  if (minor === null) {
+    return FAILED("Enter the amount in rupees, like 1200 or 1200.50.");
+  }
+  if (minor <= 0) return FAILED("Enter an amount above zero.");
+
+  const { supabase, user } = await currentUser();
+  if (!user) return FAILED("Sign in to file a bill.");
+
+  const { data: booking, error: readError } = await supabase
+    .from("bookings")
+    .select("id, reference, status, fixer_id")
+    .eq("id", parsed.data.bookingId)
+    .maybeSingle<{ id: string; reference: string; status: BookingStatus; fixer_id: string }>();
+
+  if (readError) return FAILED(explain(readError.code, "That booking could not be loaded."));
+  if (!booking) return FAILED("That booking could not be found.");
+
+  const denied = await assertOwnership(supabase, user.id, booking.fixer_id);
+  if (denied) return FAILED(denied);
+
+  // The RLS insert policy enforces this too. Checked here so the refusal is a
+  // sentence rather than an opaque 42501 — the shop needs to know the job has to
+  // be finished first, not that permission was denied.
+  if (!["completed", "closed", "disputed"].includes(booking.status)) {
+    return FAILED("Finish the job first — a bill can only be filed on a completed repair.");
+  }
+
+  /*
+   * `final_amount` before the bill row, deliberately.
+   *
+   * The rebate is capped against `final_amount` at approval time, so writing the
+   * bill row first would leave a window where a reviewer could approve against a
+   * stale or absent amount and pay out the wrong figure. This order means the cap
+   * always has something to cap against.
+   */
+  const { error: amountError } = await supabase
+    .from("bookings")
+    .update({ final_amount: minor })
+    .eq("id", booking.id);
+
+  if (amountError) {
+    return FAILED(explain(amountError.code, "That amount could not be saved."));
+  }
+
+  const { error: billError } = await supabase.from("shop_bills").insert({
+    booking_id: booking.id,
+    fixer_id: booking.fixer_id,
+    amount_minor: minor,
+    storage_path: parsed.data.storagePath || null,
+  });
+
+  if (billError) {
+    // One bill per booking, by unique index. A second attempt is almost always a
+    // double-submit rather than fraud, so it is worded as already-done.
+    if (billError.code === "23505") {
+      return FAILED("A bill has already been filed for this job.");
+    }
+    return FAILED(explain(billError.code, "That bill could not be filed."));
+  }
+
+  revalidatePath("/dashboard/expert/earnings");
+  revalidatePath("/dashboard/expert/requests");
+  revalidatePath(`/dashboard/expert/requests/${booking.reference}`);
+
+  return OK(
+    `Bill for ${formatMoney(minor)} filed. Your ${formatMoney(Math.floor(minor * 0.05))} ` +
+      "rebate is credited once we have checked it.",
+  );
+}
