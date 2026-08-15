@@ -7,9 +7,11 @@ import { EmptyState } from "@/components/dashboard/empty-state";
 import { InvoiceTable, RefundTable } from "@/components/dashboard/invoice-table";
 import { PageHeader, SectionHeader } from "@/components/dashboard/page-header";
 import { StatTile } from "@/components/dashboard/stat-tile";
+import { WalletPanel } from "@/components/dashboard/wallet-panel";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { getCurrentUser } from "@/lib/auth/session";
+import { getWallet, listLedger } from "@/lib/wallet/server";
 import {
   getBillingSummary,
   listInvoices,
@@ -44,16 +46,18 @@ export default async function BillingPage() {
 
   const now = new Date();
 
-  const [summary, invoices, refunds, warranties] = await Promise.all([
+  const [summary, invoices, refunds, warranties, wallet, ledger] = await Promise.all([
     getBillingSummary(user.id, now),
     listInvoices(user.id),
     listRefunds(user.id),
     listWarranties(user.id, now),
+    getWallet("user", user.id),
+    listLedger("user", user.id, 25),
   ]);
 
   // The summary carries no currency of its own — it is a fold over invoices
   // that may in principle mix currencies. Taking the newest invoice's currency
-  // makes the tiles agree with the table directly beneath them, and GBP is the
+  // makes the tiles agree with the table directly beneath them, and INR is the
   // schema default when there are no invoices at all.
   const currency = invoices[0]?.currency ?? "INR";
 
@@ -99,6 +103,14 @@ export default async function BillingPage() {
           icon={Receipt}
         />
       </div>
+
+      <WalletPanel
+        wallet={wallet}
+        lines={ledger}
+        title="Your balance"
+        description="Bookings, platform fees and refunds settle against this. Top-ups are handled by our team while card payments are being set up."
+        emptyLabel="Nothing has moved through your balance yet. It fills up as you book repairs."
+      />
 
       <EscrowTracker held={held} now={now} />
 

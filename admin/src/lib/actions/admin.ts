@@ -9,6 +9,8 @@ import {
   type AdminSession,
 } from "@/lib/auth/session";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { creditWallet } from "@/lib/wallet";
+import { formatMoney } from "@/lib/format";
 import type { AdminActionState } from "@/lib/actions/state";
 
 /**
@@ -835,4 +837,73 @@ export async function setUserRole(
   revalidatePath(`/customers/${parsed.data.userId}`);
 
   return OK(`${data.display_name ?? "That account"} is now ${parsed.data.role}.`);
+}
+
+/* ── Wallets ──────────────────────────────────────────────────────────────── */
+
+const TopUpSchema = z.object({
+  ownerKind: z.enum(["user", "shop"]),
+  ownerId: z.string().uuid("That account could not be found."),
+  amount: z.string().trim().min(1, "Enter an amount."),
+  memo: z.string().trim().max(200, "Keep the note under 200 characters.").optional(),
+});
+
+/**
+ * Put money into a customer's or a shop's balance.
+ *
+ * This action is the payment gateway. There is no card rail yet, so every rupee
+ * in the system entered through here, and the platform wallet's balance is the
+ * running total of what we have paid in minus what we have taken back in fees.
+ *
+ * **Owner-only, and that is not arbitrary.** An editor can approve claims and
+ * resolve disputes; neither of those conjures money. This does. It sits with
+ * `markPayoutPaid` and `setUserRole` on the owner side of the line for the same
+ * reason: the blast radius is the platform's own funds.
+ *
+ * Deliberately has no matching "debit" action. Taking money out of someone's
+ * balance from a console, with no booking behind it, is not an operation this
+ * product should make easy — a correction goes through `adjustment` with a memo
+ * naming why, which is a conversation rather than a button.
+ */
+export async function topUpWallet(
+  _prev: AdminActionState,
+  formData: FormData,
+): Promise<AdminActionState> {
+  const allowed = await gate("owner");
+  if ("error" in allowed) return FAILED(allowed.error);
+
+  const parsed = TopUpSchema.safeParse({
+    ownerKind: formData.get("ownerKind"),
+    ownerId: formData.get("ownerId"),
+    amount: formData.get("amount"),
+    memo: formData.get("memo") ?? undefined,
+  });
+  if (!parsed.success) {
+    return FAILED(parsed.error.issues[0]?.message ?? "That top-up could not be posted.");
+  }
+
+  const minor = rupeesToPaise(parsed.data.amount);
+  if (minor === null) {
+    return FAILED("Enter the amount in rupees, like 500 or 500.50.");
+  }
+  if (minor <= 0) return FAILED("Enter an amount above zero.");
+  // A cap, because this is a free-text field that mints money and a slipped
+  // decimal is the likeliest mistake anyone will make on this screen.
+  if (minor > 100_000_00) return FAILED("Top-ups are capped at ₹100,000 per entry.");
+
+  const result = await creditWallet({
+    kind: "topup",
+    amountMinor: minor,
+    to: { kind: parsed.data.ownerKind, ownerId: parsed.data.ownerId },
+    memo: parsed.data.memo || `Top-up by ${allowed.session.email}`,
+  });
+
+  if (!result.ok) return FAILED(result.error);
+
+  revalidatePath("/customers");
+  revalidatePath(`/customers/${parsed.data.ownerId}`);
+  revalidatePath("/experts");
+  revalidatePath(`/experts/${parsed.data.ownerId}`);
+
+  return OK(`${formatMoney(minor)} added.`);
 }
