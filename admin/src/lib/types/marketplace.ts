@@ -416,15 +416,36 @@ export type PayoutRow = {
   created_at: string;
 };
 
+/**
+ * A party's balance. One row per wallet, keyed `(owner_kind, owner_id)`.
+ *
+ * `balance_minor` is a cache of `sum(ledger_entries.amount)` for this wallet,
+ * kept in step by the `ledger_entries_apply_balance` trigger. Nothing writes it
+ * directly — see `admin/src/lib/wallet.ts`.
+ */
+export type WalletRow = {
+  id: string;
+  /** `platform` is the house, and always carries the nil uuid as its owner. */
+  owner_kind: "user" | "shop" | "platform";
+  owner_id: string;
+  /** Paise. Only the platform wallet may be negative. */
+  balance_minor: number;
+  currency: string;
+  created_at: string;
+  updated_at: string;
+};
+
 export type LedgerEntryRow = {
   id: string;
+  /** The wallet this entry moves. Null for a row that touches no balance. */
+  wallet_id: string | null;
   booking_id: string | null;
   payment_id: string | null;
   payout_id: string | null;
   fixer_id: string | null;
   customer_id: string | null;
   kind: LedgerKind;
-  /** Pence, signed. */
+  /** Paise, signed. */
   amount: number;
   currency: string;
   memo: string | null;

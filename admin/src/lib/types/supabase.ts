@@ -30,6 +30,7 @@ import type {
   DisputeMessageRow,
   DisputeRow,
   LedgerEntryRow,
+  WalletRow,
   MessageRow,
   MessageThreadRow,
   PaymentRow,
@@ -168,12 +169,27 @@ export interface AdminDatabase {
       refunds: TableOf<RefundRow>;
       payouts: TableOf<PayoutRow>;
       ledger_entries: TableOf<LedgerEntryRow>;
+      wallets: TableOf<WalletRow>;
       disputes: TableOf<DisputeRow>;
       dispute_messages: TableOf<DisputeMessageRow>;
       dispute_evidence: TableOf<DisputeEvidenceRow>;
     };
     Views: Database["public"]["Views"];
-    Functions: Database["public"]["Functions"];
+    /**
+     * Generated functions, plus the ones added after that file was last
+     * regenerated.
+     *
+     * `post_ledger` is the only way money moves; see `admin/src/lib/wallet.ts`.
+     * `Args` is loose on purpose — the function takes a jsonb array of legs, and
+     * restating that shape here would duplicate a contract the client cannot
+     * check anyway. The zero-sum guarantee is asserted by the function itself.
+     */
+    Functions: Database["public"]["Functions"] & {
+      post_ledger: {
+        Args: { p_entries: unknown };
+        Returns: undefined;
+      };
+    };
     Enums: Database["public"]["Enums"];
     CompositeTypes: Database["public"]["CompositeTypes"];
   };
