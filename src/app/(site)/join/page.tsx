@@ -4,6 +4,8 @@ import type { Metadata } from "next";
 import { CalendarCheck, ShieldCheck, Store } from "lucide-react";
 
 import { JoinForm } from "@/components/join/join-form";
+import { ENROLLMENT_FEE_MINOR } from "@/lib/join/state";
+import { getWallet } from "@/lib/wallet/server";
 import { getCurrentUser } from "@/lib/auth/session";
 import { getOwnedShop } from "@/lib/dashboard/owned-shop";
 import { absoluteUrl } from "@/lib/site";
@@ -34,6 +36,18 @@ export default async function JoinPage() {
     const shop = await getOwnedShop(user.id);
     if (shop) redirect("/dashboard/expert");
   }
+
+  /*
+   * The balance, for the payment sheet.
+   *
+   * Zero for a signed-out visitor: the page still renders the form and its price,
+   * because "what does this cost" is a question worth answering before asking
+   * anyone to sign in. The sheet is only reachable after signing in, and the
+   * server action re-reads the real balance regardless.
+   */
+  const wallet = user
+    ? await getWallet("user", user.id)
+    : { balanceMinor: 0, currency: "INR" };
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-12 sm:py-16">
@@ -104,7 +118,11 @@ export default async function JoinPage() {
               {/* The uid is passed down rather than read in the browser: the
                   storage policy requires each upload to sit in a folder named
                   after the caller, and the server already knows who that is. */}
-              <JoinForm userId={user.id} />
+              <JoinForm
+                userId={user.id}
+                balanceMinor={wallet.balanceMinor}
+                enrollmentFeeMinor={ENROLLMENT_FEE_MINOR}
+              />
             </>
           ) : (
             <div className="flex flex-col gap-4">

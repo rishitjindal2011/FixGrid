@@ -1,5 +1,6 @@
 "use client";
 
+import * as React from "react";
 import { useActionState, useState } from "react";
 import { Building2, Loader2, MapPin, Phone, Upload, X } from "lucide-react";
 
@@ -8,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { submitShop } from "@/lib/join/actions";
 import { JOIN_INITIAL_STATE } from "@/lib/join/state";
+import { PaymentSheet } from "@/components/dashboard/payment-sheet";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 
@@ -72,7 +74,25 @@ function Field({
   );
 }
 
-export function JoinForm({ userId }: { userId: string }) {
+export function JoinForm({
+  userId,
+  balanceMinor,
+  enrollmentFeeMinor,
+}: {
+  userId: string;
+  balanceMinor: number;
+  enrollmentFeeMinor: number;
+}) {
+  /*
+   * The listing fee is chosen, not deducted.
+   *
+   * The form used to submit straight into an action that debited the balance, so
+   * the first a submitter knew about the charge was either a smaller balance or a
+   * refusal. Now the button opens the payment sheet, and the real submit only
+   * happens once the money is there — by balance or by card.
+   */
+  const formRef = React.useRef<HTMLFormElement>(null);
+  const [paying, setPaying] = React.useState(false);
   const [state, action, pending] = useActionState(submitShop, JOIN_INITIAL_STATE);
   const [files, setFiles] = useState<Attachment[]>([]);
   const [uploading, setUploading] = useState(false);
@@ -145,7 +165,7 @@ export function JoinForm({ userId }: { userId: string }) {
   const busy = pending || uploading;
 
   return (
-    <form action={action} className="flex flex-col gap-5">
+    <form ref={formRef} action={action} className="flex flex-col gap-5">
       {/* Paths, not files — this is what keeps the action body a few hundred
           bytes instead of twenty megabytes. */}
       {files.map((file) => (
@@ -270,7 +290,7 @@ export function JoinForm({ userId }: { userId: string }) {
         </p>
       ) : null}
 
-      <Button type="submit" size="lg" disabled={busy}>
+      <Button type="button" size="lg" disabled={busy} onClick={() => setPaying(true)}>
         {pending ? "Submitting…" : uploading ? "Waiting for uploads…" : "Submit for review"}
       </Button>
 
@@ -278,6 +298,24 @@ export function JoinForm({ userId }: { userId: string }) {
         Your dashboard opens straight away so you can add services, hours and
         photos. The shop appears in search once we have checked your details.
       </p>
+
+      {paying ? (
+        <PaymentSheet
+          open
+          onClose={() => setPaying(false)}
+          amountMinor={enrollmentFeeMinor}
+          balanceMinor={balanceMinor}
+          title="Listing fee"
+          description="A one-off fee to list your shop, refunded in full if we cannot verify it. Choose how you want to pay."
+          purchaseFields={{}}
+          /* The purchase here is the whole submission, which this form already
+             owns — so the sheet only assures the funds and hands back. */
+          onFunded={() => {
+            setPaying(false);
+            formRef.current?.requestSubmit();
+          }}
+        />
+      ) : null}
     </form>
   );
 }

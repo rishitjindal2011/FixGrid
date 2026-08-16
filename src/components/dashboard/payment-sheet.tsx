@@ -101,6 +101,7 @@ export function PaymentSheet({
   /** Extra fields the purchase action needs, forwarded verbatim. */
   purchaseFields,
   purchaseAction,
+  onFunded,
   confirmLabel,
 }: {
   open: boolean;
@@ -110,7 +111,17 @@ export function PaymentSheet({
   title: string;
   description: string;
   purchaseFields: Record<string, string>;
-  purchaseAction: (formData: FormData) => Promise<PurchaseResult>;
+  /**
+   * The purchase, once funds are assured.
+   *
+   * Optional, because not every caller's purchase fits a flat field map. The join
+   * form's "purchase" is a whole multipart submission it already owns, so it hands
+   * `onFunded` instead and submits itself — the sheet's job there is only to make
+   * sure the money is there first.
+   */
+  purchaseAction?: (formData: FormData) => Promise<PurchaseResult>;
+  /** Called instead of `purchaseAction` when the caller drives its own submit. */
+  onFunded?: () => void;
   confirmLabel?: string;
 }) {
   const [step, setStep] = React.useState<Step>("choose");
@@ -127,6 +138,19 @@ export function PaymentSheet({
 
   /** Run the caller's purchase. Shared by both routes into it. */
   const runPurchase = React.useCallback(async () => {
+    /*
+     * A caller driving its own submit takes over here.
+     *
+     * The sheet closes rather than showing a tick, because the outcome it would be
+     * reporting has not happened yet — the caller's form is about to run and owns
+     * its own success and failure messaging. Claiming success at this point would
+     * be a tick over a submission that might still be refused.
+     */
+    if (!purchaseAction) {
+      onFunded?.();
+      return;
+    }
+
     setStep("working");
 
     const formData = new FormData();
@@ -143,7 +167,7 @@ export function PaymentSheet({
       setNote(result.error ?? "That payment could not be completed.");
       setStep("failed");
     }
-  }, [purchaseAction, purchaseFields]);
+  }, [purchaseAction, purchaseFields, onFunded]);
 
   /*
    * Confirm the gateway leg, then buy.
