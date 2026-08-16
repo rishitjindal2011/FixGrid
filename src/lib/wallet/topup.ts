@@ -7,9 +7,16 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { formatMoney } from "@/lib/format";
 import { creditFromPlatform } from "@/lib/wallet/server";
+import { getRequestOrigin } from "@/lib/auth/origin";
+import {
+  buildPayUrl,
+  isUnreachableFromPhone,
+  payQrSvg,
+} from "@/lib/wallet/upi";
 import {
   TOPUP_MAX_MINOR,
   TOPUP_MIN_MINOR,
+  type TopUpIntent,
   type TopUpMethod,
   type TopUpState,
 } from "@/lib/wallet/topup-state";
@@ -113,8 +120,13 @@ export async function createTopUpIntent(
       method: parsed.data.method,
       idempotency_key: parsed.data.idempotencyKey,
     })
-    .select("reference, amount_minor, method")
-    .maybeSingle<{ reference: string; amount_minor: number; method: TopUpMethod }>();
+    .select("reference, amount_minor, method, pay_token")
+    .maybeSingle<{
+      reference: string;
+      amount_minor: number;
+      method: TopUpMethod;
+      pay_token: string;
+    }>();
 
   if (error) {
     // A repeated key means the customer already started this exact attempt —
@@ -123,7 +135,7 @@ export async function createTopUpIntent(
     if (error.code === "23505") {
       const { data: existing } = await admin
         .from("wallet_topups")
-        .select("reference, amount_minor, method, status")
+        .select("reference, amount_minor, method, status, pay_token")
         .eq("user_id", user.id)
         .eq("idempotency_key", parsed.data.idempotencyKey)
         .maybeSingle<{
@@ -131,16 +143,17 @@ export async function createTopUpIntent(
           amount_minor: number;
           method: TopUpMethod;
           status: string;
+          pay_token: string;
         }>();
 
       if (existing && existing.status === "pending") {
         return {
           error: null,
-          intent: {
+          intent: await withScanTarget({
             reference: existing.reference,
             amountMinor: existing.amount_minor,
             method: existing.method,
-          },
+          }, existing.pay_token),
           outcome: null,
         };
       }
@@ -163,12 +176,41 @@ export async function createTopUpIntent(
 
   return {
     error: null,
-    intent: {
+    intent: await withScanTarget({
       reference: data.reference,
       amountMinor: data.amount_minor,
       method: data.method,
-    },
+    }, data.pay_token),
     outcome: null,
+  };
+}
+
+/**
+ * Attach the scannable QR, for UPI only.
+ *
+ * Split out so both return paths above — the fresh intent and the recovered
+ * duplicate — produce the same shape. A QR on one and not the other would mean a
+ * double-click silently lost the ability to scan.
+ *
+ * The origin comes from the request, so the QR encodes whatever host the operator
+ * is actually browsing. When that is loopback the flag is set rather than the QR
+ * suppressed: the code still scans, it just cannot be reached from a phone, and
+ * the UI explains that instead of showing nothing.
+ */
+async function withScanTarget(
+  intent: TopUpIntent,
+  payToken: string,
+): Promise<TopUpIntent> {
+  if (intent.method !== "upi") return intent;
+
+  const origin = await getRequestOrigin();
+  const payUrl = buildPayUrl(origin, payToken);
+
+  return {
+    ...intent,
+    qrSvg: await payQrSvg(payUrl),
+    payUrl,
+    payUrlUnreachable: isUnreachableFromPhone(origin),
   };
 }
 
@@ -223,55 +265,47 @@ const ConfirmSchema = z.object({
   credential: z.string().trim().max(120).optional(),
 });
 
+/** The columns settling an attempt needs. Both entry points select exactly these. */
+interface PendingAttempt {
+  id: string;
+  user_id: string;
+  reference: string;
+  amount_minor: number;
+  method: TopUpMethod;
+  status: string;
+  ledger_posted: boolean;
+}
+
+const ATTEMPT_COLUMNS =
+  "id, user_id, reference, amount_minor, method, status, ledger_posted";
+
 /**
- * Complete an attempt.
+ * Settle one attempt: decide, claim, credit.
  *
- * Note the ordering, which is the only genuinely delicate thing here. The row is
- * **claimed first** — a conditional update from `pending` to `succeeded` — and
- * only then is the money posted. Reserving before performing gives at-most-once:
- * two concurrent confirms race for one row and exactly one wins.
+ * Shared by both entry points — the desktop form, which authorises by session,
+ * and the scanned QR, which authorises by capability token. They differ only in
+ * how they *find* the attempt; what happens to it afterwards must be identical,
+ * so it lives here once. Two implementations of a claim would be two chances to
+ * get at-most-once wrong.
  *
- * The alternative, crediting first and marking after, is worse: a failure between
- * the two leaves a paid customer with a `pending` row that a retry would credit a
- * second time. If the ledger posting fails after a successful claim, the row is
- * walked back to `failed` so the customer can try again, and nothing was credited.
+ * The ordering is the delicate part. The row is **claimed first** — a conditional
+ * update from `pending` to `succeeded` — and only then is money posted. Reserving
+ * before performing gives at-most-once: two concurrent confirms race for one row
+ * and exactly one wins. That is not hypothetical here, because the desktop form
+ * and the phone can both be looking at the same attempt.
  *
- * The amount is read from the row, never from the form. The client supplies only
- * a reference and a fake credential.
+ * Crediting first and marking after would be worse: a failure between the two
+ * leaves a paid customer with a `pending` row that a retry would credit again. If
+ * the ledger posting fails after a successful claim the row is walked back, so
+ * nothing was credited and a fresh attempt is safe.
+ *
+ * The amount always comes from the row, never from the request.
  */
-export async function confirmTopUp(
-  _prev: TopUpState,
-  formData: FormData,
+async function settleAttempt(
+  attempt: PendingAttempt,
+  credential: string,
 ): Promise<TopUpState> {
-  const parsed = ConfirmSchema.safeParse({
-    reference: formData.get("reference"),
-    credential: formData.get("credential") ?? undefined,
-  });
-
-  if (!parsed.success) return FAILED("That payment could not be completed.");
-
-  const user = await currentUser();
-  if (!user) return FAILED("Sign in to add funds.");
-
   const admin = createAdminClient();
-
-  const { data: attempt, error: readError } = await admin
-    .from("wallet_topups")
-    .select("id, reference, amount_minor, method, status, ledger_posted")
-    .eq("reference", parsed.data.reference)
-    .eq("user_id", user.id)
-    .maybeSingle<{
-      id: string;
-      reference: string;
-      amount_minor: number;
-      method: TopUpMethod;
-      status: string;
-      ledger_posted: boolean;
-    }>();
-
-  if (readError || !attempt) {
-    return FAILED("That payment could not be found. Start again.");
-  }
 
   if (attempt.status !== "pending") {
     return {
@@ -291,7 +325,7 @@ export async function confirmTopUp(
 
   /* The gateway decision comes before the claim: a decline should record a
      failure, not consume the pending row as if it had been paid. */
-  const verdict = simulateGateway(attempt.method, parsed.data.credential ?? "");
+  const verdict = simulateGateway(attempt.method, credential);
 
   if (!verdict.ok) {
     await admin
@@ -318,8 +352,6 @@ export async function confirmTopUp(
     };
   }
 
-  // Claim. `status` and `ledger_posted` both gate it, so this succeeds for
-  // exactly one caller no matter how many arrive at once.
   const { data: claimed, error: claimError } = await admin
     .from("wallet_topups")
     .update({
@@ -334,13 +366,17 @@ export async function confirmTopUp(
     .maybeSingle<{ id: string; amount_minor: number }>();
 
   if (claimError) {
-    console.error("[topup] claim failed", { code: claimError.code, message: claimError.message });
+    console.error("[topup] claim failed", {
+      code: claimError.code,
+      message: claimError.message,
+    });
     return FAILED("That payment could not be completed. Nothing has been charged.");
   }
 
   if (!claimed) {
-    // Somebody else claimed it between the read and the update. Their credit is
-    // the real one; this caller reports success without posting a second.
+    // Somebody else claimed it between the read and the update — the desktop and
+    // the phone both confirming is the likely case. Their credit is the real one;
+    // this caller reports success without posting a second.
     return {
       error: null,
       intent: null,
@@ -356,13 +392,13 @@ export async function confirmTopUp(
   const credit = await creditFromPlatform({
     kind: "topup",
     amountMinor: claimed.amount_minor,
-    to: { kind: "user", ownerId: user.id },
+    to: { kind: "user", ownerId: attempt.user_id },
     memo: `Top-up ${attempt.reference} (${attempt.method})`,
   });
 
   if (!credit.ok) {
-    /* Walk the claim back so the customer is not left holding a "succeeded" row
-       with no money behind it. Nothing was credited, so a fresh attempt is safe. */
+    /* Walk the claim back so nobody holds a "succeeded" row with no money behind
+       it. Nothing was credited, so a fresh attempt is safe. */
     await admin
       .from("wallet_topups")
       .update({
@@ -396,3 +432,84 @@ export async function confirmTopUp(
     },
   };
 }
+
+/**
+ * Complete an attempt from the dashboard, authorised by the session.
+ *
+ * Scoped to the caller's own rows by `user_id`, so a reference belonging to
+ * somebody else resolves to nothing.
+ */
+export async function confirmTopUp(
+  _prev: TopUpState,
+  formData: FormData,
+): Promise<TopUpState> {
+  const parsed = ConfirmSchema.safeParse({
+    reference: formData.get("reference"),
+    credential: formData.get("credential") ?? undefined,
+  });
+
+  if (!parsed.success) return FAILED("That payment could not be completed.");
+
+  const user = await currentUser();
+  if (!user) return FAILED("Sign in to add funds.");
+
+  const { data: attempt, error } = await createAdminClient()
+    .from("wallet_topups")
+    .select(ATTEMPT_COLUMNS)
+    .eq("reference", parsed.data.reference)
+    .eq("user_id", user.id)
+    .maybeSingle<PendingAttempt>();
+
+  if (error || !attempt) {
+    return FAILED("That payment could not be found. Start again.");
+  }
+
+  return settleAttempt(attempt, parsed.data.credential ?? "");
+}
+
+const TokenConfirmSchema = z.object({
+  // 32 bytes base64url. Length-bounded so a padded or truncated value is refused
+  // before it ever reaches a query.
+  token: z.string().trim().min(32).max(64),
+  credential: z.string().trim().max(120).optional(),
+});
+
+/**
+ * Complete an attempt from a scanned QR, authorised by the capability token alone.
+ *
+ * **There is no session here and there cannot be.** The phone that scanned the
+ * code has never signed in to this app, so the token in the URL is the entire
+ * authorisation — which is why it is 32 random bytes rather than the short
+ * human-readable reference, and why it is never displayed anywhere.
+ *
+ * The token identifies the attempt and the attempt names its own user, so the
+ * credit lands in the right wallet without the caller claiming an identity. A
+ * token whose attempt is no longer `pending` settles to a report rather than a
+ * second credit, so a re-scanned QR is harmless.
+ */
+export async function confirmTopUpByToken(
+  _prev: TopUpState,
+  formData: FormData,
+): Promise<TopUpState> {
+  const parsed = TokenConfirmSchema.safeParse({
+    token: formData.get("token"),
+    credential: formData.get("credential") ?? undefined,
+  });
+
+  if (!parsed.success) return FAILED("That payment link is not valid.");
+
+  const { data: attempt, error } = await createAdminClient()
+    .from("wallet_topups")
+    .select(ATTEMPT_COLUMNS)
+    .eq("pay_token", parsed.data.token)
+    .maybeSingle<PendingAttempt>();
+
+  if (error || !attempt) {
+    // Deliberately the same message as a spent one: distinguishing "no such
+    // token" from "token exists but is used" would make this an oracle.
+    return FAILED("That payment link is not valid or has already been used.");
+  }
+
+  return settleAttempt(attempt, parsed.data.credential ?? "");
+}
+

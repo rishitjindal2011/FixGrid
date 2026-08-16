@@ -12,6 +12,18 @@ export interface TopUpIntent {
   reference: string;
   amountMinor: number;
   method: TopUpMethod;
+  /**
+   * The scannable QR as an inline SVG, and the URL it encodes. Only present for
+   * UPI — a card has nothing to scan.
+   *
+   * The SVG travels rather than the token: the token is a bearer credential and
+   * has no business in a client component beyond the QR that has to carry it.
+   */
+  qrSvg?: string | null;
+  /** Shown under the QR so a phone that will not scan can be typed into. */
+  payUrl?: string | null;
+  /** True when payUrl points at loopback, which a phone cannot reach. */
+  payUrlUnreachable?: boolean;
 }
 
 export interface TopUpOutcome {
