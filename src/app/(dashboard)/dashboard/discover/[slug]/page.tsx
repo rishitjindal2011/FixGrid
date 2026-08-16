@@ -14,6 +14,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { getCurrentUser } from "@/lib/auth/session";
 import { listAddresses } from "@/lib/dashboard/addresses";
+import { getEntitlement } from "@/lib/plans/server";
+import { getWallet } from "@/lib/wallet/server";
 import type { SlotRule } from "@/lib/bookings/slots";
 import { getExpertForBooking, type BookingExpert } from "@/lib/dashboard/discover";
 import { formatDuration } from "@/lib/format";
@@ -219,11 +221,13 @@ export default async function BookExpertPage({
   const now = new Date();
   const windowEnd = new Date(now.getTime() + WINDOW_DAYS * 24 * 60 * 60 * 1000);
 
-  // Both feed the form below and neither depends on the other.
-  const [busyIso, addresses, platformFeeMinor] = await Promise.all([
+  // All five feed the form below and none depends on another.
+  const [busyIso, addresses, platformFeeMinor, wallet, entitlement] = await Promise.all([
     listBusyPeriods(profile.id, now, windowEnd),
     listAddresses(user.id),
     resolveBookingFee(profile.id),
+    getWallet("user", user.id),
+    getEntitlement(),
   ]);
 
   const acceptsBookings = profile.accepts_bookings ?? true;
@@ -343,6 +347,10 @@ export default async function BookExpertPage({
               fallbackDurationMinutes={DEFAULTS.durationMinutes}
               defaultWarrantyDays={profile.default_warranty_days ?? DEFAULTS.warrantyDays}
               platformFeeMinor={platformFeeMinor}
+              balanceMinor={wallet.balanceMinor}
+              /* Read server-side: a client asserting its own discount would be a
+                 client setting its own price. createBooking resolves it again. */
+              feeWaived={entitlement.feeWaived}
               addresses={addresses}
             />
           ) : (

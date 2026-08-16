@@ -19,6 +19,7 @@ import {
   type SlotRule,
 } from "@/lib/bookings/slots";
 import { BOOKING_INITIAL_STATE } from "@/lib/bookings/state";
+import { PaymentSheet } from "@/components/dashboard/payment-sheet";
 import { formatDuration, formatMoney, formatPriceRange, formatSlot } from "@/lib/format";
 import {
   DELIVERY_MODE_LABELS,
@@ -116,6 +117,10 @@ export interface BookingFormProps {
    * submit — this prop is for display, never for the amount.
    */
   platformFeeMinor: number;
+  /** Spendable balance, for the payment sheet's "pay from balance" option. */
+  balanceMinor: number;
+  /** True when the customer's plan covers this booking's fee. */
+  feeWaived: boolean;
 }
 
 /** Radio value meaning "type a new one". Not a uuid, so it cannot collide. */
@@ -133,6 +138,8 @@ export function BookingForm({
   fallbackDurationMinutes,
   defaultWarrantyDays,
   platformFeeMinor,
+  balanceMinor,
+  feeWaived,
   addresses,
 }: BookingFormProps) {
   const router = useRouter();
@@ -140,12 +147,23 @@ export function BookingForm({
   const [pending, setPending] = React.useState(false);
   const [faultPhotos, setFaultPhotos] = React.useState<File[]>([]);
 
-  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
+  /**
+   * The submission held back while the payment sheet is open.
+   *
+   * The form is captured at the moment of pressing the button rather than re-read
+   * afterwards, because the sheet is a dialog and the fields behind it could in
+   * principle change while it is up. What gets booked is what was on screen when
+   * the person committed to it.
+   */
+  const [held, setHeld] = React.useState<FormData | null>(null);
+
+  /** A fee is due unless the customer's plan covers it. */
+  const feeDue = !feeWaived && platformFeeMinor > 0;
+
+  async function doSubmit(formData: FormData) {
     setPending(true);
     setState(BOOKING_INITIAL_STATE);
 
-    const formData = new FormData(event.currentTarget);
     const result = await createBooking(BOOKING_INITIAL_STATE, formData);
 
     if (result.success && result.bookingId && faultPhotos.length > 0) {
@@ -158,6 +176,29 @@ export function BookingForm({
     if (result.success && result.reference) {
       router.push(`/dashboard/bookings/${encodeURIComponent(result.reference)}`);
     }
+  }
+
+  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    const formData = new FormData(event.currentTarget);
+
+    /*
+     * A payable fee goes through the sheet.
+     *
+     * It used to go straight to `createBooking`, which charged the balance and,
+     * when there was not enough, came back with "there isn't enough in your
+     * balance — top up and try again". That is a dead end wearing the clothes of
+     * an error: the person is told to go somewhere else and start over, on a form
+     * they have just filled in. The sheet offers the card route in place and keeps
+     * the form intact behind it.
+     */
+    if (feeDue) {
+      setHeld(formData);
+      return;
+    }
+
+    await doSubmit(formData);
   }
 
   const [serviceId, setServiceId] = React.useState(services[0]?.id ?? "");
@@ -623,6 +664,26 @@ export function BookingForm({
               : "No times are bookable right now — try a shorter service or message the shop."}
         </p>
       </div>
+
+      {held ? (
+        <PaymentSheet
+          open
+          onClose={() => setHeld(null)}
+          amountMinor={platformFeeMinor}
+          balanceMinor={balanceMinor}
+          title="Booking fee"
+          description={`${shopName} confirms the price and the slot before any work starts. This fee is returned in full if they decline or do not answer.`}
+          purchaseFields={{}}
+          /* The booking itself is the purchase, and this form owns it — including
+             the photo uploads that follow a successful insert. The sheet only
+             assures the fee and hands back the submission it was holding. */
+          onFunded={() => {
+            const submission = held;
+            setHeld(null);
+            if (submission) void doSubmit(submission);
+          }}
+        />
+      ) : null}
     </form>
   );
 }
