@@ -309,3 +309,99 @@
 .blog-article :is(time, code, pre, kbd) {
   font-family: var(--font-mono);
 }
+
+/* ── Blog article body ──────────────────────────────────────────────────────
+ *
+ * The measured column the post reads in. Real CSS rather than utilities in the
+ * stored template, for the reason above: Tailwind never scans the database, so a
+ * template can only be trusted with plain markup and a class name.
+ *
+ * `max-width` is in `ch`, not `rem`. The constraint being expressed is a line
+ * length in characters — the thing that actually governs whether prose is
+ * comfortable — so it should not drift when the font size changes.
+ */
+.blog-article .blog-body {
+  max-width: 68ch;
+  margin-inline: auto;
+  padding: 4rem 1.5rem 6rem;
+  color: var(--color-enamel);
+  font-size: 1.0625rem;
+  line-height: 1.75;
+}
+
+/* Vertical rhythm set with margins on the elements themselves rather than a
+   `gap`, because the content is arbitrary HTML from the editor — there is no
+   guarantee of a single flex parent to hang a gap on. */
+.blog-article .blog-body > * + * {
+  margin-block-start: 1.5em;
+}
+
+/* Headings get more space above than below, so a section reads as belonging to
+   the text beneath it rather than floating between two blocks. */
+.blog-article .blog-body :is(h2, h3, h4) {
+  margin-block: 2.75em 0.75em;
+  line-height: 1.15;
+}
+
+.blog-article .blog-body h2 {
+  font-size: 1.5rem;
+}
+
+.blog-article .blog-body h3 {
+  font-size: 1.2rem;
+  color: var(--color-steel);
+}
+
+.blog-article .blog-body :is(ul, ol) {
+  padding-inline-start: 1.5rem;
+}
+
+.blog-article .blog-body li + li {
+  margin-block-start: 0.5em;
+}
+
+.blog-article .blog-body ul {
+  list-style: disc;
+}
+
+.blog-article .blog-body ol {
+  list-style: decimal;
+}
+
+.blog-article .blog-body a {
+  color: var(--color-signal);
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+
+.blog-article .blog-body strong {
+  color: var(--color-enamel);
+  font-weight: 650;
+}
+
+/* A quote is the one place the body changes voice, so it gets the display face
+   and a rule rather than italics — the same treatment pull quotes get elsewhere. */
+.blog-article .blog-body blockquote {
+  border-inline-start: 3px solid var(--color-signal);
+  padding-inline-start: 1.25rem;
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  line-height: 1.35;
+  color: var(--color-enamel);
+}
+
+.blog-article .blog-body :is(img, figure) {
+  border-radius: 0.5rem;
+  margin-block: 2.5em;
+}
+
+.blog-article .blog-body :is(pre, code) {
+  font-size: 0.9em;
+}
+
+.blog-article .blog-body pre {
+  overflow-x: auto;
+  padding: 1rem 1.25rem;
+  border-radius: 0.5rem;
+  background: var(--color-bench-sunk, #eef1f4);
+}
