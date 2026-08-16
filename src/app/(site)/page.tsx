@@ -288,6 +288,7 @@ export default async function HomePage() {
                 address={fixer.address}
                 photo={fixer.photos[0] ?? null}
                 verified={fixer.verified}
+                warrantyDays={fixer.default_warranty_days}
                 ratingAvg={Number(fixer.rating_avg)}
                 ratingCount={fixer.rating_count}
                 categories={fixer.categories}

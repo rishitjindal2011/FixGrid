@@ -158,6 +158,21 @@ type ReviewRowFull = GeneratedTables["reviews"]["Row"] & {
  * customers who have booked with a shop the caller owns.
  */
 interface MarketplaceFunctions {
+  /**
+   * The public directory search.
+   *
+   * Returns `setof fixer_profiles`, so its rows carry every booking column the
+   * marketplace migration added — including `default_warranty_days`, which the
+   * search cards now read. The generated signature describes the pre-migration
+   * row, which is why this replaces it rather than adding to it.
+   *
+   * `Args` is taken from the generated type so the four viewport and filter
+   * parameters stay in one place; only the return shape is being corrected.
+   */
+  search_fixers: {
+    Args: Database["public"]["Functions"]["search_fixers"]["Args"];
+    Returns: FixerRowFull[];
+  };
   my_profile: {
     Args: Record<string, never>;
     Returns: Array<
@@ -293,7 +308,21 @@ export interface AppDatabase {
       client_notes: TableOf<ClientNoteRow>;
     };
     Views: Database["public"]["Views"];
-    Functions: Flatten<Database["public"]["Functions"] & MarketplaceFunctions>;
+    /*
+     * `search_fixers` is omitted from the generated half and redeclared in
+     * `MarketplaceFunctions`, rather than intersected.
+     *
+     * It returns `setof fixer_profiles`, so its generated Returns is the generated
+     * row — which predates migration 001 and therefore has no
+     * `default_warranty_days`, `accepts_bookings` or any other booking column.
+     * Intersecting would produce `GeneratedRow[] & AppRow[]`: readable, but
+     * unassignable, because a value built from the RPC would have to satisfy both
+     * shapes at once. Omit-then-replace gives the one shape the function actually
+     * returns.
+     */
+    Functions: Flatten<
+      Omit<Database["public"]["Functions"], "search_fixers"> & MarketplaceFunctions
+    >;
     Enums: Database["public"]["Enums"];
     CompositeTypes: Database["public"]["CompositeTypes"];
   };

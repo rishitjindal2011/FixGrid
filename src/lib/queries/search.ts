@@ -276,6 +276,20 @@ export function countActiveFilters(filters: SearchFilters): number {
 /** A search hit: the profile row plus the categories it is listed under. */
 export interface SearchResult extends FixerProfileRow {
   categories: RepairCategoryRow[];
+  /**
+   * The shop's standard warranty, in days.
+   *
+   * Declared here rather than relied on from `FixerProfileRow`, because that type
+   * comes from the generated `database.ts` — which predates migration 001 and so
+   * has no `default_warranty_days`. `search_fixers` returns `setof fixer_profiles`,
+   * so the column is present at runtime; this is the type catching up with it.
+   *
+   * Non-nullable, matching the column: `not null default 3`. Checked rather than
+   * assumed — declaring it nullable would have collided with
+   * `Partial<FixerBookingSettings>` in `discover.ts`, and widening that shared type
+   * to accommodate a null the database cannot produce would have been the wrong fix.
+   */
+  default_warranty_days: number;
 }
 
 export interface SearchOutcome {

@@ -5,6 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { BadgeCheck, MapPin } from "lucide-react";
 
+import { WarrantyBadge } from "@/components/warranty-badge";
 import { RatingStars } from "@/components/rating-stars";
 import { StatusStrip } from "@/components/status-strip";
 import { Badge } from "@/components/ui/badge";
@@ -20,6 +21,8 @@ export interface ResultCardProps {
   address: string;
   photo: string | null;
   verified: boolean;
+  /** The shop’s standard warranty in days. 0 renders no badge. */
+  warrantyDays: number;
   ratingAvg: number;
   ratingCount: number;
   categories: RepairCategoryRow[];
@@ -38,6 +41,7 @@ export function ResultCard({
   address,
   photo,
   verified,
+  warrantyDays,
   ratingAvg,
   ratingCount,
   categories,
@@ -107,6 +111,19 @@ export function ResultCard({
           <div className="mt-2">
             <StatusStrip hours={hours} initialStatus={initialStatus} />
           </div>
+
+          {/*
+            Above the categories, not among them.
+
+            A warranty is a promise about the work; a category is a statement of
+            what the shop touches. Mixing them into one row of grey pills would
+            make the strongest thing on the card read as another tag.
+          */}
+          {warrantyDays ? (
+            <div className="mt-2">
+              <WarrantyBadge days={warrantyDays} />
+            </div>
+          ) : null}
 
           {categories.length > 0 ? (
             <ul className="mt-2.5 flex flex-wrap gap-1.5">

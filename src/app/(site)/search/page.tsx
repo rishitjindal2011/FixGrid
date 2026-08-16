@@ -181,6 +181,7 @@ export default async function SearchPage({ searchParams }: PageProps) {
                         address={result.address}
                         photo={result.photos[0] ?? null}
                         verified={result.verified}
+                        warrantyDays={result.default_warranty_days}
                         ratingAvg={Number(result.rating_avg)}
                         ratingCount={result.rating_count}
                         categories={result.categories}
