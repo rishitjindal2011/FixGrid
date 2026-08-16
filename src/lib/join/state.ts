@@ -16,3 +16,19 @@ export interface JoinState {
 }
 
 export const JOIN_INITIAL_STATE: JoinState = { error: null, field: null };
+
+/**
+ * What it costs to list a shop, in paise.
+ *
+ * Flat rather than per-category: the categories differ in what a *repair* is
+ * worth, not in what a listing is worth. Charged on submission, not on approval —
+ * a fee taken only from the shops we accept would deter nobody from submitting —
+ * and returned in full if the listing is rejected.
+ *
+ * Lives here rather than in `actions.ts` because that module is `"use server"`,
+ * and such a module may only export async functions; a plain `export const` there
+ * is a build error. Same reason `src/lib/auth/state.ts` exists. Note that `tsc`
+ * does not catch it — only the bundler does — so it surfaces as a build failure
+ * rather than a type error.
+ */
+export const ENROLLMENT_FEE_MINOR = 50000;

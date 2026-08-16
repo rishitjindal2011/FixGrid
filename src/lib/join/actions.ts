@@ -9,6 +9,7 @@ import { chargeToPlatform } from "@/lib/wallet/server";
 import { formatMoney } from "@/lib/format";
 import { createClient } from "@/lib/supabase/server";
 import type { JoinState } from "@/lib/join/state";
+import { ENROLLMENT_FEE_MINOR } from "@/lib/join/state";
 
 /**
  * Expert-submitted shops.
@@ -32,16 +33,6 @@ import type { JoinState } from "@/lib/join/state";
 
 
 const MAX_FILES = 4;
-
-/**
- * What it costs to list a shop, in paise.
- *
- * Flat rather than per-category: the categories differ in what a *repair* is
- * worth, not in what a listing is worth. Charged on submission, not on approval —
- * a fee taken only from the shops we accept would deter nobody from submitting —
- * and returned in full if we reject the listing.
- */
-export const ENROLLMENT_FEE_MINOR = 50000;
 
 /**
  * Evidence arrives as storage paths, not files.
