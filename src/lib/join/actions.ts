@@ -5,6 +5,8 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
 import { createAdminClient } from "@/lib/supabase/admin";
+import { chargeToPlatform } from "@/lib/wallet/server";
+import { formatMoney } from "@/lib/format";
 import { createClient } from "@/lib/supabase/server";
 import type { JoinState } from "@/lib/join/state";
 
@@ -30,6 +32,16 @@ import type { JoinState } from "@/lib/join/state";
 
 
 const MAX_FILES = 4;
+
+/**
+ * What it costs to list a shop, in paise.
+ *
+ * Flat rather than per-category: the categories differ in what a *repair* is
+ * worth, not in what a listing is worth. Charged on submission, not on approval —
+ * a fee taken only from the shops we accept would deter nobody from submitting —
+ * and returned in full if we reject the listing.
+ */
+export const ENROLLMENT_FEE_MINOR = 50000;
 
 /**
  * Evidence arrives as storage paths, not files.
@@ -284,6 +296,64 @@ export async function submitShop(_prev: JoinState, formData: FormData): Promise<
       error: "We could not file your verification request. Try again in a moment.",
       field: null,
     };
+  }
+
+  /*
+   * The enrollment fee.
+   *
+   * Charged last, once the shop and its claim both exist, and rolled back the same
+   * way the claim failure is: taking money and then failing to create the listing
+   * it paid for is the one outcome worth extra code to avoid.
+   *
+   * Charged on *submission*, not on approval, which is the whole point of it — a
+   * fee taken only from shops we accept would deter nobody from submitting. It is
+   * returned in full if we reject the listing; see `rejectClaim` in the admin app.
+   */
+  const charge = await chargeToPlatform({
+    kind: "enrollment",
+    amountMinor: ENROLLMENT_FEE_MINOR,
+    from: { kind: "user", ownerId: user.id },
+    memo: `Listing fee — ${shopName}`,
+  });
+
+  if (!charge.ok) {
+    // Nothing was created that the submitter can use, so remove both rather than
+    // leaving an unpaid listing in the review queue.
+    await admin.from("shop_claims").delete().eq("fixer_id", shop.id);
+    await admin.from("fixer_profiles").delete().eq("id", shop.id);
+
+    return {
+      // `charge.error` is already a sentence — `explainMoney` turns an
+      // insufficient balance into one. Prefixed with the amount and the refund
+      // promise, because both are things the submitter needs before deciding
+      // whether to top up and come back.
+      error:
+        `Listing a shop costs ${formatMoney(ENROLLMENT_FEE_MINOR)}, refunded in full ` +
+        `if we cannot list you. ${charge.error}`,
+      field: null,
+    };
+  }
+
+  // Stamped by the service role, which the guard trigger lets past; an owner
+  // cannot write these columns themselves.
+  const { error: stampError } = await admin
+    .from("fixer_profiles")
+    .update({
+      enrollment_fee_minor: ENROLLMENT_FEE_MINOR,
+      enrollment_paid_at: new Date().toISOString(),
+    })
+    .eq("id", shop.id);
+
+  if (stampError) {
+    // The money moved and the ledger records it, so this is a bookkeeping gap
+    // rather than a lost payment. Logged loudly instead of unwinding a successful
+    // charge, because the listing itself is fine and the submitter should not be
+    // sent back to the start over a stamp.
+    console.error("[join] enrollment stamp failed — ledger is authoritative", {
+      shopId: shop.id,
+      amountMinor: ENROLLMENT_FEE_MINOR,
+      message: stampError.message,
+    });
   }
 
   revalidatePath("/dashboard/expert", "layout");

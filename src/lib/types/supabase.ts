@@ -130,6 +130,11 @@ type FixerRowFull = GeneratedTables["fixer_profiles"]["Row"] & {
   default_warranty_days: number;
   payout_email: string | null;
   stripe_account_id: string | null;
+  /** Paise paid to list this shop. Owner-locked by the guard trigger. */
+  enrollment_fee_minor: number;
+  enrollment_paid_at: string | null;
+  /** Non-null once a rejected listing has had its fee returned. */
+  enrollment_refunded_at: string | null;
 };
 
 /** `reviews` gains a nullable link to the booking that earned it. */

@@ -246,8 +246,8 @@ export async function rejectClaim(
     })
     .eq("id", parsed.data.claimId)
     .eq("status", "pending")
-    .select("id")
-    .maybeSingle<{ id: string }>();
+    .select("id, fixer_id, user_id")
+    .maybeSingle<{ id: string; fixer_id: string; user_id: string }>();
 
   if (error) {
     logWriteFailure("rejectClaim", error);
@@ -258,8 +258,81 @@ export async function rejectClaim(
     return FAILED("That claim is no longer pending — someone else has already decided it.");
   }
 
+  /*
+   * Give the listing fee back.
+   *
+   * The fee is charged when a shop is submitted, so a rejected listing has paid
+   * for something it did not get. Refunded here rather than left for a human to
+   * remember, because the person who would have to remember is the one who just
+   * pressed reject.
+   *
+   * The claim rejection has already committed and is not unwound if this fails:
+   * the decision is the thing that had to happen, and an unrefunded fee is
+   * recoverable from the log line whereas a claim stuck pending is not. The
+   * conditional update on `enrollment_refunded_at` is what stops a second
+   * rejection — after a resubmit, say — paying the fee out twice.
+   */
+  const { data: enrolment } = await supabase
+    .from("fixer_profiles")
+    .select("enrollment_fee_minor, enrollment_paid_at, enrollment_refunded_at, shop_name")
+    .eq("id", data.fixer_id)
+    .maybeSingle<{
+      enrollment_fee_minor: number;
+      enrollment_paid_at: string | null;
+      enrollment_refunded_at: string | null;
+      shop_name: string;
+    }>();
+
+  const owed =
+    enrolment &&
+    enrolment.enrollment_fee_minor > 0 &&
+    enrolment.enrollment_paid_at !== null &&
+    enrolment.enrollment_refunded_at === null;
+
+  let refunded = false;
+
+  if (owed && enrolment) {
+    // Claim the refund before paying it, so two reviewers cannot both pay it.
+    const { data: claimedRefund } = await supabase
+      .from("fixer_profiles")
+      .update({ enrollment_refunded_at: new Date().toISOString() })
+      .eq("id", data.fixer_id)
+      .is("enrollment_refunded_at", null)
+      .select("id")
+      .maybeSingle<{ id: string }>();
+
+    if (claimedRefund) {
+      const credit = await creditWallet({
+        kind: "enrollment_refund",
+        amountMinor: enrolment.enrollment_fee_minor,
+        to: { kind: "user", ownerId: data.user_id },
+        memo: `Listing fee returned — ${enrolment.shop_name}`,
+      });
+
+      if (credit.ok) {
+        refunded = true;
+      } else {
+        // Release the marker so it can be retried, and say so loudly.
+        await supabase
+          .from("fixer_profiles")
+          .update({ enrollment_refunded_at: null })
+          .eq("id", data.fixer_id);
+
+        console.error("[admin] ENROLLMENT REFUND FAILED — needs manual correction", {
+          fixerId: data.fixer_id,
+          userId: data.user_id,
+          amountMinor: enrolment.enrollment_fee_minor,
+        });
+      }
+    }
+  }
+
   revalidateClaims(parsed.data.claimId);
-  return OK("Claim rejected.");
+  return OK(
+    refunded && enrolment
+      ? `Claim rejected and ${formatMoney(enrolment.enrollment_fee_minor)} listing fee returned.`
+      : "Claim rejected.",
+  );
 }
 
 function revalidateClaims(claimId: string): void {
