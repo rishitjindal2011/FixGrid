@@ -21,6 +21,26 @@ const SELECT = `
   reviews(*, customer:users(id, display_name, avatar_url))
 ` as const;
 
+/**
+ * The shop's standard warranty in days, or 0.
+ *
+ * `SELECT` above is `*`, so the column comes back — but `ExpertProfile` is built on
+ * the *generated* row type in `database.ts`, which predates migration 001 and does
+ * not declare it. Adding it there would be erased the next time
+ * `supabase gen types typescript` runs, which is the whole reason
+ * `marketplace.ts` exists as a separate file.
+ *
+ * So this is a narrow, documented read at the one place it is needed, rather than
+ * a cast at each call site or a widened type that a regeneration would silently
+ * revert. It returns 0 for anything unexpected, and `WarrantyBadge` renders nothing
+ * at 0 — a missing column degrades to "no warranty shown", never to a wrong promise.
+ */
+export function profileWarrantyDays(profile: ExpertProfile): number {
+  const value = (profile as { default_warranty_days?: number | null })
+    .default_warranty_days;
+  return typeof value === "number" && value > 0 ? value : 0;
+}
+
 interface RawProfile extends FixerProfileRow {
   category_links: Array<{ repair_categories: RepairCategoryRow | null }> | null;
   reviews: ReviewWithAuthor[] | null;

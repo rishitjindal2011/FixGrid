@@ -13,7 +13,12 @@ import { PhotoGallery } from "@/components/expert/photo-gallery";
 import { ReviewGate } from "@/components/expert/review-gate";
 import { ReviewList } from "@/components/expert/review-list";
 
-import { getAllExpertSlugs, getExpertBySlug, getPublicInventory } from "@/lib/queries/expert";
+import {
+  getAllExpertSlugs,
+  getExpertBySlug,
+  getPublicInventory,
+  profileWarrantyDays,
+} from "@/lib/queries/expert";
 import { PublicInventory } from "@/components/expert/public-inventory";
 import { getShopStatus, type HoursInput } from "@/lib/hours";
 import { buildBreadcrumbs, buildLocalBusiness, type Thing, type WithContext } from "@/lib/seo/jsonld";
@@ -85,6 +90,10 @@ export default async function ExpertPage({ params }: PageProps) {
   // Computed on the server so the first paint is already correct; the client
   // strip then re-checks every 30s.
   const status = getShopStatus(hours);
+
+  /* The strongest claim on this page, so it is resolved once and passed down
+     rather than derived inside a component that also renders it. */
+  const warrantyDays = profileWarrantyDays(profile);
 
   const schemas: WithContext<Thing>[] = [buildLocalBusiness(profile)];
   const breadcrumbs = buildBreadcrumbs([
@@ -178,7 +187,12 @@ export default async function ExpertPage({ params }: PageProps) {
             {/* Contact card sits here on mobile, before the tabs, because
                 phone and directions are the whole point of the page. */}
             <div className="mt-8 lg:hidden">
-              <ContactCard profile={profile} hours={hours} initialStatus={status} />
+              <ContactCard
+                profile={profile}
+                hours={hours}
+                initialStatus={status}
+                warrantyDays={warrantyDays}
+              />
             </div>
 
             <div className="mt-10">
@@ -203,7 +217,12 @@ export default async function ExpertPage({ params }: PageProps) {
 
           <div className="hidden lg:block">
             <div className="lg:sticky lg:top-24">
-              <ContactCard profile={profile} hours={hours} initialStatus={status} />
+              <ContactCard
+                profile={profile}
+                hours={hours}
+                initialStatus={status}
+                warrantyDays={warrantyDays}
+              />
             </div>
           </div>
         </div>

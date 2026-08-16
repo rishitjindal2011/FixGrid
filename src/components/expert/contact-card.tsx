@@ -1,6 +1,7 @@
 import { Mail, MapPin, Navigation, PackageCheck, Phone, Store, Truck } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { WarrantyBadge } from "@/components/warranty-badge";
 import { StatusStrip } from "@/components/status-strip";
 import { formatClock, resolveWeek, type HoursInput, type ShopStatus } from "@/lib/hours";
 import { cn, directionsUrl, telHref } from "@/lib/utils";
@@ -15,10 +16,20 @@ export function ContactCard({
   profile,
   hours,
   initialStatus,
+  warrantyDays,
 }: {
   profile: ExpertProfile;
   hours: HoursInput;
   initialStatus: ShopStatus;
+  /**
+   * The shop's standard warranty in days. 0 renders nothing.
+   *
+   * An explicit prop rather than read off `profile`, because `ExpertProfile` is
+   * built on the *generated* row type, which predates migration 001 and has no
+   * `default_warranty_days`. Adding it there would be erased the next time
+   * `supabase gen types` runs — the same trap `marketplace.ts` exists to avoid.
+   */
+  warrantyDays: number;
 }) {
   const week = resolveWeek(hours);
   const today = getZonedNow(profile.timezone).weekday;
@@ -43,6 +54,20 @@ export function ContactCard({
     <aside className="rounded-machined border border-hairline bg-chalk shadow-bench">
       <div className="border-b border-hairline p-5">
         <StatusStrip hours={hours} size="md" initialStatus={initialStatus} />
+
+        {/*
+          Above the call button, not below it.
+
+          This card is where somebody decides whether to trust the shop with their
+          device, and the warranty is the strongest thing we can tell them at that
+          moment. Putting it under the buttons would make it a footnote to an action
+          they have already taken or abandoned.
+
+          Renders nothing when the shop offers no warranty — see `WarrantyBadge`.
+        */}
+        <div className="mt-4 empty:mt-0">
+          <WarrantyBadge days={warrantyDays} variant="line" />
+        </div>
 
         <div className="mt-4 flex flex-col gap-2">
           {profile.contact_phone ? (
