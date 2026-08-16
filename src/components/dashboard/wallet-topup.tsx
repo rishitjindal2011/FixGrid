@@ -148,7 +148,7 @@ export function WalletTopUp({ balanceMinor }: { balanceMinor: number }) {
     const field = METHOD_FIELDS[intent.method];
 
     return (
-      <form action={confirm} className="flex flex-col gap-4">
+      <form key="gateway" action={confirm} className="flex flex-col gap-4">
         <input type="hidden" name="reference" value={intent.reference} />
 
         <div className="rounded-machined border border-hairline bg-bench p-3">
@@ -248,7 +248,7 @@ export function WalletTopUp({ balanceMinor }: { balanceMinor: number }) {
   /* ── Step 1 ─────────────────────────────────────────────────────────────── */
 
   return (
-    <form action={startIntent} className="flex flex-col gap-4">
+    <form key="amount" action={startIntent} className="flex flex-col gap-4">
       <input type="hidden" name="idempotencyKey" value={key} />
       <input type="hidden" name="method" value={method} />
 

@@ -307,7 +307,7 @@ export function PaymentSheet({
         ) : null}
 
         {step === "gateway" && !intent ? (
-          <form action={startIntent} className="flex flex-col gap-4 pt-4">
+          <form key="method" action={startIntent} className="flex flex-col gap-4 pt-4">
             <input type="hidden" name="idempotencyKey" value={key} />
             <input type="hidden" name="method" value={method} />
             <input type="hidden" name="amount" value={(amountMinor / 100).toFixed(2)} />
@@ -348,7 +348,7 @@ export function PaymentSheet({
         ) : null}
 
         {step === "gateway" && intent ? (
-          <form action={confirmAndBuy} className="flex flex-col gap-4 pt-4">
+          <form key="credential" action={confirmAndBuy} className="flex flex-col gap-4 pt-4">
             <input type="hidden" name="reference" value={intent.reference} />
 
             {field ? (
