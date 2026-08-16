@@ -1134,3 +1134,52 @@ export async function getBookingNote(bookingId: string): Promise<BookingNoteRow 
 
   return data;
 }
+
+/* ── Bills ────────────────────────────────────────────────────────────────── */
+
+export interface BookingBill {
+  amountMinor: number;
+  status: "pending" | "approved" | "rejected";
+  /** What was actually credited. Null until approved. */
+  rebateMinor: number | null;
+  reviewNote: string | null;
+}
+
+/**
+ * The bill filed against one booking, if any.
+ *
+ * Read through the caller's own client, so RLS decides: `shop reads own bills` is
+ * `owns_shop(fixer_id)`, which means a shop asking about somebody else's job gets
+ * nothing back rather than a refusal. There is at most one row per booking by
+ * unique index, so `maybeSingle` cannot throw on a duplicate.
+ *
+ * Degrades to null on failure, like every other read in this file — a bill panel
+ * that will not load must not take the job page with it.
+ */
+export async function getBillForBooking(bookingId: string): Promise<BookingBill | null> {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from("shop_bills")
+    .select("amount_minor, status, rebate_minor, review_note")
+    .eq("booking_id", bookingId)
+    .maybeSingle<{
+      amount_minor: number;
+      status: "pending" | "approved" | "rejected";
+      rebate_minor: number | null;
+      review_note: string | null;
+    }>();
+
+  if (error) {
+    logReadFailure(`[dashboard] bill lookup failed (${bookingId})`, error);
+    return null;
+  }
+  if (!data) return null;
+
+  return {
+    amountMinor: data.amount_minor,
+    status: data.status,
+    rebateMinor: data.rebate_minor,
+    reviewNote: data.review_note,
+  };
+}

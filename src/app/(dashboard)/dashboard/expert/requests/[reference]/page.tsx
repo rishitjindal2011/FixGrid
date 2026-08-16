@@ -12,12 +12,14 @@ import {
   MapPin,
   NotebookPen,
   Phone,
+  Receipt,
   Star,
   User,
   Wrench,
 } from "lucide-react";
 
 import { AttachmentGallery } from "@/components/dashboard/attachment-gallery";
+import { BillForm } from "@/components/dashboard/expert/bill-form";
 import {
   PrivateNoteEditor,
   RequestActions,
@@ -35,6 +37,7 @@ import { getCurrentUser } from "@/lib/auth/session";
 import { slotEnd, slotStart, statusExplainer } from "@/lib/bookings/actions-map";
 import { getMyShop } from "@/lib/dashboard/claims";
 import {
+  getBillForBooking,
   getBookingNote,
   getClient,
   listExpertBookings,
@@ -209,6 +212,17 @@ export default async function ExpertRequestDetailPage({
   // re-authorises per request through `is_booking_party` — so the shop sees the
   // customer's fault photos without a Supabase token ever reaching the browser.
   const attachmentUrls = attachmentHrefs("booking", attachments);
+
+  /*
+   * The bill on this job, if one has been filed.
+   *
+   * Read here rather than inside the form because the form is a client component
+   * and this decides which of two things it renders — a field to fill in, or the
+   * state of what was already filed. Only fetched once the job is billable, so a
+   * request still waiting on an answer costs no extra round-trip.
+   */
+  const billable = ["completed", "closed", "disputed"].includes(booking.status);
+  const bill = billable ? await getBillForBooking(booking.id) : null;
 
   const pricing = booking.service_id
     ? (buildPricingIndex(services).get(booking.service_id) ?? null)
@@ -429,6 +443,22 @@ export default async function ExpertRequestDetailPage({
         </div>
 
         <aside className="flex flex-col gap-6 lg:col-span-2">
+          {/*
+            Above "Your answer" once the job is done, because at that point filing
+            the bill IS the answer — the transition buttons have nothing left to
+            offer on a completed job.
+          */}
+          {billable ? (
+            <Panel title="Bill and rebate" icon={Receipt}>
+              <BillForm
+                bookingId={booking.id}
+                quotedMinor={booking.final_amount ?? booking.quoted_amount}
+                currency={booking.currency}
+                existing={bill}
+              />
+            </Panel>
+          ) : null}
+
           <Panel title="Your answer">
             <RequestActions
               bookingId={booking.id}
