@@ -55,5 +55,17 @@ export const TOPUP_INITIAL_STATE: TopUpState = {
 export const TOPUP_MIN_MINOR = 5000;
 export const TOPUP_MAX_MINOR = 1000000;
 
+/**
+ * Ceiling on what one account can add in a day, in paise.
+ *
+ * The per-attempt cap alone bounds nothing that matters: a loop of ₹10,000 top-ups
+ * mints money as fast as the requests go through. This is the limit that actually
+ * constrains a self-serve funding endpoint, which is why it exists separately.
+ *
+ * Counted against *succeeded* attempts only — a declined card should not consume
+ * somebody's daily allowance.
+ */
+export const TOPUP_DAILY_MAX_MINOR = 2000000;
+
 /** Preset amounts, in paise. Covers a few bookings' worth of fees. */
 export const TOPUP_PRESETS: readonly number[] = [10000, 25000, 50000, 100000];

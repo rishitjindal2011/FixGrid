@@ -14,6 +14,7 @@ import {
   payQrSvg,
 } from "@/lib/wallet/upi";
 import {
+  TOPUP_DAILY_MAX_MINOR,
   TOPUP_MAX_MINOR,
   TOPUP_MIN_MINOR,
   type TopUpIntent,
@@ -111,6 +112,45 @@ export async function createTopUpIntent(
   }
 
   const admin = createAdminClient();
+
+  /*
+   * The daily ceiling.
+   *
+   * The per-attempt cap bounds a slipped decimal; this bounds the endpoint. A loop
+   * of ₹10,000 top-ups mints money as fast as the requests go through, and this is
+   * a self-serve funding path driven by an untrusted party.
+   *
+   * Counted against `succeeded` only. A declined card must not consume somebody's
+   * allowance, and a `pending` row is an attempt that may never be paid — counting
+   * either would let a person lock themselves out by abandoning a payment.
+   */
+  const dayStart = new Date();
+  dayStart.setUTCHours(0, 0, 0, 0);
+
+  const { data: today, error: sumError } = await admin
+    .from("wallet_topups")
+    .select("amount_minor")
+    .eq("user_id", user.id)
+    .eq("status", "succeeded")
+    .gte("created_at", dayStart.toISOString())
+    .returns<{ amount_minor: number }[]>();
+
+  if (sumError) {
+    // Fail closed. An unreadable history is not a licence to add money.
+    console.error("[topup] daily total unreadable — refusing", sumError.message);
+    return FAILED("We could not check your daily limit. Try again in a moment.");
+  }
+
+  const addedToday = (today ?? []).reduce((sum, row) => sum + row.amount_minor, 0);
+
+  if (addedToday + minor > TOPUP_DAILY_MAX_MINOR) {
+    const left = Math.max(0, TOPUP_DAILY_MAX_MINOR - addedToday);
+    return FAILED(
+      left === 0
+        ? `You have reached the ${formatMoney(TOPUP_DAILY_MAX_MINOR)} daily limit for adding funds. Try again tomorrow.`
+        : `That would take you past the ${formatMoney(TOPUP_DAILY_MAX_MINOR)} daily limit — you can add up to ${formatMoney(left)} more today.`,
+    );
+  }
 
   const { data, error } = await admin
     .from("wallet_topups")
