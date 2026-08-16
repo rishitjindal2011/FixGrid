@@ -2,7 +2,8 @@ import "server-only";
 
 import { createClient } from "@/lib/supabase/server";
 import type { HoursInput } from "@/lib/hours";
-import type { Database, FixerProfileRow, RepairCategoryRow } from "@/lib/types/database";
+import type { FixerProfileRow, RepairCategoryRow } from "@/lib/types/database";
+import type { AppDatabase } from "@/lib/types/supabase";
 
 /**
  * Search / directory query layer.
@@ -16,10 +17,11 @@ import type { Database, FixerProfileRow, RepairCategoryRow } from "@/lib/types/d
  *
  *   2. Filtering happens in Postgres, via the `search_fixers(...)` function in
  *      supabase/schema.sql. That function already knows about the bounding box,
- *      the category join, the rating floor, the three service flags, and the
- *      result ordering (verified first, then rating, then review volume).
- *      Re-implementing any of that in TypeScript would mean pulling whole
- *      tables over the wire and drifting out of sync with the schema.
+ *      the category join, the rating floor, the warranty floor, the three
+ *      service flags, and the result ordering (verified first, then rating, then
+ *      review volume). Re-implementing any of that in TypeScript would mean
+ *      pulling whole tables over the wire and drifting out of sync with the
+ *      schema.
  *
  * `import "server-only"` is deliberate: this module reaches for `next/headers`
  * through the Supabase server client. If a client component ever imports it,
@@ -52,6 +54,14 @@ export interface SearchFilters {
   category: string | null;
   /** Rating floor, 0–5. 0 means "no minimum". */
   minRating: number;
+  /**
+   * Warranty floor in days. 0 means "no minimum".
+   *
+   * A required field rather than an optional one on purpose: every construction
+   * site for `SearchFilters` — including `discover.ts` — then has to say what it
+   * wants, instead of silently inheriting a floor it never considered.
+   */
+  minWarrantyDays: number;
   services: ServiceFilters;
   /** null means "the whole world" — the RPC defaults cover the globe. */
   bbox: BoundingBox | null;
@@ -69,6 +79,7 @@ export interface SearchFilters {
 export const SEARCH_PARAM_KEYS = {
   category: "category",
   rating: "rating",
+  warranty: "warranty",
   inShop: "in_shop",
   homeService: "home_service",
   pickupDrop: "pickup",
@@ -79,6 +90,7 @@ export const SEARCH_PARAM_KEYS = {
 export const DEFAULT_FILTERS: SearchFilters = {
   category: null,
   minRating: 0,
+  minWarrantyDays: 0,
   services: { inShop: false, homeService: false, pickupDrop: false },
   bbox: null,
   q: "",
@@ -86,6 +98,20 @@ export const DEFAULT_FILTERS: SearchFilters = {
 
 /** The rating floors the segmented control offers. 0 = "Any". */
 export const RATING_STEPS: readonly number[] = [0, 3, 4, 4.5];
+
+/**
+ * The warranty floors the segmented control offers, in days. 0 = "Any".
+ *
+ * 1 is a deliberate step, not a placeholder. `fixer_profiles.default_warranty_days`
+ * is `not null default 3`, so almost every shop has *some* cover and the question a
+ * customer actually asks first is "does this shop stand behind the work at all" —
+ * which is the 1-day floor. 30 and 90 are the floors that separate the shops making
+ * a real promise.
+ */
+export const WARRANTY_STEPS: readonly number[] = [0, 1, 30, 90];
+
+/** Nothing sensible is longer than a decade, and it bounds the parser. */
+const MAX_WARRANTY_DAYS = 3650;
 
 /**
  * How many results we show. Well under the RPC's own hard ceiling of 250.
@@ -146,6 +172,23 @@ function parseMinRating(input: string | string[] | undefined): number {
 }
 
 /**
+ * Warranty floor in whole days.
+ *
+ * Floored rather than snapped to `WARRANTY_STEPS`, so a hand-edited
+ * `?warranty=14` does the obvious thing instead of being rounded to a value the
+ * visitor did not ask for. The facet permutations that allows are harmless
+ * because `isIndexable` in the search page keeps every non-zero floor out of the
+ * index.
+ */
+function parseMinWarrantyDays(input: string | string[] | undefined): number {
+  const raw = firstValue(input);
+  if (raw === undefined) return 0;
+  const parsed = Number.parseFloat(raw);
+  if (!Number.isFinite(parsed)) return 0;
+  return Math.floor(clamp(parsed, 0, MAX_WARRANTY_DAYS));
+}
+
+/**
  * `bbox=west,south,east,north` — the OGC / GeoJSON ordering, so the value can
  * be pasted between mapping tools without reshuffling.
  *
@@ -202,6 +245,7 @@ export function parseSearchParams(sp: RawSearchParams): SearchFilters {
   return {
     category: parseCategory(sp[SEARCH_PARAM_KEYS.category]),
     minRating: parseMinRating(sp[SEARCH_PARAM_KEYS.rating]),
+    minWarrantyDays: parseMinWarrantyDays(sp[SEARCH_PARAM_KEYS.warranty]),
     services: {
       inShop: readFlag(sp[SEARCH_PARAM_KEYS.inShop]),
       homeService: readFlag(sp[SEARCH_PARAM_KEYS.homeService]),
@@ -232,6 +276,9 @@ export function toSearchParams(filters: SearchFilters): URLSearchParams {
 
   if (filters.category) params.set(SEARCH_PARAM_KEYS.category, filters.category);
   if (filters.minRating > 0) params.set(SEARCH_PARAM_KEYS.rating, String(filters.minRating));
+  if (filters.minWarrantyDays > 0) {
+    params.set(SEARCH_PARAM_KEYS.warranty, String(filters.minWarrantyDays));
+  }
   if (filters.services.inShop) params.set(SEARCH_PARAM_KEYS.inShop, "1");
   if (filters.services.homeService) params.set(SEARCH_PARAM_KEYS.homeService, "1");
   if (filters.services.pickupDrop) params.set(SEARCH_PARAM_KEYS.pickupDrop, "1");
@@ -263,6 +310,7 @@ export function countActiveFilters(filters: SearchFilters): number {
   return [
     filters.category !== null,
     filters.minRating > 0,
+    filters.minWarrantyDays > 0,
     filters.services.inShop,
     filters.services.homeService,
     filters.services.pickupDrop,
@@ -317,7 +365,14 @@ export function toHoursInput(row: FixerProfileRow): HoursInput {
   };
 }
 
-type SearchFixersArgs = Database["public"]["Functions"]["search_fixers"]["Args"];
+/**
+ * Read off `AppDatabase`, not the generated `Database`.
+ *
+ * `min_warranty_days` is added by migration 011 and declared in the composed
+ * schema in `types/supabase.ts`; the generated half predates it. Using the
+ * generated Args here would make a correct call a compile error.
+ */
+type SearchFixersArgs = AppDatabase["public"]["Functions"]["search_fixers"]["Args"];
 
 function toRpcArgs(filters: SearchFilters): SearchFixersArgs {
   const args: SearchFixersArgs = {
@@ -333,6 +388,9 @@ function toRpcArgs(filters: SearchFilters): SearchFixersArgs {
   // "unfiltered" means here.
   if (filters.category) args.category_slug = filters.category;
   if (filters.q) args.search_query = filters.q;
+  // Sent only when set, so an unfiltered search produces byte-for-byte the same
+  // request body it did before migration 011.
+  if (filters.minWarrantyDays > 0) args.min_warranty_days = filters.minWarrantyDays;
   if (filters.bbox) {
     args.min_lat = filters.bbox.minLat;
     args.max_lat = filters.bbox.maxLat;
@@ -346,10 +404,10 @@ function toRpcArgs(filters: SearchFilters): SearchFixersArgs {
 /**
  * Run a directory search.
  *
- * Every predicate — bounding box, category, rating floor, service flags, free
- * text, ordering and the row cap — is resolved by `search_fixers` in Postgres.
- * Nothing is re-filtered here, so the "showing the first N" count is honest and
- * the page never pulls rows it will throw away.
+ * Every predicate — bounding box, category, rating floor, warranty floor, service
+ * flags, free text, ordering and the row cap — is resolved by `search_fixers` in
+ * Postgres. Nothing is re-filtered here, so the "showing the first N" count is
+ * honest and the page never pulls rows it will throw away.
  */
 export async function searchFixers(filters: SearchFilters): Promise<SearchOutcome> {
   const supabase = await createClient();

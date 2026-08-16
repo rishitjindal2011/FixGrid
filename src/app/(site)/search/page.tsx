@@ -42,6 +42,7 @@ function isIndexable(filters: SearchFilters): boolean {
   return (
     filters.q === "" &&
     filters.minRating === 0 &&
+    filters.minWarrantyDays === 0 &&
     filters.bbox === null &&
     !filters.services.inShop &&
     !filters.services.homeService &&
@@ -111,6 +112,20 @@ export default async function SearchPage({ searchParams }: PageProps) {
     ? `${activeCategory.name} repair`
     : "Repair experts near you";
 
+  /*
+   * `pluralize` already emits the number ("2 shops"), so prefixing the count by
+   * hand — as this line used to — rendered "2 2 shops", and "1 1 shop" on a
+   * single result.
+   *
+   * The truncated branch spells the plural out rather than calling `pluralize`,
+   * because the "+" has to land on the digits and not after the noun. It is safe:
+   * `truncated` means the row cap was reached, so the count there is
+   * SEARCH_RESULT_LIMIT and never 1.
+   */
+  const matchLabel = outcome.truncated
+    ? `${outcome.results.length}+ shops`
+    : pluralize(outcome.results.length, "shop");
+
   const schemas: WithContext<Thing>[] = [];
   if (isIndexable(filters)) {
     schemas.push(
@@ -146,10 +161,7 @@ export default async function SearchPage({ searchParams }: PageProps) {
           <p className="mt-2 text-sm text-steel">
             {outcome.failed
               ? "We couldn't reach the directory just now."
-              : `${outcome.results.length}${outcome.truncated ? "+" : ""} ${pluralize(
-                  outcome.results.length,
-                  "shop",
-                )} matching your filters`}
+              : `${matchLabel} matching your filters`}
           </p>
         </header>
 
@@ -235,7 +247,7 @@ function EmptyState({ hasFilters }: { hasFilters: boolean }) {
         <h2 className="mt-3 text-display-sm">Nothing here yet</h2>
         <p className="mx-auto mt-3 max-w-[42ch] text-sm leading-relaxed text-steel">
           {hasFilters
-            ? "No shop matches every filter at once. Widening the rating floor or clearing the service type usually helps."
+            ? "No shop matches every filter at once. Loosening the rating or warranty floor, or clearing the service type, usually helps."
             : "There are no repair shops in the registry for this area yet."}
         </p>
         {hasFilters ? (

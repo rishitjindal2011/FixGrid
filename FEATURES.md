@@ -86,7 +86,7 @@ shop-front photo, ID match — stored per claim with which checks passed. Show
 customers *what* was verified, not just a tick. A badge nobody can interrogate is
 decoration.
 
-### 1.2 Warranty is the differentiator — lead with it
+### 1.2 Warranty is the differentiator — lead with it — **DONE**
 
 `warranty_days`, `warranty_expires_at`, the dispute flow and the escrow view are
 all built and working. **Urban Company's public pages show no warranty or
@@ -96,6 +96,19 @@ schema.
 **Add:** a warranty badge on every search result and shop card; "covered until
 {date}" on the booking; a warranty filter in search. Move it from a detail page to
 the pitch.
+
+**Shipped:**
+
+- `WarrantyBadge` on search results, the homepage featured list and the shop
+  profile's contact card, above the call button. One component, so the wording
+  cannot drift between surfaces. Renders nothing at 0 days.
+- A warranty floor in the public search rail and the dashboard discover rail,
+  backed by `min_warranty_days` on `search_fixers` (migration 011). Steps are
+  Any / Offered / 30d+ / 90d+; the floor is a real SQL predicate, not a
+  post-filter, so the "showing the first N" count stays honest.
+- The facet is excluded from `isIndexable`, so it cannot bloat the index.
+
+**Still open here:** "covered until {date}" on the booking itself.
 
 ### 1.3 Escrow that is real
 

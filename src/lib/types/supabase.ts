@@ -166,11 +166,24 @@ interface MarketplaceFunctions {
    * search cards now read. The generated signature describes the pre-migration
    * row, which is why this replaces it rather than adding to it.
    *
-   * `Args` is taken from the generated type so the four viewport and filter
-   * parameters stay in one place; only the return shape is being corrected.
+   * `Args` is taken from the generated type and extended, so the parameters that
+   * did not change stay in one place; the return shape and the one new parameter
+   * are what this override adds.
    */
   search_fixers: {
-    Args: Database["public"]["Functions"]["search_fixers"]["Args"];
+    /**
+     * The generated `Args` plus `min_warranty_days`, added by migration 011.
+     *
+     * Extended rather than rewritten so the eleven viewport, category, rating and
+     * service parameters keep one definition. `Flatten` collapses the intersection
+     * into a plain object type — postgrest-js reads this through a constrained
+     * generic, and an intersection is not always a shape it can see through.
+     */
+    Args: Flatten<
+      Database["public"]["Functions"]["search_fixers"]["Args"] & {
+        min_warranty_days?: number;
+      }
+    >;
     Returns: FixerRowFull[];
   };
   my_profile: {

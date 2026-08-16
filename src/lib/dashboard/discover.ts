@@ -2,6 +2,7 @@ import "server-only";
 
 import {
   RATING_STEPS,
+  WARRANTY_STEPS,
   getCategories,
   parseSearchParams,
   searchFixers,
@@ -69,6 +70,8 @@ export interface DiscoverFilters {
   categoryId?: string;
   /** Rating floor, one of `RATING_STEPS`. Absent means no minimum. */
   minRating?: number;
+  /** Warranty floor in days, one of `WARRANTY_STEPS`. Absent means no minimum. */
+  minWarrantyDays?: number;
   /** Ceiling on the cheapest active service a shop lists, in pence. */
   maxPricePence?: number;
   deliveryMode?: DeliveryMode;
@@ -83,6 +86,7 @@ export const DISCOVER_PARAM_KEYS = {
   q: "q",
   category: "category",
   rating: "rating",
+  warranty: "warranty",
   maxPrice: "max_price",
   delivery: "delivery",
   available: "available",
@@ -134,6 +138,12 @@ function snapRating(value: number): number | undefined {
   return step && step > 0 ? step : undefined;
 }
 
+/** Same downward snap as `snapRating`, for the same reason. */
+function snapWarranty(value: number): number | undefined {
+  const step = [...WARRANTY_STEPS].reverse().find((candidate) => value >= candidate);
+  return step && step > 0 ? step : undefined;
+}
+
 function parsePrice(input: string | string[] | undefined): number | undefined {
   const raw = firstValue(input);
   if (raw === undefined) return undefined;
@@ -154,6 +164,7 @@ export function parseDiscoverParams(sp: RawSearchParams): DiscoverFilters {
     // rather than sent to Postgres, which raises 22P02 on a malformed uuid.
     categoryId: categoryId && UUID_RE.test(categoryId) ? categoryId : undefined,
     minRating: snapRating(shared.minRating),
+    minWarrantyDays: snapWarranty(shared.minWarrantyDays),
     maxPricePence: parsePrice(sp[DISCOVER_PARAM_KEYS.maxPrice]),
     deliveryMode: DELIVERY_MODES.find((mode) => mode === delivery),
     availableOnly: readFlag(sp[DISCOVER_PARAM_KEYS.available]) || undefined,
@@ -174,6 +185,9 @@ export function toDiscoverParams(filters: DiscoverFilters): URLSearchParams {
   if (filters.q) params.set(DISCOVER_PARAM_KEYS.q, filters.q);
   if (filters.categoryId) params.set(DISCOVER_PARAM_KEYS.category, filters.categoryId);
   if (filters.minRating) params.set(DISCOVER_PARAM_KEYS.rating, String(filters.minRating));
+  if (filters.minWarrantyDays) {
+    params.set(DISCOVER_PARAM_KEYS.warranty, String(filters.minWarrantyDays));
+  }
   if (filters.maxPricePence) {
     params.set(DISCOVER_PARAM_KEYS.maxPrice, String(filters.maxPricePence));
   }
@@ -210,6 +224,7 @@ export function countActiveDiscoverFilters(filters: DiscoverFilters): number {
     Boolean(filters.q),
     Boolean(filters.categoryId),
     Boolean(filters.minRating),
+    Boolean(filters.minWarrantyDays),
     Boolean(filters.maxPricePence),
     Boolean(filters.deliveryMode),
     Boolean(filters.availableOnly),
@@ -256,6 +271,7 @@ function toSearchFilters(filters: DiscoverFilters, categorySlug: string | null):
   return {
     category: categorySlug,
     minRating: filters.minRating ?? 0,
+    minWarrantyDays: filters.minWarrantyDays ?? 0,
     services: {
       inShop: filters.deliveryMode === "in_shop",
       homeService: filters.deliveryMode === "home_visit",

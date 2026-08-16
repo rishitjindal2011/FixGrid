@@ -36,6 +36,7 @@ const KEYS = {
   q: "q",
   category: "category",
   rating: "rating",
+  warranty: "warranty",
   maxPrice: "max_price",
   delivery: "delivery",
   available: "available",
@@ -53,6 +54,17 @@ const RATING_CHOICES = [
 ] as const;
 
 /**
+ * Mirrors `WARRANTY_STEPS`. Same values and labels as the public panel, so the
+ * two directories cannot come to mean different things by the same URL.
+ */
+const WARRANTY_CHOICES = [
+  { value: "", label: "Any" },
+  { value: "1", label: "Offered" },
+  { value: "30", label: "30d+" },
+  { value: "90", label: "90d+" },
+] as const;
+
+/**
  * Price ceilings in **pence**, because that is the unit the parameter carries
  * and the schema stores. Bands rather than a free number field keep rupees out
  * of the URL entirely, so there is nowhere for a decimal to creep in.
@@ -66,6 +78,7 @@ interface RailState {
   q: string;
   category: string;
   rating: string;
+  warranty: string;
   maxPrice: string;
   delivery: string;
   available: boolean;
@@ -79,6 +92,7 @@ function toRailState(filters: DiscoverFilters): RailState {
     q: filters.q ?? "",
     category: filters.categoryId ?? "",
     rating: filters.minRating ? String(filters.minRating) : "",
+    warranty: filters.minWarrantyDays ? String(filters.minWarrantyDays) : "",
     maxPrice: filters.maxPricePence ? String(filters.maxPricePence) : "",
     delivery: filters.deliveryMode ?? "",
     available: Boolean(filters.availableOnly),
@@ -96,6 +110,7 @@ function toPath(state: RailState): string {
   if (state.q.trim()) params.set(KEYS.q, state.q.trim());
   if (state.category) params.set(KEYS.category, state.category);
   if (state.rating) params.set(KEYS.rating, state.rating);
+  if (state.warranty) params.set(KEYS.warranty, state.warranty);
   if (state.maxPrice) params.set(KEYS.maxPrice, state.maxPrice);
   if (state.delivery) params.set(KEYS.delivery, state.delivery);
   if (state.available) params.set(KEYS.available, "1");
@@ -112,6 +127,7 @@ function sameState(a: RailState, b: RailState): boolean {
     a.q === b.q &&
     a.category === b.category &&
     a.rating === b.rating &&
+    a.warranty === b.warranty &&
     a.maxPrice === b.maxPrice &&
     a.delivery === b.delivery &&
     a.available === b.available &&
@@ -282,33 +298,23 @@ export function DiscoverFilterRail({
         </p>
       </div>
 
-      <fieldset>
-        <legend className="eyebrow mb-2">Minimum rating</legend>
-        <div className="flex rounded-machined border border-hairline bg-chalk p-0.5">
-          {RATING_CHOICES.map((choice) => (
-            <label key={choice.label} className="flex-1">
-              <input
-                type="radio"
-                name={KEYS.rating}
-                value={choice.value}
-                checked={draft.rating === choice.value}
-                onChange={() => commit({ ...draft, rating: choice.value })}
-                className="peer sr-only"
-              />
-              <span
-                className={cn(
-                  "block cursor-pointer rounded-[2px] py-1.5 text-center font-mono text-eyebrow uppercase tracking-[0.12em] transition-colors",
-                  "text-steel hover:bg-bench-sunk hover:text-enamel",
-                  "peer-checked:bg-enamel peer-checked:text-bench",
-                  "peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-signal",
-                )}
-              >
-                {choice.label}
-              </span>
-            </label>
-          ))}
-        </div>
-      </fieldset>
+      <RadioFloor
+        legend="Minimum rating"
+        name={KEYS.rating}
+        choices={RATING_CHOICES}
+        value={draft.rating}
+        onSelect={(value) => commit({ ...draft, rating: value })}
+      />
+
+      {/* Beside rating, for the same reason as on the public panel: these are the
+          two trust questions, and warranty is the one nobody else is answering. */}
+      <RadioFloor
+        legend="Warranty"
+        name={KEYS.warranty}
+        choices={WARRANTY_CHOICES}
+        value={draft.warranty}
+        onSelect={(value) => commit({ ...draft, warranty: value })}
+      />
 
       <div>
         <label htmlFor={`${idPrefix}-delivery`} className="eyebrow mb-2 block">
@@ -403,6 +409,61 @@ export function DiscoverFilterRail({
 
       <div className="hidden lg:block">{renderForm("discover-d")}</div>
     </>
+  );
+}
+
+/**
+ * A segmented "at least this much" control, over real radio inputs.
+ *
+ * Radios rather than buttons for the same reason `ToggleRow` uses a native
+ * checkbox: with scripting off this rail submits as a form, and a `<button>`
+ * carrying `aria-pressed` contributes nothing to a native post. The visible
+ * segment is a `<span>` styled off `peer-checked`, so the control that the
+ * browser and assistive tech see is the one that actually holds the value.
+ *
+ * Shared by rating and warranty — the same control over a different number.
+ */
+function RadioFloor({
+  legend,
+  name,
+  choices,
+  value,
+  onSelect,
+}: {
+  legend: string;
+  name: string;
+  choices: readonly { readonly value: string; readonly label: string }[];
+  value: string;
+  onSelect: (value: string) => void;
+}) {
+  return (
+    <fieldset>
+      <legend className="eyebrow mb-2">{legend}</legend>
+      <div className="flex rounded-machined border border-hairline bg-chalk p-0.5">
+        {choices.map((choice) => (
+          <label key={choice.label} className="flex-1">
+            <input
+              type="radio"
+              name={name}
+              value={choice.value}
+              checked={value === choice.value}
+              onChange={() => onSelect(choice.value)}
+              className="peer sr-only"
+            />
+            <span
+              className={cn(
+                "block cursor-pointer rounded-[2px] py-1.5 text-center font-mono text-eyebrow uppercase tracking-[0.12em] transition-colors",
+                "text-steel hover:bg-bench-sunk hover:text-enamel",
+                "peer-checked:bg-enamel peer-checked:text-bench",
+                "peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-signal",
+              )}
+            >
+              {choice.label}
+            </span>
+          </label>
+        ))}
+      </div>
+    </fieldset>
   );
 }
 

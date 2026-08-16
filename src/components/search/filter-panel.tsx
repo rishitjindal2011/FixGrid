@@ -25,6 +25,7 @@ import type { RepairCategoryRow } from "@/lib/types/database";
 const KEYS = {
   category: "category",
   rating: "rating",
+  warranty: "warranty",
   inShop: "in_shop",
   homeService: "home_service",
   pickupDrop: "pickup",
@@ -37,6 +38,21 @@ const RATING_CHOICES = [
   { value: 3, label: "3.0+" },
   { value: 4, label: "4.0+" },
   { value: 4.5, label: "4.5+" },
+] as const;
+
+/**
+ * Mirrors `WARRANTY_STEPS` in `@/lib/queries/search` — duplicated for the same
+ * reason the keys are: that module is `server-only`.
+ *
+ * "Offered" is the 1-day floor. `default_warranty_days` is `not null default 3`,
+ * so the useful first cut is not "how long" but "at all" — it is the step that
+ * separates a shop standing behind its work from one that does not.
+ */
+const WARRANTY_CHOICES = [
+  { value: 0, label: "Any" },
+  { value: 1, label: "Offered" },
+  { value: 30, label: "30d+" },
+  { value: 90, label: "90d+" },
 ] as const;
 
 const SERVICE_CHOICES = [
@@ -99,6 +115,7 @@ export function FilterPanel({ categories, activeCount }: FilterPanelProps) {
 
   const currentCategory = searchParams.get(KEYS.category) ?? "";
   const currentRating = Number.parseFloat(searchParams.get(KEYS.rating) ?? "0") || 0;
+  const currentWarranty = Number.parseFloat(searchParams.get(KEYS.warranty) ?? "0") || 0;
 
   const body = (
     <div
@@ -194,32 +211,26 @@ export function FilterPanel({ categories, activeCount }: FilterPanelProps) {
         </Select>
       </div>
 
-      <fieldset>
-        <legend className="eyebrow mb-2">Minimum rating</legend>
-        <div className="flex rounded-machined border border-hairline bg-chalk p-0.5">
-          {RATING_CHOICES.map((choice) => {
-            const isSelected = currentRating === choice.value;
-            return (
-              <button
-                key={choice.value}
-                type="button"
-                aria-pressed={isSelected}
-                onClick={() =>
-                  setParam(KEYS.rating, choice.value === 0 ? null : String(choice.value))
-                }
-                className={cn(
-                  "flex-1 rounded-[2px] py-1.5 font-mono text-eyebrow uppercase tracking-[0.12em] transition-colors",
-                  isSelected
-                    ? "bg-enamel text-bench"
-                    : "text-steel hover:bg-bench-sunk hover:text-enamel",
-                )}
-              >
-                {choice.label}
-              </button>
-            );
-          })}
-        </div>
-      </fieldset>
+      <FloorControl
+        legend="Minimum rating"
+        choices={RATING_CHOICES}
+        current={currentRating}
+        onSelect={(value) => setParam(KEYS.rating, value === 0 ? null : String(value))}
+      />
+
+      {/*
+        Directly under rating, above service type.
+
+        Rating is what other customers thought; warranty is what the shop will
+        commit to. Those are the two trust questions and they belong next to each
+        other — service type is logistics and can follow.
+      */}
+      <FloorControl
+        legend="Warranty"
+        choices={WARRANTY_CHOICES}
+        current={currentWarranty}
+        onSelect={(value) => setParam(KEYS.warranty, value === 0 ? null : String(value))}
+      />
 
       <fieldset>
         <legend className="eyebrow mb-2">Service type</legend>
@@ -276,5 +287,68 @@ export function FilterPanel({ categories, activeCount }: FilterPanelProps) {
 
       <div className="hidden lg:block">{body}</div>
     </>
+  );
+}
+
+interface FloorChoice {
+  readonly value: number;
+  readonly label: string;
+}
+
+/**
+ * A segmented "at least this much" control.
+ *
+ * Shared by rating and warranty because they are the same control over a
+ * different number, and two hand-rolled copies would drift the moment either
+ * gained a state.
+ *
+ * The selected segment is resolved by snapping the URL value *down* to the
+ * nearest choice, not by matching it exactly. A hand-edited or stale
+ * `?warranty=14` is a real floor that is filtering real results, so leaving every
+ * segment unlit would show a panel that disagrees with the list beside it.
+ * Snapping down never overstates what is being filtered: it lights "Offered",
+ * which is true, rather than "30d+", which would not be.
+ */
+function FloorControl({
+  legend,
+  choices,
+  current,
+  onSelect,
+}: {
+  legend: string;
+  choices: readonly FloorChoice[];
+  current: number;
+  onSelect: (value: number) => void;
+}) {
+  const selected = choices.reduce(
+    (best, choice) => (current >= choice.value && choice.value >= best ? choice.value : best),
+    0,
+  );
+
+  return (
+    <fieldset>
+      <legend className="eyebrow mb-2">{legend}</legend>
+      <div className="flex rounded-machined border border-hairline bg-chalk p-0.5">
+        {choices.map((choice) => {
+          const isSelected = selected === choice.value;
+          return (
+            <button
+              key={choice.value}
+              type="button"
+              aria-pressed={isSelected}
+              onClick={() => onSelect(choice.value)}
+              className={cn(
+                "flex-1 rounded-[2px] py-1.5 font-mono text-eyebrow uppercase tracking-[0.12em] transition-colors",
+                isSelected
+                  ? "bg-enamel text-bench"
+                  : "text-steel hover:bg-bench-sunk hover:text-enamel",
+              )}
+            >
+              {choice.label}
+            </button>
+          );
+        })}
+      </div>
+    </fieldset>
   );
 }
