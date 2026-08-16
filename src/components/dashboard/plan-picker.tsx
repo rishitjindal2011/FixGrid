@@ -1,13 +1,15 @@
 "use client";
 
+import * as React from "react";
 import { useActionState } from "react";
 import { Check, Zap } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { formatMoney } from "@/lib/format";
-import { subscribeToPlan } from "@/lib/plans/actions";
+import { purchasePlan, subscribeToPlan } from "@/lib/plans/actions";
 import { PLAN_INITIAL_STATE } from "@/lib/plans/state";
+import { PaymentSheet } from "@/components/dashboard/payment-sheet";
 import type { Entitlement, Plan } from "@/lib/plans/server";
 import { cn } from "@/lib/utils";
 
@@ -31,6 +33,15 @@ export function PlanPicker({
   balanceMinor: number;
 }) {
   const [state, submit, pending] = useActionState(subscribeToPlan, PLAN_INITIAL_STATE);
+
+  /**
+   * Which paid plan the sheet is open for, by code.
+   *
+   * A code rather than a boolean, so the sheet is told exactly what is being bought
+   * and there is no second piece of state that could disagree with it.
+   */
+  const [paying, setPaying] = React.useState<string | null>(null);
+  const payingPlan = plans.find((plan) => plan.code === paying) ?? null;
 
   return (
     <div className="flex flex-col gap-4">
@@ -98,37 +109,64 @@ export function PlanPicker({
 
               <div className="grow" />
 
-              <form action={submit} className="pt-4">
-                <input type="hidden" name="planCode" value={plan.code} />
-                <Button
-                  type="submit"
-                  size="sm"
-                  variant={current ? "outline" : "primary"}
-                  className="w-full"
-                  disabled={pending || current || !affordable}
-                >
-                  {current
-                    ? "Your plan"
-                    : plan.priceMinor === 0
-                      ? "Switch to pay as you go"
-                      : affordable
-                        ? `Pay ${formatMoney(plan.priceMinor, plan.currency)}`
-                        : "Not enough balance"}
-                </Button>
-              </form>
+              {plan.priceMinor === 0 ? (
+                /* The free tier takes nothing, so there is nothing to choose a
+                   payment method for — it stays a plain form. */
+                <form action={submit} className="pt-4">
+                  <input type="hidden" name="planCode" value={plan.code} />
+                  <Button
+                    type="submit"
+                    size="sm"
+                    variant={current ? "outline" : "primary"}
+                    className="w-full"
+                    disabled={pending || current}
+                  >
+                    {current ? "Your plan" : "Switch to pay as you go"}
+                  </Button>
+                </form>
+              ) : (
+                <div className="pt-4">
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant={current ? "outline" : "primary"}
+                    className="w-full"
+                    disabled={current}
+                    onClick={() => setPaying(plan.code)}
+                  >
+                    {current
+                      ? "Your plan"
+                      : `Pay ${formatMoney(plan.priceMinor, plan.currency)}`}
+                  </Button>
+                </div>
+              )}
 
-              {/* Named rather than left to a failed attempt. The fix is on another
-                  page, and saying so here saves a round trip through an error. */}
+              {/* No longer says "top up first". The sheet offers a card, UPI or
+                  net-banking route, so an empty balance is not a dead end. */}
               {!affordable && !current ? (
                 <p className="pt-2 text-xs leading-relaxed text-steel">
-                  Top up your balance first — you have{" "}
-                  {formatMoney(balanceMinor, plan.currency)}.
+                  Pay by card or UPI, or top up your{" "}
+                  {formatMoney(balanceMinor, plan.currency)} balance first.
                 </p>
               ) : null}
             </div>
           );
         })}
       </div>
+
+      {payingPlan ? (
+        <PaymentSheet
+          open
+          onClose={() => setPaying(null)}
+          amountMinor={payingPlan.priceMinor}
+          balanceMinor={balanceMinor}
+          title={`Subscribe to ${payingPlan.name}`}
+          description={`${payingPlan.periodDays} days of ${payingPlan.name}. Choose how you want to pay — nothing leaves your balance until you do.`}
+          purchaseFields={{ planCode: payingPlan.code }}
+          purchaseAction={purchasePlan}
+          confirmLabel="Done"
+        />
+      ) : null}
     </div>
   );
 }

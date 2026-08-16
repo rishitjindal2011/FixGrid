@@ -40,6 +40,18 @@ export async function subscribeToPlan(
   _prev: PlanActionState,
   formData: FormData,
 ): Promise<PlanActionState> {
+  return purchasePlan(formData);
+}
+
+/**
+ * The same purchase, without the `useActionState` prefix argument.
+ *
+ * `PaymentSheet` calls the purchase itself once funds are assured, so it needs a
+ * plain `(formData) => result` shape rather than a reducer. Both entry points share
+ * one body — a second copy of a charge is a second place for the charge to be
+ * wrong.
+ */
+export async function purchasePlan(formData: FormData): Promise<PlanActionState> {
   const parsed = SubscribeSchema.safeParse({ planCode: formData.get("planCode") });
   if (!parsed.success) return FAILED("Pick a plan.");
 
