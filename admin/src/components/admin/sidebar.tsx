@@ -6,6 +6,7 @@ import {
   Banknote,
   CalendarRange,
   Gauge,
+  Receipt,
   Scale,
   ShieldCheck,
   UserCog,
@@ -29,6 +30,8 @@ const LINKS = [
   { href: "/users", label: "All accounts", icon: UserCog },
   { href: "/bookings", label: "Bookings", icon: CalendarRange },
   { href: "/disputes", label: "Disputes", icon: Scale },
+  // Next to Payouts, because both are money leaving the platform.
+  { href: "/bills", label: "Bills", icon: Receipt },
   { href: "/payouts", label: "Payouts", icon: Banknote },
   { href: "/team", label: "Team", icon: Lock },
 ] as const;
