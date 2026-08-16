@@ -16,6 +16,7 @@ import {
   Search,
   Settings,
   ShieldCheck,
+  Sparkles,
   Star,
   Store,
   Users,
@@ -99,6 +100,9 @@ export const NAV_SECTIONS: NavSection[] = [
       // somebody who has just been told they have too little goes looking for
       // this one, not for their invoice history.
       { href: "/dashboard/wallet", label: "Wallet", icon: Wallet, match: "/dashboard/wallet" },
+      // Next to Wallet, because a plan is bought with the balance and the two are
+      // read together: "can I afford this" is a question about both.
+      { href: "/dashboard/plan", label: "Plan", icon: Sparkles, match: "/dashboard/plan" },
       { href: "/dashboard/billing", label: "Payments", icon: CreditCard, match: "/dashboard/billing" },
       { href: "/dashboard/reviews", label: "Reviews", icon: Star, match: "/dashboard/reviews" },
       {

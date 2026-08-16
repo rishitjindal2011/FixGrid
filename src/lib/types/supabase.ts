@@ -47,6 +47,8 @@ import type {
   ShopInventoryRow,
   ShopNoticeRow,
   ShopBillRow,
+  SubscriptionPlanRow,
+  UserSubscriptionRow,
   ShopServiceRow,
   ShopTimeOffRow,
   UserAddressRow,
@@ -193,6 +195,33 @@ interface MarketplaceFunctions {
    * `Returns: undefined` because the function returns `void`: it either commits
    * every leg or raises, so there is nothing to read back.
    */
+  /**
+   * What the caller's plan grants right now.
+   *
+   * A lapsed period resolves to the free tier inside the function, so no caller
+   * has to check expiry itself. That is the point of it being one function rather
+   * than a join repeated in the app and in the booking action.
+   */
+  my_entitlement: {
+    Args: Record<string, never>;
+    Returns: Array<{
+      plan_code: string;
+      plan_name: string;
+      priority: boolean;
+      fee_waived: boolean;
+      bookings_used: number;
+      bookings_included: number | null;
+      period_end: string | null;
+    }>;
+  };
+  /**
+   * Spend one included booking. Returns false when there was nothing to spend,
+   * which the caller logs rather than assuming.
+   */
+  consume_booking_allowance: {
+    Args: Record<string, never>;
+    Returns: boolean;
+  };
   post_ledger: {
     Args: { p_entries: unknown };
     Returns: undefined;
@@ -256,6 +285,8 @@ export interface AppDatabase {
       wallets: TableOf<WalletRow>;
       wallet_topups: TableOf<WalletTopUpRow>;
       shop_bills: TableOf<ShopBillRow>;
+      subscription_plans: TableOf<SubscriptionPlanRow>;
+      user_subscriptions: TableOf<UserSubscriptionRow>;
       disputes: TableOf<DisputeRow>;
       dispute_messages: TableOf<DisputeMessageRow>;
       dispute_evidence: TableOf<DisputeEvidenceRow>;

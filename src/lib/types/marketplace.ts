@@ -305,6 +305,11 @@ export interface BookingRow {
   /** Pence. */
   final_amount: number | null;
   platform_fee: number;
+  /**
+   * Snapshot of the customer's plan priority at request time. Never recomputed —
+   * a later downgrade must not reorder work already under way.
+   */
+  priority: boolean;
   tax_amount: number;
   currency: string;
 
@@ -541,6 +546,39 @@ export interface ShopBillRow {
   reviewed_by: string | null;
   reviewed_at: string | null;
   review_note: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+/** Reference data: the price list. Edited by migration, not by the app. */
+export interface SubscriptionPlanRow {
+  code: string;
+  name: string;
+  /** Paise per period. 0 on the free tier. */
+  price_minor: number;
+  currency: string;
+  /** Bookings with the fee waived per period. Null means unlimited. */
+  bookings_included: number | null;
+  priority: boolean;
+  period_days: number;
+  blurb: string | null;
+  sort_order: number;
+  is_active: boolean;
+}
+
+/**
+ * One customer subscription. An absent row means the free tier.
+ *
+ * A `period_end` in the past means lapsed. Quota is derived against it at the
+ * moment of use, so there is no renewal job that can go stale and leave somebody
+ * entitled to something they have not paid for.
+ */
+export interface UserSubscriptionRow {
+  user_id: string;
+  plan_code: string;
+  period_start: string;
+  period_end: string;
+  bookings_used: number;
   created_at: string;
   updated_at: string;
 }

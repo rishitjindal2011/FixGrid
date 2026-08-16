@@ -487,6 +487,46 @@ export async function createBooking(
   const feeMinor = Math.max(0, feeRow?.fee_minor ?? 0);
   const categoryId = feeRow?.category_id ?? null;
 
+  /*
+   * What the customer's plan covers.
+   *
+   * `my_entitlement()` resolves the plan actually in force — a lapsed period falls
+   * back to `free` rather than to its expired tier — and says whether this next
+   * booking's fee is waived. Read here rather than trusted from the form for the
+   * obvious reason: the client would otherwise be asserting its own discount.
+   *
+   * A failure resolves to "no plan", which charges the fee. That is the safe
+   * direction: undercharging a subscriber is a refund, overcharging a free user is
+   * a complaint, and charging a subscriber we could not verify is a refund too —
+   * but silently waiving fees because a read failed is revenue going missing with
+   * no trace.
+   */
+  const { data: entitlement, error: planError } = await supabase
+    .rpc("my_entitlement")
+    .maybeSingle<{
+      plan_code: string;
+      plan_name: string;
+      priority: boolean;
+      fee_waived: boolean;
+      bookings_used: number;
+      bookings_included: number | null;
+    }>();
+
+  if (planError) {
+    console.error("[bookings] entitlement read failed — charging the fee", {
+      code: planError.code,
+      message: planError.message,
+    });
+  }
+
+  const feeWaived = entitlement?.fee_waived === true;
+  const priority = entitlement?.priority === true;
+
+  // The fee actually charged and snapshotted. A waived booking records zero, so
+  // the invoice tells the truth about what was taken rather than showing a charge
+  // that never happened.
+  const chargeableFeeMinor = feeWaived ? 0 : feeMinor;
+
   const needsAddress =
     input.deliveryMode === "home_visit" || input.deliveryMode === "pickup_drop";
   if (needsAddress && !input.addressLine1) {
@@ -503,10 +543,10 @@ export async function createBooking(
    * notices until the earnings figures are wrong. So the recoverable direction
    * goes first, and the refund below covers it.
    */
-  if (feeMinor > 0) {
+  if (chargeableFeeMinor > 0) {
     const charge = await chargeToPlatform({
       kind: "fee",
-      amountMinor: feeMinor,
+      amountMinor: chargeableFeeMinor,
       from: { kind: "user", ownerId: user.id },
       memo: "Booking platform fee",
       fallbackError: "That request could not be sent — the fee could not be taken.",
@@ -526,7 +566,8 @@ export async function createBooking(
       fixer_id: input.fixerId,
       service_id: input.serviceId || null,
       category_id: categoryId,
-      platform_fee: feeMinor,
+      platform_fee: chargeableFeeMinor,
+      priority,
       delivery_mode: input.deliveryMode,
       status: "requested",
       slot,
@@ -562,10 +603,10 @@ export async function createBooking(
      * it is logged with the amount and the person's id — enough for an operator
      * to post the correction by hand from the admin console.
      */
-    if (feeMinor > 0) {
+    if (chargeableFeeMinor > 0) {
       const refund = await creditFromPlatform({
         kind: "refund",
-        amountMinor: feeMinor,
+        amountMinor: chargeableFeeMinor,
         to: { kind: "user", ownerId: user.id },
         memo: "Booking fee returned — request could not be sent",
       });
@@ -573,7 +614,7 @@ export async function createBooking(
       if (!refund.ok) {
         console.error("[bookings] ORPHANED FEE — refund failed, needs manual correction", {
           userId: user.id,
-          amountMinor: feeMinor,
+          amountMinor: chargeableFeeMinor,
           reason: refund.error,
         });
       }
@@ -612,6 +653,35 @@ export async function createBooking(
 
   revalidatePath("/dashboard");
   revalidatePath("/dashboard/bookings");
+
+  /*
+   * Spend the included booking.
+   *
+   * After the insert, never before: an allowance consumed by a booking that then
+   * failed to save is one the customer paid for and did not get, and unlike a fee
+   * there is nothing to refund — only a counter to walk back.
+   *
+   * If this fails the customer has had a free booking that went uncounted, which
+   * costs us one fee and is visible in the log. The reverse ordering would cost
+   * them a booking they had already paid for, which they would have to notice and
+   * complain about. The cheap failure goes second.
+   */
+  if (feeWaived) {
+    const { data: spent, error: spendError } = await supabase.rpc(
+      "consume_booking_allowance",
+    );
+
+    if (spendError || spent === false) {
+      console.error("[bookings] plan allowance not consumed — booking was free", {
+        userId: user.id,
+        plan: entitlement?.plan_code,
+        reference: data?.reference,
+        reason: spendError?.message ?? "the function reported nothing to spend",
+      });
+    } else {
+      revalidatePath("/dashboard/plan");
+    }
+  }
 
   if (data?.id) {
     void notifyBookingCreated(data.id).catch((error) =>
