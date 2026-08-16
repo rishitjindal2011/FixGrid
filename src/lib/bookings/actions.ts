@@ -183,7 +183,7 @@ export async function transitionBooking(
 
   const { data: booking, error: readError } = await supabase
     .from("bookings")
-    .select("id, reference, status, customer_id, fixer_id, warranty_days, quoted_amount")
+    .select("id, reference, status, customer_id, fixer_id, warranty_days, quoted_amount, platform_fee")
     .eq("id", bookingId)
     .maybeSingle<{
       id: string;
@@ -193,6 +193,8 @@ export async function transitionBooking(
       fixer_id: string;
       warranty_days: number;
       quoted_amount: number | null;
+      /** Read so a refusal can hand the fee back. See the refund below. */
+      platform_fee: number;
     }>();
 
   if (readError) return FAILED(explain(readError.code, "That booking could not be loaded."));
@@ -282,8 +284,57 @@ export async function transitionBooking(
     actor,
   }).catch((error) => console.error("[notifications] transition failed", error));
 
+  /*
+   * Give the platform fee back when the repair is never going to happen.
+   *
+   * The customer pays the fee the moment they request a booking, before anyone has
+   * agreed to anything. If the shop then declines, or nobody answers and cron
+   * expires it, or the shop cancels — the customer has paid us for a repair they
+   * are not getting. That is not a fee, it is a charge for nothing.
+   *
+   * Deliberately NOT refunded on `cancelled_customer`. Somebody withdrawing their
+   * own request is the one case where the fee bought what it was for: the shop was
+   * engaged and the slot was held against other customers.
+   *
+   * Runs after the status has committed, and a failure here does not fail the
+   * transition. The decline is the thing that had to happen; an unrefunded fee is
+   * recoverable from this log line, whereas a booking stuck in its old state
+   * because a refund failed is not.
+   */
+  if (REFUND_FEE_ON.includes(to) && booking.platform_fee > 0) {
+    const refund = await creditFromPlatform({
+      kind: "refund",
+      amountMinor: booking.platform_fee,
+      to: { kind: "user", ownerId: booking.customer_id },
+      bookingId: booking.id,
+      memo: `Booking fee returned — ${booking.reference} ${to}`,
+    });
+
+    if (!refund.ok) {
+      console.error("[bookings] FEE REFUND FAILED — needs manual correction", {
+        reference: booking.reference,
+        customerId: booking.customer_id,
+        amountMinor: booking.platform_fee,
+        to,
+        reason: refund.error,
+      });
+    }
+  }
+
   return OK("Booking updated.");
 }
+
+/**
+ * Terminal states where the customer gets their platform fee back.
+ *
+ * All three are "the repair is not happening, and it was not the customer's
+ * doing". `cancelled_customer` is absent on purpose — see the note at the refund.
+ */
+const REFUND_FEE_ON: readonly BookingStatus[] = [
+  "declined",
+  "expired",
+  "cancelled_shop",
+];
 
 /** Cancel, choosing the right terminal status for whoever is asking. */
 export async function cancelBooking(
