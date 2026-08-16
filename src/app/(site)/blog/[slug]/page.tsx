@@ -83,8 +83,42 @@ export default async function BlogPostPage({ params }: PageProps) {
     rawHtml = rawHtml.replace(/\{\{date\}\}/g, dateString);
     rawHtml = rawHtml.replace(/\{\{content\}\}/g, safeContent);
     
-    // Sanitize the final template with content inside
-    finalHtml = sanitize(rawHtml, { allowedAttributes: { ...sanitize.defaults.allowedAttributes, '*': ['style'] } });
+    /*
+     * Sanitise the assembled template.
+     *
+     * The `"*"` key REPLACES sanitize-html's wildcard entry rather than adding to
+     * it, and `class` is not in its defaults — so allowing only `style` here
+     * stripped every class in the template and the article rendered as naked HTML:
+     * no layout, no card, no prose styling. The spread of `defaults` looks like it
+     * preserves everything, which is what makes this an easy one to write and a
+     * hard one to spot.
+     *
+     * `class` is safe to allow. These templates are authored in the admin by staff,
+     * the classes are Tailwind utilities, and every one of them is already in the
+     * compiled CSS because the fallback markup below uses the same set in source —
+     * which is also why a DB-authored template can be styled at all: Tailwind's
+     * scanner never sees the database, so anything the fallback does not also use
+     * would not be generated.
+     *
+     * `svg`/`path` are allowed so the back-arrow survives; without them the link
+     * renders as bare text.
+     */
+    finalHtml = sanitize(rawHtml, {
+      allowedTags: [...sanitize.defaults.allowedTags, "svg", "path", "time"],
+      allowedAttributes: {
+        ...sanitize.defaults.allowedAttributes,
+        "*": ["class", "style", "id", "lang", "dir"],
+        svg: ["width", "height", "viewbox", "fill", "xmlns", "class"],
+        path: [
+          "d",
+          "stroke",
+          "stroke-width",
+          "stroke-linecap",
+          "stroke-linejoin",
+          "fill",
+        ],
+      },
+    });
   }
 
   return (
