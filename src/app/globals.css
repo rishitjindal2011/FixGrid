@@ -273,3 +273,39 @@
     border-inline-start-width: 3px;
   }
 }
+
+/* ── Blog templates ─────────────────────────────────────────────────────────
+ *
+ * Typography for HTML that lives in `blog_templates.html_template`, applied
+ * through the `.blog-article` wrapper in `src/app/(site)/blog/[slug]/page.tsx`.
+ *
+ * Real CSS rather than Tailwind utilities in the template, and that is the whole
+ * point of this block: Tailwind's scanner reads source files, never the database,
+ * so a utility used only inside a stored template is never generated. A template
+ * asking for `prose-headings:font-display` would compile to nothing. Declaring it
+ * here means every template gets the site's type without knowing anything about
+ * it — including templates written after this.
+ *
+ * `!important` is deliberate and load-bearing. The seeded template sets
+ * `font-sans normal-case` on its own headings, so without it the utility wins on
+ * specificity and the article keeps rendering in Public Sans title case while the
+ * rest of the site uses condensed uppercase. Overriding stored markup is exactly
+ * the case `!important` is for.
+ */
+.blog-article :is(h1, h2, h3, h4, h5, h6) {
+  font-family: var(--font-display) !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.01em;
+}
+
+/* Body copy, quotes and lists follow the site's sans — the same face every other
+   page sets on `body`. Links and emphasis inherit it for free. */
+.blog-article :is(p, li, blockquote, dd, dt, figcaption, td, th) {
+  font-family: var(--font-sans);
+}
+
+/* `time` and anything the template marks as metadata reads as a spec value here,
+   the same way dates and references do elsewhere in the product. */
+.blog-article :is(time, code, pre, kbd) {
+  font-family: var(--font-mono);
+}

@@ -141,7 +141,16 @@ export default async function BlogPostPage({ params }: PageProps) {
       `}} />
 
       {finalHtml ? (
-        <div dangerouslySetInnerHTML={{ __html: finalHtml }} />
+        /*
+         * `blog-article` carries the typography, defined in `globals.css`.
+         *
+         * Not done with Tailwind classes inside the template, because Tailwind's
+         * scanner never sees the database — a utility used only in a stored
+         * template is never generated, so `prose-headings:font-display` in the
+         * template HTML would compile to nothing at all. Real CSS on a wrapper this
+         * file owns applies to every template, including ones written later.
+         */
+        <div className="blog-article" dangerouslySetInnerHTML={{ __html: finalHtml }} />
       ) : (
         <article className="min-h-screen bg-wash pb-24">
           <header className="relative overflow-hidden bg-enamel pt-32 pb-32 px-4 text-center isolate">
