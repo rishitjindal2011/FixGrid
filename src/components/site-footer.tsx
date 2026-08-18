@@ -28,6 +28,10 @@ const COLUMNS: Array<{ heading: string; links: Array<{ label: string; href: stri
       { label: "About", href: "/about" },
       { label: "Privacy", href: "/privacy" },
       { label: "Terms", href: "/terms" },
+      // Listed beside the other two rather than buried in the terms, because the
+      // question it answers — "do I get my money back" — is the one people go
+      // looking for, and a policy nobody can find is a policy nobody read.
+      { label: "Refunds", href: "/refunds" },
     ],
   },
 ];
