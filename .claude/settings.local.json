@@ -51,7 +51,13 @@
       "mcp__supabase__apply_migration",
       "mcp__plugin_supabase_supabase__get_advisors",
       "Bash(echo \"MAIN_EXIT=$?\")",
-      "Bash(echo \"SEO_EXIT=$?\")"
+      "Bash(echo \"SEO_EXIT=$?\")",
+      "Bash(sed -E 's/.* //')",
+      "Bash(grep -nE \"export \\(async \\)?function|/\\\\*\\\\*|wallet_kind|ledger|balance\" src/lib/wallet/server.ts)",
+      "Bash(sed 's/public\\\\.//')"
     ]
-  }
+  },
+  "enabledMcpjsonServers": [
+    "supabase"
+  ]
 }
