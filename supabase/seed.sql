@@ -286,3 +286,71 @@ on conflict (lower(path_prefix), lower(slug)) do update
       schema_type      = excluded.schema_type,
       is_indexed       = excluded.is_indexed,
       is_followed      = excluded.is_followed;
+
+-- ─── Sample Job Vacancies ───────────────────────────────────────────────────
+
+insert into shop_jobs (
+  fixer_id, title, job_type, work_location, experience_level,
+  salary_type, salary_min, salary_max, salary_period, salary_negotiable,
+  description, skills_required, contact_phone, contact_whatsapp, is_active
+)
+select
+  f.id, j.title, j.job_type::job_type, j.work_location::work_location, j.experience_level,
+  j.salary_type::salary_type, j.salary_min, j.salary_max, j.salary_period::salary_period, j.salary_negotiable,
+  j.description, j.skills_required, j.contact_phone, j.contact_whatsapp, true
+from (values
+  (
+    'northgate-phone-clinic',
+    'Smartphone & Micro-Soldering Technician',
+    'full_time',
+    'in_shop',
+    '1-2 Years Experience',
+    'range',
+    25000,
+    35000,
+    'month',
+    true,
+    'Looking for a skilled technician for iPhone & Android screen replacements, charging port repairs, and SMD chip soldering. Clean workbench provided.',
+    array['Screen Replacement', 'SMD Soldering', 'Charging Port Repair', 'Battery Replacement'],
+    '+91 98765 43210',
+    '+91 98765 43210'
+  ),
+  (
+    'brightwell-laptop-works',
+    'Laptop Chip-Level Hardware Specialist',
+    'full_time',
+    'in_shop',
+    '2+ Years Experience',
+    'range',
+    30000,
+    45000,
+    'month',
+    true,
+    'Urgent opening for a motherboard repair specialist. Must have experience with BGA rework stations, thermal diagnostics, and schematic tracing.',
+    array['BGA Rework', 'Motherboard Schematics', 'Power Rail Diagnostics', 'BIOS Programming'],
+    '+91 98111 22334',
+    '+91 98111 22334'
+  ),
+  (
+    'halloway-appliance-service',
+    'Appliance Repair Apprentice / Trainee',
+    'apprenticeship',
+    'on_field',
+    'Fresher / Eager to Learn',
+    'range',
+    12000,
+    18000,
+    'month',
+    true,
+    'Hands-on training provided for washing machine, microwave, and refrigerator repairs. Valid 2-wheeler license required for field visits with senior technician.',
+    array['Basic Electrical Wiring', 'Multimeter Use', 'Appliance Assembly', 'Customer Service'],
+    '+91 98222 33445',
+    '+91 98222 33445'
+  )
+) as j (
+  fixer_slug, title, job_type, work_location, experience_level,
+  salary_type, salary_min, salary_max, salary_period, salary_negotiable,
+  description, skills_required, contact_phone, contact_whatsapp
+)
+join fixer_profiles f on lower(f.slug) = j.fixer_slug;
+

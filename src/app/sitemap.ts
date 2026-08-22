@@ -2,6 +2,7 @@ import type { MetadataRoute } from "next";
 
 import { getPublishedPagePaths } from "@/lib/queries/cms";
 import { getAllExpertSlugs } from "@/lib/queries/expert";
+import { getAllPublishedBlogPosts } from "@/lib/queries/blog";
 import { absoluteUrl, CANONICAL_ORIGIN, joinCmsPath } from "@/lib/site";
 
 /**
@@ -43,16 +44,30 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: "daily",
       priority: 0.9,
     },
+    {
+      url: absoluteUrl("/blog", CANONICAL_ORIGIN),
+      lastModified: now,
+      changeFrequency: "daily",
+      priority: 0.85,
+    },
   ];
 
-  const [experts, cmsPages] = await Promise.all([
+  const [experts, cmsPages, blogPosts] = await Promise.all([
     getAllExpertSlugs(5000),
     getPublishedPagePaths(5000),
+    getAllPublishedBlogPosts(),
   ]);
 
   const expertEntries: MetadataRoute.Sitemap = experts.map((expert) => ({
     url: absoluteUrl(`/expert/${expert.slug}`, CANONICAL_ORIGIN),
     lastModified: new Date(expert.updated_at),
+    changeFrequency: "weekly",
+    priority: 0.8,
+  }));
+
+  const blogEntries: MetadataRoute.Sitemap = blogPosts.map((post) => ({
+    url: absoluteUrl(`/blog/${post.slug}`, CANONICAL_ORIGIN),
+    lastModified: new Date(post.updated_at || post.published_at || now),
     changeFrequency: "weekly",
     priority: 0.8,
   }));
@@ -66,5 +81,5 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.7,
     }));
 
-  return [...staticEntries, ...expertEntries, ...cmsEntries];
+  return [...staticEntries, ...expertEntries, ...blogEntries, ...cmsEntries];
 }

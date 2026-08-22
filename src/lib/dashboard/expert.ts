@@ -15,6 +15,7 @@ import {
   type PayoutStatus,
   type ShopAvailabilityRow,
   type ShopInventoryRow,
+  type ShopJobRow,
   type ShopServiceRow,
   type ShopTimeOffRow,
 } from "@/lib/types/marketplace";
@@ -1183,3 +1184,27 @@ export async function getBillForBooking(bookingId: string): Promise<BookingBill 
     reviewNote: data.review_note,
   };
 }
+
+/* ── Jobs & Hiring ────────────────────────────────────────────────────────── */
+
+/**
+ * The shop's job postings and vacancies, inactive rows included.
+ */
+export async function listShopJobs(fixerId: string): Promise<ShopJobRow[]> {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from("shop_jobs")
+    .select("*")
+    .eq("fixer_id", fixerId)
+    .order("sort_order", { ascending: true })
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    logReadFailure("[dashboard] expert jobs failed", error);
+    return [];
+  }
+
+  return (data as ShopJobRow[]) ?? [];
+}
+

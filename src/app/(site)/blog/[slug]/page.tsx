@@ -6,6 +6,8 @@ import Link from "next/link";
 import { getPublishedBlogPost, getBlogPostForPreview, getPublishedBlogPaths } from "@/lib/queries/blog";
 import { getSeoGlobal } from "@/lib/queries/cms";
 import { absoluteUrl, SITE_NAME } from "@/lib/site";
+import { JsonLd } from "@/components/seo/JsonLd";
+import { buildArticle, buildBreadcrumbs } from "@/lib/seo/jsonld";
 import sanitize from "sanitize-html";
 
 export const revalidate = 300;
@@ -121,8 +123,28 @@ export default async function BlogPostPage({ params }: PageProps) {
     });
   }
 
+  const url = absoluteUrl(path);
+  const articleSchema = buildArticle({
+    headline: post.title,
+    description: post.meta_description,
+    url,
+    datePublished: post.published_at,
+    dateModified: post.updated_at,
+    image: post.og_image_url,
+    keywords: post.keywords,
+  });
+
+  const breadcrumbs = buildBreadcrumbs([
+    { name: "Home", path: "/" },
+    { name: "Blog", path: "/blog" },
+    { name: post.title, path },
+  ]);
+
+  const schemas = [articleSchema, ...(breadcrumbs ? [breadcrumbs] : [])];
+
   return (
     <>
+      <JsonLd data={schemas} />
       {isDraft ? <DraftBanner path={path} /> : null}
 
       {/* Reading Progress Bar (Scroll-driven Animation) */}

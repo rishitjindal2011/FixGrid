@@ -14,14 +14,18 @@ export function ExpertTabs({
   about,
   reviews,
   inventory,
+  jobs,
   reviewCount,
   inventoryCount,
+  jobsCount = 0,
 }: {
   about: React.ReactNode;
   reviews: React.ReactNode;
   inventory: React.ReactNode;
+  jobs?: React.ReactNode;
   reviewCount: number;
   inventoryCount: number;
+  jobsCount?: number;
 }) {
   // `?tab=reviews` has to actually land on reviews — the sign-in round-trip
   // from the review gate returns here and would otherwise drop the visitor back
@@ -29,7 +33,14 @@ export function ExpertTabs({
   // than from the page's `searchParams`, because touching those in the page
   // would opt this route out of static generation.
   const queryTab = useSearchParams().get("tab");
-  const requested = queryTab === "reviews" ? "reviews" : queryTab === "inventory" ? "inventory" : "about";
+  const requested =
+    queryTab === "reviews"
+      ? "reviews"
+      : queryTab === "inventory"
+      ? "inventory"
+      : queryTab === "jobs"
+      ? "jobs"
+      : "about";
 
   // Keyed rather than controlled: on a prerendered route the param is only
   // legible after hydration, and keying lets the resolved value re-seed
@@ -54,11 +65,20 @@ export function ExpertTabs({
             </span>
           </TabsTrigger>
         )}
+        {jobsCount > 0 && (
+          <TabsTrigger value="jobs" className="gap-1.5 text-cyan hover:text-cyan">
+            Hiring
+            <span className="rounded-full bg-cyan/15 px-1.5 py-0.2 font-mono text-xs font-semibold text-cyan tabular-nums">
+              {jobsCount}
+            </span>
+          </TabsTrigger>
+        )}
       </TabsList>
 
       <TabsContent value="about">{about}</TabsContent>
       <TabsContent value="reviews">{reviews}</TabsContent>
       {inventoryCount > 0 && <TabsContent value="inventory">{inventory}</TabsContent>}
+      {jobsCount > 0 && <TabsContent value="jobs">{jobs}</TabsContent>}
     </Tabs>
   );
 }

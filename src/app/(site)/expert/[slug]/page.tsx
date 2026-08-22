@@ -17,9 +17,11 @@ import {
   getAllExpertSlugs,
   getExpertBySlug,
   getPublicInventory,
+  getPublicShopJobs,
   profileWarrantyDays,
 } from "@/lib/queries/expert";
 import { PublicInventory } from "@/components/expert/public-inventory";
+import { PublicJobs } from "@/components/expert/public-jobs";
 import { getShopStatus, type HoursInput } from "@/lib/hours";
 import { buildBreadcrumbs, buildLocalBusiness, type Thing, type WithContext } from "@/lib/seo/jsonld";
 import { absoluteUrl } from "@/lib/site";
@@ -84,7 +86,10 @@ export default async function ExpertPage({ params }: PageProps) {
   const profile = await getExpertBySlug(slug);
   if (!profile) notFound();
   
-  const publicInventory = await getPublicInventory(profile.id);
+  const [publicInventory, publicJobs] = await Promise.all([
+    getPublicInventory(profile.id),
+    getPublicShopJobs(profile.id),
+  ]);
 
   const hours = hoursOf(profile);
   // Computed on the server so the first paint is already correct; the client
@@ -209,8 +214,10 @@ export default async function ExpertPage({ params }: PageProps) {
                   </ReviewGate>
                 }
                 inventory={<PublicInventory items={publicInventory} shopName={profile.shop_name} />}
+                jobs={<PublicJobs shopName={profile.shop_name} jobs={publicJobs} />}
                 reviewCount={profile.rating_count}
                 inventoryCount={publicInventory.length}
+                jobsCount={publicJobs.length}
               />
             </div>
           </div>

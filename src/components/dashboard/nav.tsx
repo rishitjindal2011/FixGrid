@@ -4,6 +4,7 @@ import type { ComponentType } from "react";
 import Link from "next/link";
 import {
   Boxes,
+  Briefcase,
   CalendarClock,
   Heart,
   CalendarDays,
@@ -167,6 +168,12 @@ export const EXPERT_NAV_SECTION: NavSection = {
       label: "Inventory",
       icon: Boxes,
       match: "/dashboard/expert/inventory",
+    },
+    {
+      href: "/dashboard/expert/hiring",
+      label: "Hiring & Jobs",
+      icon: Briefcase,
+      match: "/dashboard/expert/hiring",
     },
     {
       href: "/dashboard/expert/profile",

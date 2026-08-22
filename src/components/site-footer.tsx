@@ -6,13 +6,22 @@ const COLUMNS: Array<{ heading: string; links: Array<{ label: string; href: stri
     heading: "Find a repair",
     links: [
       { label: "Browse all experts", href: "/search" },
-      // Slugs must match `CATEGORY_SEEDS` in scripts/seed-content.ts, which is
-      // what actually lands in `repair_categories`. These previously read
-      // "phone-repair" / "appliance-repair" / "bicycle-repair" — no such rows,
-      // so all three filtered the directory down to nothing.
-      { label: "Phone repair", href: "/search?category=phones" },
-      { label: "Appliance repair", href: "/search?category=appliances" },
-      { label: "Bicycle repair", href: "/search?category=bicycles" },
+      { label: "Phone repair", href: "/repair/phones" },
+      { label: "Laptop repair", href: "/repair/laptops" },
+      { label: "Appliance repair", href: "/repair/appliances" },
+      { label: "Bicycle repair", href: "/repair/bicycles" },
+      { label: "Desktop PC repair", href: "/repair/desktops" },
+      { label: "Game console repair", href: "/repair/consoles" },
+    ],
+  },
+  {
+    heading: "Resources & Guides",
+    links: [
+      { label: "Repair blog & news", href: "/blog" },
+      { label: "Tablet repair guide", href: "/repair/tablets" },
+      { label: "Audio & Hi-Fi guide", href: "/repair/audio-equipment" },
+      { label: "Watch & clock service", href: "/repair/watches" },
+      { label: "Camera & lens repair", href: "/repair/cameras" },
     ],
   },
   {
@@ -25,13 +34,10 @@ const COLUMNS: Array<{ heading: string; links: Array<{ label: string; href: stri
   {
     heading: "Company",
     links: [
-      { label: "About", href: "/about" },
-      { label: "Privacy", href: "/privacy" },
-      { label: "Terms", href: "/terms" },
-      // Listed beside the other two rather than buried in the terms, because the
-      // question it answers — "do I get my money back" — is the one people go
-      // looking for, and a policy nobody can find is a policy nobody read.
-      { label: "Refunds", href: "/refunds" },
+      { label: "About FixGrid", href: "/about" },
+      { label: "Privacy policy", href: "/privacy" },
+      { label: "Terms of service", href: "/terms" },
+      { label: "Refund policy", href: "/refunds" },
     ],
   },
 ];

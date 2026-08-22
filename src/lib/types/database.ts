@@ -129,6 +129,37 @@ export interface Database {
         Relationships: [];
       };
 
+      shop_jobs: {
+        Row: {
+          id: string;
+          fixer_id: string;
+          title: string;
+          job_type: "full_time" | "part_time" | "contract" | "apprenticeship";
+          work_location: "in_shop" | "on_field" | "hybrid";
+          experience_level: string;
+          salary_type: "fixed" | "range" | "negotiable" | "commission";
+          salary_min: number | null;
+          salary_max: number | null;
+          salary_period: "month" | "week" | "day" | "per_job";
+          salary_negotiable: boolean;
+          description: string;
+          skills_required: string[];
+          contact_phone: string | null;
+          contact_whatsapp: string | null;
+          contact_email: string | null;
+          is_active: boolean;
+          sort_order: number;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: Omit<
+          Database["public"]["Tables"]["shop_jobs"]["Row"],
+          "id" | "created_at" | "updated_at"
+        > & { id?: string; created_at?: string; updated_at?: string };
+        Update: Partial<Database["public"]["Tables"]["shop_jobs"]["Insert"]>;
+        Relationships: [];
+      };
+
       seo_global: {
         Row: {
           id: number;
@@ -357,6 +388,7 @@ export type CmsTemplateRow = Tables["cms_templates"]["Row"];
 export type SeoAdminRow = Tables["seo_admins"]["Row"];
 export type BlogPostRow = Tables["blog_posts"]["Row"];
 export type BlogTemplateRow = Tables["blog_templates"]["Row"];
+export type ShopJobRow = Tables["shop_jobs"]["Row"];
 
 /** A review joined with its author, as returned by the profile page query. */
 export type ReviewWithAuthor = ReviewRow & {

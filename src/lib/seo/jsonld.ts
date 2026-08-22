@@ -210,6 +210,33 @@ export function buildBreadcrumbs(
   });
 }
 
+export function buildArticle(params: {
+  headline: string;
+  description?: string | null;
+  url: string;
+  datePublished?: string | null;
+  dateModified?: string | null;
+  image?: string | null;
+  keywords?: string[] | null;
+}): WithContext<Thing> {
+  return withContext({
+    "@type": "BlogPosting",
+    "@id": `${params.url}#article`,
+    headline: params.headline,
+    description: params.description ?? undefined,
+    url: params.url,
+    datePublished: params.datePublished ?? undefined,
+    dateModified: params.dateModified ?? undefined,
+    image: params.image ?? undefined,
+    keywords: params.keywords?.join(", ") ?? undefined,
+    publisher: { "@id": `${SITE_ORIGIN}/#organization` },
+    mainEntityOfPage: {
+      "@type": "WebPage",
+      "@id": params.url,
+    },
+  });
+}
+
 /**
  * Merge admin-authored `schema_markup` JSONB with a generated base object.
  * Admin keys win, so a page can override `areaServed` without us shipping a

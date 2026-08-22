@@ -732,3 +732,54 @@ export interface BookingWithParties extends BookingRow {
   customer: BookingCustomerSummary | null;
   service: Pick<ShopServiceRow, "id" | "name" | "duration_minutes"> | null;
 }
+
+/* ── Hiring & Job Openings ─────────────────────────────────────────────────── */
+
+export type JobType = "full_time" | "part_time" | "contract" | "apprenticeship";
+export type WorkLocation = "in_shop" | "on_field" | "hybrid";
+export type SalaryType = "fixed" | "range" | "negotiable" | "commission";
+export type SalaryPeriod = "month" | "week" | "day" | "per_job";
+
+export const JOB_TYPE_LABELS: Record<JobType, string> = {
+  full_time: "Full-time",
+  part_time: "Part-time",
+  contract: "Contract",
+  apprenticeship: "Apprenticeship / Trainee",
+};
+
+export const WORK_LOCATION_LABELS: Record<WorkLocation, string> = {
+  in_shop: "In-shop",
+  on_field: "On-field / Visits",
+  hybrid: "Hybrid",
+};
+
+export const SALARY_PERIOD_LABELS: Record<SalaryPeriod, string> = {
+  month: "/ month",
+  week: "/ week",
+  day: "/ day",
+  per_job: "/ job",
+};
+
+export interface ShopJobRow {
+  id: string;
+  fixer_id: string;
+  title: string;
+  job_type: JobType;
+  work_location: WorkLocation;
+  experience_level: string;
+  salary_type: SalaryType;
+  salary_min: number | null;
+  salary_max: number | null;
+  salary_period: SalaryPeriod;
+  salary_negotiable: boolean;
+  description: string;
+  skills_required: string[];
+  contact_phone: string | null;
+  contact_whatsapp: string | null;
+  contact_email: string | null;
+  is_active: boolean;
+  sort_order: number;
+  created_at: string;
+  updated_at: string;
+}
+

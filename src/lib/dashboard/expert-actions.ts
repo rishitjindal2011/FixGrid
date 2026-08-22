@@ -2066,3 +2066,218 @@ export async function submitBill(
       "rebate is credited once we have checked it.",
   );
 }
+
+/* ── Jobs & Hiring ────────────────────────────────────────────────────────── */
+
+const jobItemSchema = z.object({
+  id: z.string().uuid().optional(),
+  fixerId: z.string().uuid("That shop could not be found."),
+  title: z
+    .string({ required_error: "Enter a job title." })
+    .trim()
+    .min(2, "Enter a job title of at least 2 characters.")
+    .max(120, "Keep the job title under 120 characters."),
+  jobType: z.enum(["full_time", "part_time", "contract", "apprenticeship"]),
+  workLocation: z.enum(["in_shop", "on_field", "hybrid"]),
+  experienceLevel: z.string().trim().default("any"),
+  salaryType: z.enum(["fixed", "range", "negotiable", "commission"]),
+  salaryPeriod: z.enum(["month", "week", "day", "per_job"]).default("month"),
+  description: z
+    .string({ required_error: "Enter a job description." })
+    .trim()
+    .min(10, "Provide a description with at least 10 characters so applicants understand the role."),
+  contactPhone: z.string().trim().optional(),
+  contactWhatsapp: z.string().trim().optional(),
+  contactEmail: z.string().trim().optional(),
+});
+
+async function readOwnedJobItem(
+  supabase: ServerClient,
+  userId: string,
+  id: string,
+): Promise<{ id: string; fixer_id: string } | string> {
+  const { data, error } = await supabase
+    .from("shop_jobs")
+    .select("id, fixer_id")
+    .eq("id", id)
+    .maybeSingle<{ id: string; fixer_id: string }>();
+
+  if (error) return explain(error.code, "That job listing could not be checked.");
+  if (!data) return "That job listing could not be found on your shop.";
+
+  const denied = await assertOwnership(supabase, userId, data.fixer_id);
+  if (denied) return denied;
+
+  return data;
+}
+
+export async function saveJobItem(
+  _prev: BookingActionState,
+  formData: FormData,
+): Promise<BookingActionState> {
+  const idRaw = formData.get("id");
+  const rawData: Record<string, unknown> = {
+    fixerId: formData.get("fixerId"),
+    title: formData.get("title"),
+    jobType: formData.get("jobType") || "full_time",
+    workLocation: formData.get("workLocation") || "in_shop",
+    experienceLevel: formData.get("experienceLevel") || "any",
+    salaryType: formData.get("salaryType") || "negotiable",
+    salaryPeriod: formData.get("salaryPeriod") || "month",
+    description: formData.get("description"),
+    contactPhone: formData.get("contactPhone") || undefined,
+    contactWhatsapp: formData.get("contactWhatsapp") || undefined,
+    contactEmail: formData.get("contactEmail") || undefined,
+  };
+
+  if (typeof idRaw === "string" && idRaw.trim() !== "") {
+    rawData.id = idRaw.trim();
+  }
+
+  const parsed = jobItemSchema.safeParse(rawData);
+  if (!parsed.success) {
+    return FAILED(parsed.error.issues[0]?.message ?? "Check the form and try again.");
+  }
+
+  const input = parsed.data;
+
+  // Parse salary numbers if provided
+  let salaryMin: number | null = null;
+  let salaryMax: number | null = null;
+
+  const minRaw = formData.get("salaryMin");
+  if (typeof minRaw === "string" && minRaw.trim() !== "") {
+    const num = parseInt(minRaw.replace(/[^0-9]/g, ""), 10);
+    if (!isNaN(num) && num >= 0) salaryMin = num;
+  }
+
+  const maxRaw = formData.get("salaryMax");
+  if (typeof maxRaw === "string" && maxRaw.trim() !== "") {
+    const num = parseInt(maxRaw.replace(/[^0-9]/g, ""), 10);
+    if (!isNaN(num) && num >= 0) salaryMax = num;
+  }
+
+  if (salaryMin !== null && salaryMax !== null && salaryMax < salaryMin) {
+    return FAILED("Maximum salary cannot be less than minimum salary.");
+  }
+
+  const salaryNegotiable = checked(formData, "salaryNegotiable");
+
+  // Parse skills from comma-separated string
+  const skillsRaw = formData.get("skills");
+  const skills: string[] =
+    typeof skillsRaw === "string"
+      ? skillsRaw
+          .split(",")
+          .map((s) => s.trim())
+          .filter((s) => s.length > 0)
+      : [];
+
+  const { supabase, user } = await currentUser();
+  if (!user) return FAILED("Sign in to edit job listings.");
+
+  const denied = await assertOwnership(supabase, user.id, input.fixerId);
+  if (denied) return FAILED(denied);
+
+  const jobPayload = {
+    title: input.title,
+    job_type: input.jobType,
+    work_location: input.workLocation,
+    experience_level: input.experienceLevel,
+    salary_type: input.salaryType,
+    salary_min: salaryMin,
+    salary_max: salaryMax,
+    salary_period: input.salaryPeriod,
+    salary_negotiable: salaryNegotiable,
+    description: input.description,
+    skills_required: skills,
+    contact_phone: input.contactPhone || null,
+    contact_whatsapp: input.contactWhatsapp || null,
+    contact_email: input.contactEmail || null,
+  };
+
+  if (input.id) {
+    const { data, error } = await supabase
+      .from("shop_jobs")
+      .update(jobPayload)
+      .eq("id", input.id)
+      .eq("fixer_id", input.fixerId)
+      .select("id")
+      .maybeSingle<{ id: string }>();
+
+    if (error) return FAILED(explain(error.code, "That job listing could not be saved."));
+    if (!data) return FAILED("That job listing could not be found on your shop.");
+  } else {
+    const { error } = await supabase.from("shop_jobs").insert({
+      ...jobPayload,
+      fixer_id: input.fixerId,
+      is_active: true,
+    });
+
+    if (error) return FAILED(explain(error.code, "That job listing could not be posted."));
+  }
+
+  revalidatePath("/dashboard/expert/hiring");
+  revalidatePath("/dashboard/expert");
+  revalidatePath("/expert/[slug]", "page");
+
+  return OK(input.id ? "Job listing updated." : "Job vacancy posted successfully.");
+}
+
+export async function toggleJobActive(
+  _prev: BookingActionState,
+  formData: FormData,
+): Promise<BookingActionState> {
+  const id = readId(formData, "id");
+  if (!id) return FAILED("That job could not be found.");
+
+  const active = checked(formData, "active");
+
+  const { supabase, user } = await currentUser();
+  if (!user) return FAILED("Sign in to edit your jobs.");
+
+  const job = await readOwnedJobItem(supabase, user.id, id);
+  if (typeof job === "string") return FAILED(job);
+
+  const { error } = await supabase
+    .from("shop_jobs")
+    .update({ is_active: active })
+    .eq("id", id);
+
+  if (error) {
+    return FAILED(explain(error.code, "That job status could not be updated."));
+  }
+
+  revalidatePath("/dashboard/expert/hiring");
+  revalidatePath("/dashboard/expert");
+  revalidatePath("/expert/[slug]", "page");
+
+  return OK(active ? "Job opening published." : "Job opening paused.");
+}
+
+export async function deleteJobItem(
+  _prev: BookingActionState,
+  formData: FormData,
+): Promise<BookingActionState> {
+  const id = readId(formData, "id");
+  if (!id) return FAILED("That job could not be found.");
+
+  const { supabase, user } = await currentUser();
+  if (!user) return FAILED("Sign in to delete job listings.");
+
+  const job = await readOwnedJobItem(supabase, user.id, id);
+  if (typeof job === "string") return FAILED(job);
+
+  const { error } = await supabase.from("shop_jobs").delete().eq("id", id);
+
+  if (error) {
+    return FAILED(explain(error.code, "That job listing could not be deleted."));
+  }
+
+  revalidatePath("/dashboard/expert/hiring");
+  revalidatePath("/dashboard/expert");
+  revalidatePath("/expert/[slug]", "page");
+
+  return OK("Job opening deleted.");
+}
+

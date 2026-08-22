@@ -159,6 +159,29 @@ create table if not exists reviews (
   updated_at  timestamptz not null default now()
 );
 
+create table if not exists shop_jobs (
+  id                  uuid primary key default gen_random_uuid(),
+  fixer_id            uuid not null references fixer_profiles (id) on delete cascade,
+  title               text not null,
+  job_type            job_type not null default 'full_time',
+  work_location       work_location not null default 'in_shop',
+  experience_level    text not null default 'any',
+  salary_type         salary_type not null default 'negotiable',
+  salary_min          integer,
+  salary_max          integer,
+  salary_period       salary_period not null default 'month',
+  salary_negotiable   boolean not null default true,
+  description         text not null,
+  skills_required     text[] not null default '{}',
+  contact_phone       text,
+  contact_whatsapp    text,
+  contact_email       citext,
+  is_active           boolean not null default true,
+  sort_order          integer not null default 0,
+  created_at          timestamptz not null default now(),
+  updated_at          timestamptz not null default now()
+);
+
 create table if not exists seo_global (
   id                       integer primary key default 1,
   site_title               text not null default 'FixGrid',

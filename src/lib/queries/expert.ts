@@ -157,3 +157,24 @@ export async function getPublicInventory(fixerId: string) {
   }
   return data ?? [];
 }
+
+/**
+ * The public projection of a shop's active job vacancies.
+ */
+export async function getPublicShopJobs(fixerId: string) {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("shop_jobs")
+    .select("*")
+    .eq("fixer_id", fixerId)
+    .eq("is_active", true)
+    .order("sort_order", { ascending: true })
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    console.error("[expert] public jobs read failed", { fixerId, error: error.message });
+    return [];
+  }
+  return data ?? [];
+}
+
