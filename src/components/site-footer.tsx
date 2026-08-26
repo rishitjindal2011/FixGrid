@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 
+import { LanguageSwitcher } from "@/components/language-switcher";
 import { SITE_NAME } from "@/lib/site";
 
 /**
@@ -95,9 +96,12 @@ export async function SiteFooter() {
           })}
         </div>
 
-        <p className="mt-12 border-t border-hairline pt-6 font-mono text-eyebrow uppercase text-steel-soft">
-          {t("rights", { year: new Date().getFullYear(), siteName: SITE_NAME })}
-        </p>
+        <div className="mt-12 flex flex-col-reverse items-start gap-4 border-t border-hairline pt-6 sm:flex-row sm:items-center sm:justify-between">
+          <p className="font-mono text-eyebrow uppercase text-steel-soft">
+            {t("rights", { year: new Date().getFullYear(), siteName: SITE_NAME })}
+          </p>
+          <LanguageSwitcher className="-ml-2 sm:ml-0" />
+        </div>
       </div>
     </footer>
   );

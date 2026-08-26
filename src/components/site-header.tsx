@@ -2,6 +2,7 @@ import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import { Search, UserRound, Wrench } from "lucide-react";
 
+import { LanguageSwitcher } from "@/components/language-switcher";
 import { SignOutButton } from "@/components/auth/sign-out-button";
 import { Button } from "@/components/ui/button";
 import { getCurrentUser } from "@/lib/auth/session";
@@ -57,6 +58,8 @@ export async function SiteHeader() {
         </nav>
 
         <div className="ml-auto flex items-center gap-2 sm:ml-0 sm:gap-3">
+          <LanguageSwitcher />
+
           <Button asChild size="sm">
             <Link href="/search">
               <Search aria-hidden />
