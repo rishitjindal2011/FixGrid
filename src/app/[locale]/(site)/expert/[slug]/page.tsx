@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 import { BadgeCheck, MapPin } from "lucide-react";
 
 import { JsonLd } from "@/components/seo/JsonLd";
@@ -24,6 +25,8 @@ import { PublicInventory } from "@/components/expert/public-inventory";
 import { PublicJobs } from "@/components/expert/public-jobs";
 import { getShopStatus, type HoursInput } from "@/lib/hours";
 import { buildBreadcrumbs, buildLocalBusiness, type Thing, type WithContext } from "@/lib/seo/jsonld";
+import { localeAlternates } from "@/lib/seo/alternates";
+import { isLocale, withLocale } from "@/i18n/config";
 import { absoluteUrl } from "@/lib/site";
 import { truncate } from "@/lib/utils";
 import type { ExpertProfile } from "@/lib/types/database";
@@ -31,8 +34,13 @@ import type { ExpertProfile } from "@/lib/types/database";
 export const revalidate = 600;
 export const dynamicParams = true;
 
-type PageProps = { params: Promise<{ slug: string }> };
+type PageProps = { params: Promise<{ locale: string; slug: string }> };
 
+/**
+ * Only the slug is enumerated here. Next composes this with the locale segment
+ * from the parent layout's own `generateStaticParams`, so this returns one entry
+ * per shop, not one per shop per language.
+ */
 export async function generateStaticParams() {
   const experts = await getAllExpertSlugs(1000);
   return experts.map((expert) => ({ slug: expert.slug }));
@@ -49,43 +57,46 @@ function hoursOf(profile: ExpertProfile): HoursInput {
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
-  const { slug } = await params;
+  const { locale, slug } = await params;
+  const t = await getTranslations({ locale, namespace: "expert" });
+
   const profile = await getExpertBySlug(slug);
-  if (!profile) return { title: "Repair expert not found" };
+  if (!profile) return { title: t("notFound") };
 
   const primaryCategory = profile.categories[0]?.name;
   const title = primaryCategory
     ? `${profile.shop_name} — ${primaryCategory}`
     : profile.shop_name;
 
+  // The shop's own bio is never translated — it is the owner's words. Only the
+  // generated fallback, which is ours, is written in the reader's language.
   const description = profile.bio
     ? truncate(profile.bio, 155)
-    : `${profile.shop_name} is a repair shop at ${profile.address}. See opening hours, services and reviews.`;
-
-  // Canonical always points at the slug URL, so the id-fallback route never
-  // competes with it for indexing.
-  const canonical = absoluteUrl(`/expert/${profile.slug}`);
+    : t("metaDescription", { shopName: profile.shop_name, address: profile.address });
 
   return {
     title,
     description,
-    alternates: { canonical },
+    // Self-canonical per locale, plus hreflang for the other six. The
+    // id-fallback route still never competes for indexing: it is not listed.
+    alternates: localeAlternates(`/expert/${profile.slug}`, locale),
     openGraph: {
       type: "profile",
       title,
       description,
-      url: canonical,
+      url: absoluteUrl(withLocale(`/expert/${profile.slug}`, isLocale(locale) ? locale : "en")),
       images: profile.photos[0] ? [profile.photos[0]] : undefined,
     },
   };
 }
 
 export default async function ExpertPage({ params }: PageProps) {
-  const { slug } = await params;
-  
+  const { locale, slug } = await params;
+  const t = await getTranslations({ locale, namespace: "expert" });
+
   const profile = await getExpertBySlug(slug);
   if (!profile) notFound();
-  
+
   const [publicInventory, publicJobs] = await Promise.all([
     getPublicInventory(profile.id),
     getPublicShopJobs(profile.id),
@@ -101,9 +112,12 @@ export default async function ExpertPage({ params }: PageProps) {
   const warrantyDays = profileWarrantyDays(profile);
 
   const schemas: WithContext<Thing>[] = [buildLocalBusiness(profile)];
+  // Breadcrumb names are translated because Google renders them verbatim in the
+  // result snippet. The paths are not: the shop lives at one URL per locale and
+  // `buildBreadcrumbs` resolves them against the canonical origin.
   const breadcrumbs = buildBreadcrumbs([
-    { name: "Home", path: "/" },
-    { name: "Experts", path: "/search" },
+    { name: t("breadcrumbHome"), path: "/" },
+    { name: t("breadcrumbExperts"), path: "/search" },
     { name: profile.shop_name, path: `/expert/${profile.slug}` },
   ]);
   if (breadcrumbs) schemas.push(breadcrumbs);
@@ -117,12 +131,12 @@ export default async function ExpertPage({ params }: PageProps) {
           ))}
         </div>
       ) : (
-        <p className="text-steel">This shop hasn&apos;t added a description yet.</p>
+        <p className="text-steel">{t("noDescription")}</p>
       )}
 
       {profile.categories.length > 0 ? (
         <section>
-          <p className="eyebrow mb-3">What they repair</p>
+          <p className="eyebrow mb-3">{t("whatTheyRepair")}</p>
           <ul className="flex flex-wrap gap-2">
             {profile.categories.map((category) => (
               <li key={category.id}>
@@ -135,7 +149,7 @@ export default async function ExpertPage({ params }: PageProps) {
 
       {profile.lat !== null && profile.lng !== null ? (
         <section>
-          <p className="eyebrow mb-3">Location</p>
+          <p className="eyebrow mb-3">{t("location")}</p>
           <ExpertMap lat={profile.lat} lng={profile.lng} shopName={profile.shop_name} />
         </section>
       ) : null}
@@ -155,7 +169,7 @@ export default async function ExpertPage({ params }: PageProps) {
                 {profile.verified ? (
                   <Badge variant="verified">
                     <BadgeCheck aria-hidden />
-                    Verified
+                    {t("verified")}
                   </Badge>
                 ) : null}
               </div>

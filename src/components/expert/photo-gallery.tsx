@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import Image from "next/image";
+import { useTranslations } from "next-intl";
 import { ChevronLeft, ChevronRight, ImageOff } from "lucide-react";
 
 import { cn } from "@/lib/utils";
@@ -16,6 +17,7 @@ import { cn } from "@/lib/utils";
  */
 export function PhotoGallery({ photos, shopName }: { photos: string[]; shopName: string }) {
   const [index, setIndex] = React.useState(0);
+  const t = useTranslations("expert");
 
   const count = photos.length;
   const go = React.useCallback(
@@ -38,7 +40,7 @@ export function PhotoGallery({ photos, shopName }: { photos: string[]; shopName:
       <div className="schematic grid aspect-[16/9] place-items-center rounded-machined border border-hairline bg-chalk">
         <p className="flex items-center gap-2 font-mono text-eyebrow uppercase tracking-[0.14em] text-steel-soft">
           <ImageOff aria-hidden className="size-4" />
-          No photos yet
+          {t("noPhotos")}
         </p>
       </div>
     );
@@ -50,7 +52,7 @@ export function PhotoGallery({ photos, shopName }: { photos: string[]; shopName:
     <div
       role="group"
       aria-roledescription="carousel"
-      aria-label={`Photos of ${shopName}`}
+      aria-label={t("photosOf", { shopName })}
       tabIndex={0}
       onKeyDown={onKeyDown}
       className="rounded-machined focus-visible:outline-2"
@@ -58,7 +60,7 @@ export function PhotoGallery({ photos, shopName }: { photos: string[]; shopName:
       <div className="relative aspect-[16/9] overflow-hidden rounded-machined border border-hairline bg-bench-sunk">
         <Image
           src={current}
-          alt={`${shopName} — photo ${index + 1} of ${count}`}
+          alt={t("photoAlt", { shopName, index: index + 1, count })}
           fill
           priority={index === 0}
           className="object-cover"
@@ -67,8 +69,8 @@ export function PhotoGallery({ photos, shopName }: { photos: string[]; shopName:
 
         {count > 1 ? (
           <>
-            <CarouselButton side="left" onClick={() => go(index - 1)} />
-            <CarouselButton side="right" onClick={() => go(index + 1)} />
+            <CarouselButton side="left" onClick={() => go(index - 1)} label={t("previousPhoto")} />
+            <CarouselButton side="right" onClick={() => go(index + 1)} label={t("nextPhoto")} />
             <span className="absolute bottom-3 right-3 rounded-machined bg-enamel/85 px-2 py-1 font-mono text-eyebrow tabular-nums text-bench">
               {index + 1} / {count}
             </span>
@@ -77,7 +79,7 @@ export function PhotoGallery({ photos, shopName }: { photos: string[]; shopName:
       </div>
 
       <p aria-live="polite" className="sr-only">
-        Photo {index + 1} of {count}
+        {t("photoPosition", { index: index + 1, count })}
       </p>
 
       {count > 1 ? (
@@ -87,7 +89,7 @@ export function PhotoGallery({ photos, shopName }: { photos: string[]; shopName:
               <button
                 type="button"
                 onClick={() => go(thumbIndex)}
-                aria-label={`Show photo ${thumbIndex + 1}`}
+                aria-label={t("showPhoto", { index: thumbIndex + 1 })}
                 aria-current={thumbIndex === index}
                 className={cn(
                   "relative size-16 shrink-0 overflow-hidden rounded-machined border-2 transition-colors",
@@ -112,13 +114,22 @@ export function PhotoGallery({ photos, shopName }: { photos: string[]; shopName:
   );
 }
 
-function CarouselButton({ side, onClick }: { side: "left" | "right"; onClick: () => void }) {
+function CarouselButton({
+  side,
+  onClick,
+  label,
+}: {
+  side: "left" | "right";
+  onClick: () => void;
+  /** Passed in rather than looked up here, so the parent owns the one namespace. */
+  label: string;
+}) {
   const Icon = side === "left" ? ChevronLeft : ChevronRight;
   return (
     <button
       type="button"
       onClick={onClick}
-      aria-label={side === "left" ? "Previous photo" : "Next photo"}
+      aria-label={label}
       className={cn(
         "absolute top-1/2 grid size-9 -translate-y-1/2 place-items-center rounded-machined bg-chalk/90 text-enamel shadow-bench transition-colors hover:bg-chalk",
         side === "left" ? "left-3" : "right-3",

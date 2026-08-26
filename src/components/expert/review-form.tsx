@@ -2,6 +2,7 @@
 
 import { useActionState, useState } from "react";
 import { useFormStatus } from "react-dom";
+import { useTranslations } from "next-intl";
 import { AlertTriangle, CheckCircle2, Star } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -20,11 +21,12 @@ import { cn } from "@/lib/utils";
  */
 function RatingPicker({ value, onChange }: { value: number; onChange: (n: number) => void }) {
   const [hovered, setHovered] = useState(0);
+  const t = useTranslations("reviews");
   const active = hovered || value;
 
   return (
     <fieldset className="flex flex-col gap-1.5">
-      <legend className="eyebrow mb-1.5">Your rating</legend>
+      <legend className="eyebrow mb-1.5">{t("yourRating")}</legend>
 
       <div className="flex items-center gap-1" onMouseLeave={() => setHovered(0)}>
         {[1, 2, 3, 4, 5].map((star) => (
@@ -49,9 +51,10 @@ function RatingPicker({ value, onChange }: { value: number; onChange: (n: number
                 star <= active ? "fill-signal text-signal" : "fill-transparent text-hairline",
               )}
             />
-            <span className="sr-only">
-              {star} {star === 1 ? "star" : "stars"}
-            </span>
+            {/* One ICU plural, not `star === 1 ? "star" : "stars"`. Hindi and
+                Bengali agree with English here; Tamil and Kannada do not
+                inflect the noun at all, and the catalogue says so per language. */}
+            <span className="sr-only">{t("starCount", { count: star })}</span>
           </label>
         ))}
       </div>
@@ -61,10 +64,11 @@ function RatingPicker({ value, onChange }: { value: number; onChange: (n: number
 
 function SubmitButton({ isEdit }: { isEdit: boolean }) {
   const { pending } = useFormStatus();
+  const t = useTranslations("reviews");
 
   return (
     <Button type="submit" disabled={pending}>
-      {pending ? "Posting…" : isEdit ? "Update review" : "Post review"}
+      {pending ? t("posting") : isEdit ? t("update") : t("post")}
     </Button>
   );
 }
@@ -80,6 +84,7 @@ export function ReviewForm({
 }) {
   const [state, formAction] = useActionState(submitReview, REVIEW_INITIAL_STATE);
   const [rating, setRating] = useState(existing?.rating ?? 0);
+  const t = useTranslations("reviews");
 
   return (
     <form
@@ -90,7 +95,7 @@ export function ReviewForm({
       <input type="hidden" name="slug" value={slug} />
 
       <p className="font-display text-lg uppercase text-enamel">
-        {existing ? "Update your review" : "Write a review"}
+        {t(existing ? "updateHeading" : "writeHeading")}
       </p>
 
       <div className="mt-4">
@@ -99,7 +104,8 @@ export function ReviewForm({
 
       <div className="mt-5 flex flex-col gap-1.5">
         <label htmlFor="review-text" className="eyebrow">
-          What happened? <span className="normal-case text-steel-soft">(optional)</span>
+          {t("whatHappened")}{" "}
+          <span className="normal-case text-steel-soft">{t("optional")}</span>
         </label>
         <textarea
           id="review-text"
@@ -107,7 +113,7 @@ export function ReviewForm({
           rows={4}
           maxLength={4000}
           defaultValue={existing?.text ?? ""}
-          placeholder="What did they fix, how long did it take, and would you go back?"
+          placeholder={t("textPlaceholder")}
           className="w-full rounded-machined border border-hairline bg-chalk px-3 py-2 text-[0.95rem] leading-relaxed text-enamel placeholder:text-steel-soft focus:border-signal focus:outline-none"
         />
       </div>
@@ -130,7 +136,7 @@ export function ReviewForm({
           className="mt-4 flex items-start gap-2 rounded-machined border border-verdigris/30 bg-verdigris-wash px-3 py-2.5 text-sm text-verdigris"
         >
           <CheckCircle2 aria-hidden className="mt-0.5 size-4 shrink-0" />
-          Thanks — your review is live.
+          {t("success")}
         </p>
       ) : null}
 

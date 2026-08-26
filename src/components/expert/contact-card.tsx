@@ -1,4 +1,5 @@
 import { Mail, MapPin, Navigation, PackageCheck, Phone, Store, Truck } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { Button } from "@/components/ui/button";
 import { WarrantyBadge } from "@/components/warranty-badge";
@@ -31,20 +32,29 @@ export function ContactCard({
    */
   warrantyDays: number;
 }) {
+  /*
+   * `useTranslations` rather than `getTranslations`, even though this is a Server
+   * Component — next-intl supports the hook in any component that is not `async`,
+   * and this one has no reason to be. Keeping it synchronous means the sticky
+   * panel renders in the same pass as the profile around it.
+   */
+  const t = useTranslations("expert.contact");
+  const ts = useTranslations("status");
+
   const week = resolveWeek(hours);
   const today = getZonedNow(profile.timezone).weekday;
 
   const services = [
-    { key: "in_shop", label: "In-shop repair", icon: Store, offered: profile.offers_in_shop },
+    { key: "in_shop", label: t("inShop"), icon: Store, offered: profile.offers_in_shop },
     {
       key: "home",
-      label: "Home visits",
+      label: t("homeVisits"),
       icon: Truck,
       offered: profile.offers_home_service,
     },
     {
       key: "pickup",
-      label: "Pickup and drop-off",
+      label: t("pickupDrop"),
       icon: PackageCheck,
       offered: profile.offers_pickup_drop,
     },
@@ -87,7 +97,7 @@ export function ContactCard({
                 rel="noopener noreferrer"
               >
                 <Navigation aria-hidden />
-                Get directions
+                {t("getDirections")}
               </a>
             </Button>
           ) : null}
@@ -96,7 +106,7 @@ export function ContactCard({
             <Button asChild variant="ghost">
               <a href={`mailto:${profile.contact_email}`}>
                 <Mail aria-hidden />
-                Email the shop
+                {t("emailShop")}
               </a>
             </Button>
           ) : null}
@@ -104,7 +114,7 @@ export function ContactCard({
       </div>
 
       <div className="border-b border-hairline p-5">
-        <p className="eyebrow mb-3">Address</p>
+        <p className="eyebrow mb-3">{t("address")}</p>
         <p className="flex gap-2 text-sm leading-relaxed text-steel">
           <MapPin aria-hidden className="mt-0.5 size-4 shrink-0 text-steel-soft" />
           {profile.address}
@@ -113,7 +123,7 @@ export function ContactCard({
 
       {services.length > 0 ? (
         <div className="border-b border-hairline p-5">
-          <p className="eyebrow mb-3">Service options</p>
+          <p className="eyebrow mb-3">{t("serviceOptions")}</p>
           <ul className="space-y-2">
             {services.map((service) => (
               <li key={service.key} className="flex items-center gap-2 text-sm text-steel">
@@ -126,7 +136,7 @@ export function ContactCard({
       ) : null}
 
       <div className="p-5">
-        <p className="eyebrow mb-3">Opening hours</p>
+        <p className="eyebrow mb-3">{t("openingHours")}</p>
         <table className="w-full font-mono text-xs">
           <tbody>
             {week.map((day) => {
@@ -147,13 +157,18 @@ export function ContactCard({
                       isToday && "font-semibold",
                     )}
                   >
-                    {day.label.slice(0, 3)}
-                    {isToday ? <span className="sr-only"> (today)</span> : null}
+                    {/*
+                      A catalogue lookup, not `label.slice(0, 3)`. Slicing works on
+                      "Monday" and destroys "ಸೋಮವಾರ" — three UTF-16 units land
+                      mid-conjunct and leave a stranded vowel sign on screen.
+                    */}
+                    {ts(`weekdayShort.${day.day}`)}
+                    {isToday ? <span className="sr-only"> {t("today")}</span> : null}
                   </th>
                   <td className={cn("py-1.5 text-right tabular-nums", isToday && "font-semibold")}>
                     {day.schedule
                       ? `${formatClock(day.schedule.openMinutes)} – ${formatClock(day.schedule.closeMinutes)}`
-                      : "Closed"}
+                      : t("closed")}
                   </td>
                 </tr>
               );
@@ -163,7 +178,7 @@ export function ContactCard({
 
         {profile.closed_on_holidays ? (
           <p className="mt-3 font-mono text-eyebrow uppercase text-steel-soft">
-            Closed on public holidays
+            {t("closedHolidays")}
           </p>
         ) : null}
       </div>

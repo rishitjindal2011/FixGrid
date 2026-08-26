@@ -3,6 +3,7 @@
 import * as React from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { useTranslations } from "next-intl";
 import { BadgeCheck, MapPin } from "lucide-react";
 
 import { WarrantyBadge } from "@/components/warranty-badge";
@@ -51,6 +52,8 @@ export function ResultCard({
   hasCoordinates,
 }: ResultCardProps) {
   const { hoveredId, selectedId, setHoveredId, setSelectedId } = useSelection();
+  const t = useTranslations("common");
+  const ts = useTranslations("search");
   const isActive = hoveredId === id || selectedId === id;
 
   return (
@@ -95,7 +98,7 @@ export function ResultCard({
           <div className="flex items-start justify-between gap-3">
             <h3 className="truncate text-base leading-tight">{shopName}</h3>
             {verified ? (
-              <BadgeCheck aria-label="Verified" className="size-4 shrink-0 text-verdigris" />
+              <BadgeCheck aria-label={t("verified")} className="size-4 shrink-0 text-verdigris" />
             ) : null}
           </div>
 
@@ -149,7 +152,7 @@ export function ResultCard({
             onClick={() => setSelectedId(id)}
             className="font-mono text-eyebrow uppercase tracking-[0.14em] text-steel underline decoration-hairline underline-offset-4 transition-colors hover:text-signal hover:decoration-signal"
           >
-            Show on map
+            {ts("showOnMap")}
           </button>
         </div>
       ) : null}

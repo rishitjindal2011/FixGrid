@@ -54,7 +54,17 @@
       "Bash(echo \"SEO_EXIT=$?\")",
       "Bash(sed -E 's/.* //')",
       "Bash(grep -nE \"export \\(async \\)?function|/\\\\*\\\\*|wallet_kind|ledger|balance\" src/lib/wallet/server.ts)",
-      "Bash(sed 's/public\\\\.//')"
+      "Bash(sed 's/public\\\\.//')",
+      "Read(//c/Users/Rishit Jindal/Downloads/FixGrid-main/**)",
+      "Bash(node -e \"console.log\\(JSON.stringify\\(require\\('./admin/package.json'\\).scripts\\)\\)\")",
+      "Bash(node -e \"const p=require\\('./admin/package.json'\\);console.log\\('zod:',p.dependencies?.zod||p.devDependencies?.zod||'MISSING'\\)\")",
+      "Bash(cd \"C:/Users/Rishit Jindal/Downloads/FixGrid-main/.claude/worktrees/code-analysis-6f4d21\" && sed -i 's/signed={signedAttachments}/hrefs={attachmentUrls}/g' \"admin/src/app/\\(admin\\)/bookings/[reference]/page.tsx\" && grep -n \"hrefs={attachmentUrls}\\\\|signed={\" \"admin/src/app/\\(admin\\)/bookings/[reference]/page.tsx\")",
+      "Bash(git reset *)",
+      "Bash(git commit *)",
+      "Bash(node node_modules/eslint/bin/eslint.js . -f json)",
+      "Bash(node node_modules/eslint/bin/eslint.js .)",
+      "Bash(curl -s -o /dev/null -w \"status=%{http_code}\\\\n\" --max-time 30 \"http://localhost:3000/dashboard/attachments/booking/not-a-uuid\")",
+      "Bash(curl -s -o /dev/null -w \"status=%{http_code}\\\\n\" --max-time 8 \"http://localhost:3002/\")"
     ]
   },
   "enabledMcpjsonServers": [

@@ -1,4 +1,13 @@
 import type { NextConfig } from "next";
+import createNextIntlPlugin from "next-intl/plugin";
+
+/**
+ * The plugin links `src/i18n/request.ts` to next-intl. Without it,
+ * `getTranslations` has no per-request configuration to read and every server
+ * component throws at render time rather than at build time — so this wrapper
+ * is not optional decoration.
+ */
+const withNextIntl = createNextIntlPlugin();
 
 /**
  * Supabase Storage is the expected host for `fixer_profiles.photos` and
@@ -53,4 +62,4 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+export default withNextIntl(nextConfig);

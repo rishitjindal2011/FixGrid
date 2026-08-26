@@ -1,48 +1,67 @@
 import Link from "next/link";
+import { getTranslations } from "next-intl/server";
+
 import { SITE_NAME } from "@/lib/site";
 
-const COLUMNS: Array<{ heading: string; links: Array<{ label: string; href: string }> }> = [
+/**
+ * Footer columns.
+ *
+ * The structure is data, the wording is not. Each entry carries a message KEY
+ * rather than a label, because this constant is evaluated once at module scope
+ * where there is no request and therefore no locale — resolving the text here
+ * would freeze the first visitor's language for everyone.
+ */
+const COLUMNS = [
   {
-    heading: "Find a repair",
+    key: "findARepair",
     links: [
-      { label: "Browse all experts", href: "/search" },
-      { label: "Phone repair", href: "/repair/phones" },
-      { label: "Laptop repair", href: "/repair/laptops" },
-      { label: "Appliance repair", href: "/repair/appliances" },
-      { label: "Bicycle repair", href: "/repair/bicycles" },
-      { label: "Desktop PC repair", href: "/repair/desktops" },
-      { label: "Game console repair", href: "/repair/consoles" },
+      { key: "browseAll", href: "/search" },
+      // Slugs must match `CATEGORY_SEEDS` in scripts/seed-content.ts and the
+      // `repair` path_prefix in scripts/seed-seo-pages.ts — these resolve to real
+      // CMS category pages (/repair/<slug>), not the old broken /repair/*-repair
+      // slugs that filtered the directory down to nothing.
+      { key: "phones", href: "/repair/phones" },
+      { key: "laptops", href: "/repair/laptops" },
+      { key: "appliances", href: "/repair/appliances" },
+      { key: "bicycles", href: "/repair/bicycles" },
+      { key: "desktops", href: "/repair/desktops" },
+      { key: "consoles", href: "/repair/consoles" },
     ],
   },
   {
-    heading: "Resources & Guides",
+    key: "resources",
     links: [
-      { label: "Repair blog & news", href: "/blog" },
-      { label: "Tablet repair guide", href: "/repair/tablets" },
-      { label: "Audio & Hi-Fi guide", href: "/repair/audio-equipment" },
-      { label: "Watch & clock service", href: "/repair/watches" },
-      { label: "Camera & lens repair", href: "/repair/cameras" },
+      { key: "blog", href: "/blog" },
+      { key: "tablets", href: "/repair/tablets" },
+      { key: "audio", href: "/repair/audio-equipment" },
+      { key: "watches", href: "/repair/watches" },
+      { key: "cameras", href: "/repair/cameras" },
     ],
   },
   {
-    heading: "For repair shops",
+    key: "forShops",
     links: [
-      { label: "List your shop", href: "/join" },
-      { label: "How verification works", href: "/verification" },
+      { key: "listYourShop", href: "/join" },
+      { key: "verification", href: "/verification" },
     ],
   },
   {
-    heading: "Company",
+    key: "company",
     links: [
-      { label: "About FixGrid", href: "/about" },
-      { label: "Privacy policy", href: "/privacy" },
-      { label: "Terms of service", href: "/terms" },
-      { label: "Refund policy", href: "/refunds" },
+      { key: "about", href: "/about" },
+      { key: "privacy", href: "/privacy" },
+      { key: "terms", href: "/terms" },
+      // Listed beside the other two rather than buried in the terms, because the
+      // question it answers — "do I get my money back" — is the one people go
+      // looking for, and a policy nobody can find is a policy nobody read.
+      { key: "refunds", href: "/refunds" },
     ],
   },
-];
+] as const;
 
-export function SiteFooter() {
+export async function SiteFooter() {
+  const t = await getTranslations("footer");
+
   return (
     <footer className="mt-24 border-t border-hairline bg-chalk">
       <div className="mx-auto max-w-6xl px-4 py-12">
@@ -50,31 +69,34 @@ export function SiteFooter() {
           <div>
             <p className="font-display text-xl uppercase text-enamel">{SITE_NAME}</p>
             <p className="mt-2 max-w-xs text-sm leading-relaxed text-steel">
-              Verified local repair experts, with real hours and real reviews.
+              {t("tagline")}
             </p>
           </div>
 
-          {COLUMNS.map((column) => (
-            <nav key={column.heading} aria-label={column.heading}>
-              <p className="eyebrow">{column.heading}</p>
-              <ul className="mt-3 space-y-2">
-                {column.links.map((link) => (
-                  <li key={link.href}>
-                    <Link
-                      href={link.href}
-                      className="text-sm text-steel transition-colors hover:text-signal"
-                    >
-                      {link.label}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </nav>
-          ))}
+          {COLUMNS.map((column) => {
+            const heading = t(`${column.key}.heading`);
+            return (
+              <nav key={column.key} aria-label={heading}>
+                <p className="eyebrow">{heading}</p>
+                <ul className="mt-3 space-y-2">
+                  {column.links.map((link) => (
+                    <li key={link.href}>
+                      <Link
+                        href={link.href}
+                        className="text-sm text-steel transition-colors hover:text-signal"
+                      >
+                        {t(`${column.key}.${link.key}`)}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </nav>
+            );
+          })}
         </div>
 
         <p className="mt-12 border-t border-hairline pt-6 font-mono text-eyebrow uppercase text-steel-soft">
-          © {new Date().getFullYear()} {SITE_NAME}. All rights reserved. {SITE_NAME} is owned and operated by Vytron.
+          {t("rights", { year: new Date().getFullYear(), siteName: SITE_NAME })}
         </p>
       </div>
     </footer>

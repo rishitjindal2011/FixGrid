@@ -6,6 +6,8 @@
  * endpoints from a second place.
  */
 
+import { splitLocale } from "@/i18n/config";
+
 /** Routes that must never be a post-sign-in destination. */
 const AUTH_ROUTES = ["/login", "/signup", "/forgot-password", "/reset-password"];
 
@@ -45,7 +47,18 @@ export function safeNextPath(candidate: string | null | undefined): string {
   if (candidate.includes("\\")) return DEFAULT_SIGNED_IN_PATH;
 
   const path = candidate.split(/[?#]/)[0] ?? "";
-  if (AUTH_ROUTES.includes(path)) return DEFAULT_SIGNED_IN_PATH;
+
+  /*
+   * Compared against the DE-LOCALIZED path.
+   *
+   * `AUTH_ROUTES` lists `/login`, and a localized candidate arrives as
+   * `/hi/login` — which does not match, so the guard that stops us bouncing a
+   * visitor back to the form they just submitted would quietly stop working for
+   * six of seven locales. The failure mode is a login → login loop, and it is
+   * reachable from a hand-edited `?next=`.
+   */
+  const { pathname: bare } = splitLocale(path);
+  if (AUTH_ROUTES.includes(bare)) return DEFAULT_SIGNED_IN_PATH;
 
   return candidate;
 }

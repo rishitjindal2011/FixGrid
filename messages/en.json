@@ -1,0 +1,272 @@
+{
+  "common": {
+    "skipToContent": "Skip to content",
+    "signIn": "Sign in",
+    "yourAccount": "Your account",
+    "search": "Search",
+    "findARepair": "Find a repair",
+    "language": "Language",
+    "chooseLanguage": "Choose a language",
+    "verified": "Verified",
+    "allCategories": "All categories",
+    "browseAll": "Browse all"
+  },
+  "header": {
+    "mainNav": "Main",
+    "browseExperts": "Browse experts",
+    "blog": "Blog"
+  },
+  "footer": {
+    "tagline": "Verified local repair experts, with real hours and real reviews.",
+    "rights": "© {year} {siteName}. All rights reserved. {siteName} is owned and operated by Vytron.",
+    "findARepair": {
+      "heading": "Find a repair",
+      "browseAll": "Browse all experts",
+      "phones": "Phone repair",
+      "appliances": "Appliance repair",
+      "bicycles": "Bicycle repair",
+      "laptops": "Laptop repair",
+      "desktops": "Desktop PC repair",
+      "consoles": "Game console repair"
+    },
+    "resources": {
+      "heading": "Resources & guides",
+      "blog": "Repair blog & news",
+      "tablets": "Tablet repair guide",
+      "audio": "Audio & Hi-Fi guide",
+      "watches": "Watch & clock service",
+      "cameras": "Camera & lens repair"
+    },
+    "forShops": {
+      "heading": "For repair shops",
+      "listYourShop": "List your shop",
+      "verification": "How verification works"
+    },
+    "company": {
+      "heading": "Company",
+      "about": "About",
+      "privacy": "Privacy",
+      "terms": "Terms",
+      "refunds": "Refunds"
+    }
+  },
+  "home": {
+    "eyebrow": "Local repair directory",
+    "heading": "Someone near you can fix that",
+    "intro": "Find a verified local repair shop, see who is open right now, and book with a warranty on the work.",
+    "searchLabel": "What needs fixing?",
+    "searchPlaceholder": "Cracked screen, leaking tap, torn seam…",
+    "trustLine": "Live opening hours · Verified shops · Warranty on every listing",
+    "stats": {
+      "shops": "Repair shops",
+      "shopsSuffix": "in the directory",
+      "categories": "Repair categories",
+      "categoriesSuffix": "covered",
+      "verified": "Verified shops",
+      "verifiedSuffix": "with confirmed details"
+    },
+    "categories": {
+      "eyebrow": "Browse by type",
+      "heading": "What are you fixing?",
+      "all": "All categories",
+      "findShops": "Find shops",
+      "browseAll": "Browse all {count} categories"
+    },
+    "how": {
+      "eyebrow": "How it works",
+      "heading": "Find your fixer in three steps",
+      "intro": "Search, compare, book. The shop quotes before any work starts, and the job closes with a warranty recorded against it.",
+      "step1Title": "Search by what broke",
+      "step1Body": "Filter by repair type, minimum rating, minimum warranty and service option — in-shop, home visit or pickup. Every predicate runs in the database, not on your device.",
+      "step2Title": "Check who's open now",
+      "step2Body": "Every listing shows a live opening-hours readout in the shop's own timezone. Not a stale table — the dot you see is accurate to the minute.",
+      "step3Title": "Book, and stay covered",
+      "step3Body": "Pick a slot and the shop accepts and quotes before touching your device. The job closes with a warranty window recorded against it."
+    },
+    "featured": {
+      "eyebrow": "Top rated",
+      "heading": "Well-reviewed shops in the registry",
+      "cta": "Browse the full directory"
+    },
+    "why": {
+      "eyebrow": "Why FixGrid",
+      "heading": "Built for the repair economy",
+      "localTitle": "Local first",
+      "localBody": "Every shop is a real business with a real address — not a national chain or a remote call centre.",
+      "verifiedTitle": "Verified listings",
+      "verifiedBody": "Verified shops have had their address, phone number and opening hours confirmed by the FixGrid team.",
+      "liveTitle": "Live status",
+      "liveBody": "Opening hours are stored per-day, per-timezone and rendered in real time — not cached from last month.",
+      "repairTitle": "Repair not replace",
+      "repairBody": "Every repair is an item that doesn't go to landfill. FixGrid exists because fixing things is worth doing."
+    },
+    "join": {
+      "badge": "For repair shops",
+      "heading": "Run a repair business?",
+      "body": "List your shop, set your hours and services, and earn 5% back on every bill you submit for completed work.",
+      "cta": "List your shop",
+      "note": "One-time listing fee · Refunded if we reject the listing"
+    }
+  },
+  "search": {
+    "eyebrow": "Directory",
+    "heading": "Repair experts near you",
+    "headingCategory": "{category} repair",
+    "resultsLabel": "Search results",
+    "matching": "{count, plural, =0 {No shops matching your filters} one {# shop matching your filters} other {# shops matching your filters}}",
+    "matchingMore": "{count}+ shops matching your filters",
+    "unavailable": "We couldn't reach the directory just now.",
+    "truncated": "Showing the first {limit} matches. Zoom the map or add a filter to narrow things down.",
+    "showOnMap": "Show on map",
+    "empty": {
+      "eyebrow": "No matches",
+      "heading": "Nothing here yet",
+      "withFilters": "No shop matches every filter at once. Widening the rating or warranty floor, or clearing the service type, usually helps.",
+      "noFilters": "There are no repair shops in the registry for this area yet.",
+      "clear": "Clear all filters"
+    },
+    "error": {
+      "eyebrow": "Search unavailable",
+      "heading": "We couldn't run that search",
+      "body": "The directory didn't respond. This is on our side, not yours — your filters are still in the address bar, so a refresh will retry exactly this search."
+    }
+  },
+  "filters": {
+    "heading": "Filters",
+    "queryLabel": "Shop, service or street",
+    "queryPlaceholder": "Screen repair, Elm St…",
+    "locationLabel": "Location",
+    "locationPlaceholder": "City, area or PIN code…",
+    "locationSearch": "Search",
+    "categoryLabel": "Category",
+    "ratingLabel": "Minimum rating",
+    "ratingAny": "Any",
+    "warrantyLabel": "Warranty",
+    "warrantyAny": "Any",
+    "warrantyOffered": "Offered",
+    "warranty30": "30d+",
+    "warranty90": "90d+",
+    "serviceLabel": "Service type",
+    "inShop": "In-shop",
+    "homeVisit": "Home visit",
+    "pickupDrop": "Pickup & drop",
+    "clearAll": "Clear all filters"
+  },
+  "expert": {
+    "notFound": "Repair expert not found",
+    "verified": "Verified",
+    "tabAbout": "About",
+    "tabReviews": "Reviews",
+    "tabInventory": "Parts & stock",
+    "noDescription": "This shop hasn't added a description yet.",
+    "whatTheyRepair": "What they repair",
+    "location": "Location",
+    "contact": {
+      "warranty": "{days} warranty on every repair",
+      "getDirections": "Get directions",
+      "emailShop": "Email the shop",
+      "address": "Address",
+      "serviceOptions": "Service options",
+      "inShop": "In-shop repair",
+      "homeVisits": "Home visits",
+      "pickupDrop": "Pickup and drop-off",
+      "openingHours": "Opening hours",
+      "closedHolidays": "Closed on public holidays",
+      "closed": "Closed",
+      "today": "(today)"
+    },
+    "inventory": {
+      "searchPlaceholder": "Search parts & stock…",
+      "filterCategory": "Filter by category",
+      "filterAvailability": "Filter by availability",
+      "availability": "Availability",
+      "inStock": "In stock",
+      "outOfStock": "Out of stock",
+      "sort": "Sort items",
+      "sortFeatured": "Featured",
+      "sortName": "Name (A–Z)",
+      "sortPriceAsc": "Price (low to high)",
+      "sortPriceDesc": "Price (high to low)",
+      "noMatches": "No items match these filters.",
+      "shopTitle": "{shopName} shop",
+      "nothingListed": "This shop hasn't listed any items for sale yet.",
+      "found": "Found {shown} of {total} items",
+      "clearFilters": "Clear filters",
+      "ask": "Ask",
+      "conditionNew": "New",
+      "conditionRefurbished": "Refurbished",
+      "conditionUsed": "Used"
+    },
+    "notFoundEyebrow": "Not in the registry",
+    "notFoundHeading": "This shop isn't listed",
+    "notFoundBody": "The listing may have been removed, or the link may be out of date. Browse the directory to find another repair expert nearby.",
+    "browseExperts": "Browse repair experts",
+    "noPhotos": "No photos yet",
+    "photosOf": "Photos of {shopName}",
+    "photoAlt": "{shopName} — photo {index} of {count}",
+    "photoPosition": "Photo {index} of {count}",
+    "showPhoto": "Show photo {index}",
+    "previousPhoto": "Previous photo",
+    "nextPhoto": "Next photo",
+    "metaDescription": "{shopName} is a repair shop at {address}. See opening hours, services and reviews.",
+    "breadcrumbHome": "Home",
+    "breadcrumbExperts": "Experts"
+  },
+  "warranty": {
+    "badge": "{label} warranty",
+    "line": "{label} warranty on every repair",
+    "day": "{count}-day",
+    "week": "1-week",
+    "month": "{count}-month",
+    "year": "{count}-year"
+  },
+  "status": {
+    "open": "Open now",
+    "closed": "Closed",
+    "opensAt": "Opens {time}",
+    "opensTomorrow": "Opens tomorrow {time}",
+    "closesAt": "Closes {time}",
+    "opensOnDay": "Opens {day} {time}",
+    "notListed": "Opening hours not listed",
+    "weekday": {
+      "mon": "Monday",
+      "tue": "Tuesday",
+      "wed": "Wednesday",
+      "thu": "Thursday",
+      "fri": "Friday",
+      "sat": "Saturday",
+      "sun": "Sunday"
+    },
+    "weekdayShort": {
+      "mon": "Mon",
+      "tue": "Tue",
+      "wed": "Wed",
+      "thu": "Thu",
+      "fri": "Fri",
+      "sat": "Sat",
+      "sun": "Sun"
+    }
+  },
+  "reviews": {
+    "noneYet": "No reviews yet",
+    "beFirst": "Used this shop? Write the first review and help the next person decide.",
+    "verifiedCustomer": "Verified customer",
+    "justNow": "just now",
+    "ownShop": "This is your shop, so you can't review it.",
+    "usedThisShop": "Used this shop?",
+    "signInPrompt": "Sign in to leave a review. It takes a minute.",
+    "signInCta": "Sign in to review",
+    "writeHeading": "Write a review",
+    "updateHeading": "Update your review",
+    "yourRating": "Your rating",
+    "starCount": "{count, plural, one {# star} other {# stars}}",
+    "whatHappened": "What happened?",
+    "optional": "(optional)",
+    "textPlaceholder": "What did they fix, how long did it take, and would you go back?",
+    "posting": "Posting…",
+    "post": "Post review",
+    "update": "Update review",
+    "success": "Thanks — your review is live.",
+    "ratingAria": "Rated {rating} out of 5 from {count, plural, one {# review} other {# reviews}}"
+  }
+}

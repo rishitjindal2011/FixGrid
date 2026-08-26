@@ -1,27 +1,39 @@
 import { createServerClient } from "@supabase/ssr";
+import createIntlMiddleware from "next-intl/middleware";
 import { NextResponse, type NextRequest } from "next/server";
 
+import { DEFAULT_LOCALE, splitLocale, withLocale, type Locale } from "@/i18n/config";
+import { routing } from "@/i18n/routing";
 import type { Database } from "@/lib/types/database";
 
 /**
  * Next 16 renamed this convention from `middleware` to `proxy`; the file and the
  * exported function have to move together or the export is simply never called.
  *
- * The proxy does exactly two jobs, in this order:
+ * The proxy does four jobs, in this order:
  *
- *   1. Apply admin-managed redirects from `seo_redirects`. These must run
- *      before anything else, so a redirected URL never renders a page or
- *      touches the session.
+ *   0. Recover an OAuth code that landed on the wrong path. First, because it
+ *      must happen regardless of locale and regardless of any redirect rule.
  *
- *   2. Refresh the Supabase auth session. Server Components can read cookies
+ *   1. Resolve the locale. `next-intl` decides it, then we re-express its
+ *      decision as our own response so we can also inject a request header
+ *      (see `PATHNAME_HEADER`) — which `NextResponse.next({ request })` can do
+ *      and next-intl's own response cannot be retrofitted with.
+ *
+ *   2. Apply admin-managed redirects from `seo_redirects`. These run before the
+ *      page renders or the session is touched.
+ *
+ *   3. Refresh the Supabase auth session. Server Components can read cookies
  *      but cannot set them, so a token that expires mid-visit can only be
  *      rotated here. Without this, a signed-in user silently becomes anonymous.
  *
- * The redirect table is cached in module scope with a short TTL. A database
- * round-trip on every single request — including ones that will never redirect,
- * which is nearly all of them — would put the whole site behind the latency of
- * a table that changes a few times a month.
+ * Every path-keyed lookup below compares against the DE-LOCALIZED path. The
+ * redirect table stores `/foo`, not `/hi/foo`, so matching on the raw pathname
+ * would silently stop applying every admin redirect for six of the seven
+ * locales — the site would look fine and quietly ignore its own configuration.
  */
+
+const handleI18nRouting = createIntlMiddleware(routing);
 
 interface RedirectRule {
   destination: string;
@@ -33,6 +45,12 @@ interface RedirectCache {
   expiresAt: number;
 }
 
+/**
+ * The redirect table is cached in module scope with a short TTL. A database
+ * round-trip on every single request — including ones that will never redirect,
+ * which is nearly all of them — would put the whole site behind the latency of
+ * a table that changes a few times a month.
+ */
 const REDIRECT_TTL_MS = 60_000;
 let redirectCache: RedirectCache | null = null;
 
@@ -122,16 +140,39 @@ export async function proxy(request: NextRequest) {
 
   // Supabase falls back to Site URL when redirectTo is not allowlisted, landing
   // on `/?code=…` instead of `/auth/callback`. Forward the code so it is exchanged.
+  //
+  // Runs before locale handling on purpose: `/auth/callback` is a route handler
+  // outside the `[locale]` segment, so the code must reach it unprefixed, and a
+  // locale redirect in between would cost an extra hop on a one-shot credential.
   if (pathname !== "/auth/callback" && searchParams.has("code") && !searchParams.has("error")) {
     const callback = new URL("/auth/callback", request.nextUrl.origin);
     callback.search = search;
     return NextResponse.redirect(callback);
   }
 
-  /* ── 1. Redirects ─────────────────────────────────────────────────────── */
+  /* ── 1. Locale ────────────────────────────────────────────────────────── */
+
+  const intlResponse = handleI18nRouting(request);
+
+  /*
+   * A non-ok response is a locale redirect — with `localePrefix: "as-needed"`
+   * that is `/en/foo` being canonicalised to `/foo`. Return it untouched: there
+   * is no point refreshing a session or reading the redirect table for a
+   * response the browser will immediately replace, and doing the work here would
+   * discard next-intl's own `Set-Cookie`.
+   */
+  if (!intlResponse.ok) return intlResponse;
+
+  const { locale: prefix, pathname: bare } = splitLocale(pathname);
+  const locale: Locale = prefix ?? DEFAULT_LOCALE;
+
+  /* ── 2. Redirects ─────────────────────────────────────────────────────── */
 
   const rules = await loadRedirects(request);
-  const rule = rules.get(normalizePath(pathname));
+  // Keyed on the DE-LOCALIZED path: rules are authored as `/foo`, so looking up
+  // `/hi/foo` would match nothing and quietly disable the whole redirect table
+  // for every non-English visitor.
+  const rule = rules.get(normalizePath(bare));
 
   if (rule) {
     // Relative destinations resolve against the *current* origin, so a redirect
@@ -144,21 +185,89 @@ export async function proxy(request: NextRequest) {
       target = new URL(rule.destination, request.nextUrl.origin);
     } catch {
       console.error("[proxy] invalid redirect destination:", rule.destination);
-      return sessionResponse(request, `${pathname}${search}`);
+      return sessionResponse(request, intlResponse, locale);
+    }
+
+    // An internal destination keeps the visitor in their language. Skipped for
+    // external hosts, where our locale prefix would be meaningless or wrong.
+    if (target.origin === request.nextUrl.origin) {
+      target.pathname = withLocale(target.pathname, locale);
     }
 
     // Preserve the query string unless the rule specifies its own.
     if (!target.search && search) target.search = search;
 
-    // A rule pointing at itself would loop forever through the CDN.
-    if (normalizePath(target.pathname) !== normalizePath(pathname) || target.origin !== request.nextUrl.origin) {
-      return NextResponse.redirect(target, rule.statusCode);
+    // A rule pointing at itself would loop forever through the CDN. Compared
+    // against the *localized* request path, since that is what the browser asked
+    // for and what a self-referencing rule would resolve back to.
+    if (
+      normalizePath(target.pathname) !== normalizePath(pathname) ||
+      target.origin !== request.nextUrl.origin
+    ) {
+      const redirect = NextResponse.redirect(target, rule.statusCode);
+      carryOver(intlResponse, redirect);
+      return redirect;
     }
   }
 
-  /* ── 2. Session refresh ───────────────────────────────────────────────── */
+  /* ── 3. Session refresh ───────────────────────────────────────────────── */
 
-  return sessionResponse(request, `${pathname}${search}`);
+  return sessionResponse(request, intlResponse, locale);
+}
+
+/**
+ * Copy next-intl's cookies and routing headers onto a response we built.
+ *
+ * Any response the proxy constructs itself replaces next-intl's, and with it the
+ * locale cookie and the internal rewrite that maps `/search` onto the
+ * `[locale]` segment. Dropping either means the visitor silently reverts to
+ * English on the next navigation, or the route fails to match at all.
+ *
+ * This is the same trap the session code below documents for Supabase cookies —
+ * a discarded response takes its `Set-Cookie` with it. There are now two sets of
+ * cookies riding on one response and both matter.
+ */
+function carryOver(from: NextResponse, to: NextResponse): void {
+  for (const cookie of from.cookies.getAll()) to.cookies.set(cookie);
+  for (const header of ROUTING_HEADERS) {
+    const value = from.headers.get(header);
+    if (value) to.headers.set(header, value);
+  }
+}
+
+/**
+ * `x-middleware-rewrite` is how next-intl points an unprefixed URL at the
+ * `[locale]` segment; `vary` keeps a locale-specific response from being served
+ * from cache to the wrong visitor. `link` carries the alternates next-intl
+ * advertises. `x-middleware-next` is deliberately excluded — it belongs to
+ * whichever response is actually being returned.
+ */
+const ROUTING_HEADERS = ["x-middleware-rewrite", "vary", "link"] as const;
+
+/**
+ * Next encodes "middleware wants to add this REQUEST header" as a response
+ * header called `x-middleware-request-<name>`.
+ *
+ * next-intl uses exactly that channel to tell `getRequestConfig` which locale it
+ * settled on. Our own `NextResponse.next({ request: { headers } })` builds its
+ * request headers from the original request, which never saw them — so without
+ * this the locale is lost, `requestLocale` resolves to undefined, and every
+ * string silently falls back to English while `<html lang>` still says `hi`,
+ * because the layout reads the route param directly. A half-translated page with
+ * no error anywhere.
+ *
+ * Copied by prefix rather than by name so this keeps working if next-intl
+ * changes or adds to the headers it forwards.
+ */
+const MIDDLEWARE_REQUEST_PREFIX = "x-middleware-request-";
+
+function forwardIntlRequestHeaders(from: NextResponse, headers: Headers): void {
+  from.headers.forEach((value, name) => {
+    const lower = name.toLowerCase();
+    if (lower.startsWith(MIDDLEWARE_REQUEST_PREFIX)) {
+      headers.set(lower.slice(MIDDLEWARE_REQUEST_PREFIX.length), value);
+    }
+  });
 }
 
 /**
@@ -176,6 +285,10 @@ export async function proxy(request: NextRequest) {
  *
  * Everything else stays open. `/search`, `/expert/[slug]` and the CMS pages are
  * the product — a signed-in customer browsing shops is not a routing mistake.
+ *
+ * Keyed WITHOUT a locale prefix. `/hi` is the Hindi homepage and must redirect
+ * exactly as `/` does; the lookup uses the de-localized path so one entry covers
+ * all seven.
  */
 const SIGNED_IN_REDIRECTS: Record<string, string> = {
   "/": "/dashboard",
@@ -183,14 +296,24 @@ const SIGNED_IN_REDIRECTS: Record<string, string> = {
 
 async function sessionResponse(
   request: NextRequest,
-  requestedPath: string,
+  intlResponse: NextResponse,
+  locale: Locale,
 ): Promise<NextResponse> {
+  const { pathname, search } = request.nextUrl;
+
   // Forwarded on the *request*, not the response: this is for the render on the
   // other side of the proxy, and it must not reach the browser.
+  //
+  // The value keeps its locale prefix. The dashboard layout feeds it to
+  // `safeNextPath` and then into `?next=`, so stripping the locale here would
+  // send a Hindi visitor to the English page after signing in.
   const headers = new Headers(request.headers);
-  headers.set(PATHNAME_HEADER, requestedPath);
+  forwardIntlRequestHeaders(intlResponse, headers);
+  headers.set(PATHNAME_HEADER, `${pathname}${search}`);
 
   const response = NextResponse.next({ request: { headers } });
+  carryOver(intlResponse, response);
+
   const supabase = createSupabaseClient(request, response);
 
   // `getUser()` (not `getSession()`) is what actually validates the token with
@@ -199,10 +322,11 @@ async function sessionResponse(
     data: { user },
   } = await supabase.auth.getUser();
 
-  const destination = SIGNED_IN_REDIRECTS[normalizePath(request.nextUrl.pathname)];
+  const { pathname: bare } = splitLocale(pathname);
+  const destination = SIGNED_IN_REDIRECTS[normalizePath(bare)];
 
   if (user && destination) {
-    const target = new URL(destination, request.nextUrl.origin);
+    const target = new URL(withLocale(destination, locale), request.nextUrl.origin);
     const redirect = NextResponse.redirect(target);
 
     /*
@@ -227,6 +351,12 @@ export const config = {
    * Skip everything that can never be redirected and never carries a session:
    * build output, image optimiser, metadata files and static assets. This keeps
    * the proxy off the hot path for the majority of requests.
+   *
+   * A gap here now breaks localization as well as sessions, and it does so
+   * silently: a path the proxy never sees is never rewritten onto the `[locale]`
+   * segment, so it 404s or renders without messages rather than erroring
+   * somewhere findable. Anything added to this list should be a URL that must
+   * not be localized at all.
    */
   matcher: [
     "/((?!_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml|.*\\.(?:svg|png|jpg|jpeg|gif|webp|avif|ico|css|js|woff|woff2|ttf)$).*)",

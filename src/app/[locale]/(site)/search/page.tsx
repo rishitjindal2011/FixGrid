@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
+import { getTranslations } from "next-intl/server";
 
 import { JsonLd } from "@/components/seo/JsonLd";
 import { FilterPanel } from "@/components/search/filter-panel";
@@ -22,7 +23,6 @@ import {
 } from "@/lib/queries/search";
 import { buildBreadcrumbs, buildWebPage, type Thing, type WithContext } from "@/lib/seo/jsonld";
 import { absoluteUrl } from "@/lib/site";
-import { pluralize } from "@/lib/utils";
 
 // Results depend on the query string and on data that changes as shops are
 // added, so this page is always rendered per-request.
@@ -91,7 +91,11 @@ export default async function SearchPage({ searchParams }: PageProps) {
   const filters = parseSearchParams(await searchParams);
 
   // Independent queries, so they run concurrently rather than in series.
-  const [outcome, categories] = await Promise.all([searchFixers(filters), getCategories()]);
+  const [outcome, categories, t] = await Promise.all([
+    searchFixers(filters),
+    getCategories(),
+    getTranslations("search"),
+  ]);
 
   const activeCategory = filters.category
     ? categories.find((category) => category.slug === filters.category)
@@ -109,22 +113,21 @@ export default async function SearchPage({ searchParams }: PageProps) {
     }));
 
   const heading = activeCategory
-    ? `${activeCategory.name} repair`
-    : "Repair experts near you";
+    ? t("headingCategory", { category: activeCategory.name })
+    : t("heading");
 
   /*
-   * `pluralize` already emits the number ("2 shops"), so prefixing the count by
-   * hand — as this line used to — rendered "2 2 shops", and "1 1 shop" on a
-   * single result.
+   * The count is an ICU plural in the catalogue rather than a `pluralize()` call,
+   * because plural rules are per-language: Hindi and Marathi agree with English
+   * here, but the rule set is the translator's to state, not ours to hardcode.
    *
-   * The truncated branch spells the plural out rather than calling `pluralize`,
-   * because the "+" has to land on the digits and not after the noun. It is safe:
-   * `truncated` means the row cap was reached, so the count there is
-   * SEARCH_RESULT_LIMIT and never 1.
+   * The truncated branch is a separate message so the "+" lands on the digits and
+   * not after the noun. Safe: `truncated` means the row cap was reached, so the
+   * count there is SEARCH_RESULT_LIMIT and never 1.
    */
   const matchLabel = outcome.truncated
-    ? `${outcome.results.length}+ shops`
-    : pluralize(outcome.results.length, "shop");
+    ? t("matchingMore", { count: outcome.results.length })
+    : t("matching", { count: outcome.results.length });
 
   const schemas: WithContext<Thing>[] = [];
   if (isIndexable(filters)) {
@@ -156,12 +159,10 @@ export default async function SearchPage({ searchParams }: PageProps) {
 
       <div className="mx-auto max-w-[92rem] px-4 py-8">
         <header className="mb-6">
-          <p className="eyebrow">Directory</p>
+          <p className="eyebrow">{t("eyebrow")}</p>
           <h1 className="mt-2 text-display">{heading}</h1>
           <p className="mt-2 text-sm text-steel">
-            {outcome.failed
-              ? "We couldn't reach the directory just now."
-              : `${matchLabel} matching your filters`}
+            {outcome.failed ? t("unavailable") : matchLabel}
           </p>
         </header>
 
@@ -176,7 +177,7 @@ export default async function SearchPage({ searchParams }: PageProps) {
               </Suspense>
             </aside>
 
-            <section aria-label="Search results">
+            <section aria-label={t("resultsLabel")}>
               {outcome.failed ? (
                 <ErrorState />
               ) : outcome.results.length === 0 ? (
@@ -207,8 +208,7 @@ export default async function SearchPage({ searchParams }: PageProps) {
 
                   {outcome.truncated ? (
                     <p className="mt-6 rounded-machined border border-dashed border-hairline p-4 text-center text-sm text-steel">
-                      Showing the first {SEARCH_RESULT_LIMIT} matches. Zoom the map or add a
-                      filter to narrow things down.
+                      {t("truncated", { limit: SEARCH_RESULT_LIMIT })}
                     </p>
                   ) : null}
                 </>
@@ -231,7 +231,9 @@ export default async function SearchPage({ searchParams }: PageProps) {
   );
 }
 
-function EmptyState({ hasFilters }: { hasFilters: boolean }) {
+async function EmptyState({ hasFilters }: { hasFilters: boolean }) {
+  const t = await getTranslations("search.empty");
+
   return (
     // Same correction as the homepage hero: `schematic-fade` is a mask, so on
     // this container it faded the message itself — the one thing someone who
@@ -243,8 +245,8 @@ function EmptyState({ hasFilters }: { hasFilters: boolean }) {
       />
 
       <div className="relative">
-        <p className="eyebrow">No matches</p>
-        <h2 className="mt-3 text-display-sm">Nothing here yet</h2>
+        <p className="eyebrow">{t("eyebrow")}</p>
+        <h2 className="mt-3 text-display-sm">{t("heading")}</h2>
         <p className="mx-auto mt-3 max-w-[42ch] text-sm leading-relaxed text-steel">
           {hasFilters
             ? "No shop matches every filter at once. Loosening the rating or warranty floor, or clearing the service type, usually helps."
@@ -260,10 +262,12 @@ function EmptyState({ hasFilters }: { hasFilters: boolean }) {
   );
 }
 
-function ErrorState() {
+async function ErrorState() {
+  const t = await getTranslations("search.error");
+
   return (
     <div className="rounded-machined border border-rust/30 bg-rust-wash px-6 py-12 text-center">
-      <p className="eyebrow text-rust">Search unavailable</p>
+      <p className="eyebrow text-rust">{t("eyebrow")}</p>
       <h2 className="mt-3 text-display-sm">We couldn&apos;t run that search</h2>
       <p className="mx-auto mt-3 max-w-[46ch] text-sm leading-relaxed text-steel">
         The directory didn&apos;t respond. This is on our side, not yours — your filters are

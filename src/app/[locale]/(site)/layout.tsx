@@ -1,3 +1,5 @@
+import { getTranslations } from "next-intl/server";
+
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 
@@ -10,14 +12,16 @@ import { SiteHeader } from "@/components/site-header";
  * group exists purely so the dashboard can opt out of this header and footer
  * without either layout knowing about the other.
  */
-export default function SiteLayout({ children }: { children: React.ReactNode }) {
+export default async function SiteLayout({ children }: { children: React.ReactNode }) {
+  const t = await getTranslations("common");
+
   return (
     <>
       <a
         href="#main"
         className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-machined focus:bg-enamel focus:px-4 focus:py-2 focus:text-bench"
       >
-        Skip to content
+        {t("skipToContent")}
       </a>
 
       <SiteHeader />

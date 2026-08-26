@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { useSearchParams } from "next/navigation";
+import { useTranslations } from "next-intl";
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
@@ -41,6 +42,7 @@ export function ExpertTabs({
       : queryTab === "jobs"
       ? "jobs"
       : "about";
+  const t = useTranslations("expert");
 
   // Keyed rather than controlled: on a prerendered route the param is only
   // legible after hydration, and keying lets the resolved value re-seed
@@ -50,16 +52,16 @@ export function ExpertTabs({
   return (
     <Tabs key={requested} defaultValue={requested}>
       <TabsList>
-        <TabsTrigger value="about">About</TabsTrigger>
+        <TabsTrigger value="about">{t("tabAbout")}</TabsTrigger>
         <TabsTrigger value="reviews">
-          Reviews
+          {t("tabReviews")}
           <span className="ml-2 font-mono text-xs tabular-nums text-steel-soft">
             {reviewCount}
           </span>
         </TabsTrigger>
         {inventoryCount > 0 && (
           <TabsTrigger value="inventory">
-            Shop
+            {t("tabInventory")}
             <span className="ml-2 font-mono text-xs tabular-nums text-steel-soft">
               {inventoryCount}
             </span>

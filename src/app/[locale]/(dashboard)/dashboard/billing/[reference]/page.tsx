@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import type { Metadata } from "next";
 import { ArrowLeft, FileWarning } from "lucide-react";
 
-import { PrintInvoiceButton } from "@/app/(dashboard)/dashboard/billing/[reference]/print-button";
+import { PrintInvoiceButton } from "./print-button";
 import { CostBreakdown } from "@/components/dashboard/cost-breakdown";
 import { EmptyState } from "@/components/dashboard/empty-state";
 import { PaymentStatusBadge } from "@/components/dashboard/invoice-table";

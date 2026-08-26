@@ -9,6 +9,7 @@
     "start": "next start",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
+    "i18n:check": "node scripts/i18n-check.mjs",
     "db:push": "psql \"$SUPABASE_DB_URL\" -f supabase/schema.sql && psql \"$SUPABASE_DB_URL\" -f supabase/policies.sql && psql \"$SUPABASE_DB_URL\" -f supabase/seed.sql && psql \"$SUPABASE_DB_URL\" -f supabase/migrations/006_storage_buckets.sql && psql \"$SUPABASE_DB_URL\" -f supabase/migrations/007_fix_rls_functions.sql && psql \"$SUPABASE_DB_URL\" -f supabase/migrations/008_blog_templates.sql",
     "db:seed": "psql \"$SUPABASE_DB_URL\" -f supabase/seed.sql",
     "seed:seo": "tsx scripts/seed-seo-pages.ts"
@@ -36,6 +37,7 @@
     "leaflet": "^1.9.4",
     "lucide-react": "^0.475.0",
     "next": "^16.3.0",
+    "next-intl": "^4.13.7",
     "pg": "^8.23.0",
     "pptxgenjs": "^4.0.1",
     "qrcode": "^1.5.4",

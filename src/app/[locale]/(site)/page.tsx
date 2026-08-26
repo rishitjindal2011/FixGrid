@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
+import { getTranslations } from "next-intl/server";
 import {
   ArrowRight,
   Clock,
@@ -64,10 +65,12 @@ export default async function HomePage() {
   // users on protected routes. Logged-in visitors on the public home page
   // simply see the marketing page — a fine UX tradeoff vs. a broken index.
 
-  const [categories, featured, stats] = await Promise.all([
+  const [categories, featured, stats, t, tc] = await Promise.all([
     getCategories(),
     getFeaturedFixers(6),
     getDirectoryStats(),
+    getTranslations("home"),
+    getTranslations("common"),
   ]);
 
   return (
@@ -87,10 +90,10 @@ export default async function HomePage() {
         />
 
         <div className="relative mx-auto max-w-4xl px-4 py-20 text-center sm:py-32">
-          <p className="eyebrow">Local repair directory</p>
-          <h1 className="mt-4 text-display-lg">Someone near you can fix that</h1>
+          <p className="eyebrow">{t("eyebrow")}</p>
+          <h1 className="mt-4 text-display-lg">{t("heading")}</h1>
           <p className="mx-auto mt-5 max-w-[52ch] text-lg leading-relaxed text-steel">
-            {SITE_DESCRIPTION}
+            {t("intro")}
           </p>
 
           {/* Plain GET form — works with JS disabled and lands on the same URL
@@ -107,24 +110,31 @@ export default async function HomePage() {
                 className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-steel-soft"
               />
               <label htmlFor="home-q" className="sr-only">
-                What needs fixing?
+                {t("searchLabel")}
               </label>
               <input
                 id="home-q"
                 name="q"
                 type="search"
                 maxLength={80}
-                placeholder="Cracked screen, leaking tap, torn seam…"
+                placeholder={t("searchPlaceholder")}
                 className="h-12 w-full rounded-machined border border-hairline bg-chalk pl-10 pr-3 text-base text-enamel shadow-bench outline-none placeholder:text-steel-soft focus-visible:border-signal focus-visible:ring-2 focus-visible:ring-signal/25"
               />
             </div>
             <Button type="submit" size="lg">
-              Search
+              {tc("search")}
             </Button>
           </form>
 
+          {/*
+            No longer claims "No booking fees".
+            A platform fee is charged to the customer at booking (see
+            `src/lib/bookings/actions.ts`), so the old line was false the moment
+            the fee shipped. Translating a false claim into six languages would
+            have multiplied the problem rather than surfaced it.
+          */}
           <p className="mt-4 font-mono text-eyebrow uppercase tracking-[0.14em] text-steel-soft">
-            Live opening hours · Verified shops · No booking fees
+            {t("trustLine")}
           </p>
         </div>
       </section>
@@ -137,22 +147,22 @@ export default async function HomePage() {
               {stats.shopCount > 0 && (
                 <StatPill
                   value={stats.shopCount}
-                  label="Repair shops"
-                  suffix="in the directory"
+                  label={t("stats.shops")}
+                  suffix={t("stats.shopsSuffix")}
                 />
               )}
               {stats.categoryCount > 0 && (
                 <StatPill
                   value={stats.categoryCount}
-                  label="Repair categories"
-                  suffix="covered"
+                  label={t("stats.categories")}
+                  suffix={t("stats.categoriesSuffix")}
                 />
               )}
               {stats.verifiedCount > 0 && (
                 <StatPill
                   value={stats.verifiedCount}
-                  label="Verified shops"
-                  suffix="with confirmed details"
+                  label={t("stats.verified")}
+                  suffix={t("stats.verifiedSuffix")}
                   className="col-span-2 sm:col-span-1"
                 />
               )}
@@ -166,16 +176,16 @@ export default async function HomePage() {
         <section className="mx-auto max-w-6xl px-4 py-16" aria-labelledby="categories-heading">
           <div className="flex items-end justify-between gap-4">
             <div>
-              <p className="eyebrow">Browse by type</p>
+              <p className="eyebrow">{t("categories.eyebrow")}</p>
               <h2 id="categories-heading" className="mt-2 text-display-sm">
-                What are you fixing?
+                {t("categories.heading")}
               </h2>
             </div>
             <Link
               href="/search"
               className="hidden shrink-0 items-center gap-1.5 font-mono text-eyebrow uppercase tracking-[0.14em] text-steel transition-colors hover:text-signal sm:inline-flex"
             >
-              All categories
+              {t("categories.all")}
               <ArrowRight aria-hidden className="size-3" />
             </Link>
           </div>
@@ -198,7 +208,7 @@ export default async function HomePage() {
                     ) : null}
                   </div>
                   <span className="inline-flex items-center gap-1 font-mono text-eyebrow uppercase tracking-[0.14em] text-steel-soft transition-colors group-hover:text-signal">
-                    Find shops
+                    {t("categories.findShops")}
                     <ArrowRight aria-hidden className="size-3" />
                   </span>
                 </Link>
@@ -210,7 +220,7 @@ export default async function HomePage() {
             <div className="mt-6 text-center">
               <Button asChild variant="outline" size="md">
                 <Link href="/search">
-                  Browse all {categories.length} categories
+                  {t("categories.browseAll", { count: categories.length })}
                   <ArrowRight aria-hidden className="size-4" />
                 </Link>
               </Button>
@@ -226,13 +236,12 @@ export default async function HomePage() {
       >
         <div className="mx-auto max-w-6xl px-4 py-16">
           <div className="text-center">
-            <p className="eyebrow">How it works</p>
+            <p className="eyebrow">{t("how.eyebrow")}</p>
             <h2 id="how-it-works-heading" className="mt-2 text-display-sm">
-              Find your fixer in three steps
+              {t("how.heading")}
             </h2>
             <p className="mx-auto mt-3 max-w-[50ch] text-sm leading-relaxed text-steel">
-              No account. No middleman. No booking fees. Just a straight line
-              between you and the person who can fix your thing.
+              {t("how.intro")}
             </p>
           </div>
 
@@ -240,20 +249,20 @@ export default async function HomePage() {
             <HowItWorksCard
               step="01"
               icon={<Search aria-hidden className="size-5" />}
-              title="Search by what broke"
-              body="Filter by repair type, minimum rating, service option — in-shop, home visit or pickup — and location. Every predicate runs in the database, not on your device."
+              title={t("how.step1Title")}
+              body={t("how.step1Body")}
             />
             <HowItWorksCard
               step="02"
               icon={<Clock aria-hidden className="size-5" />}
-              title="Check who's open now"
-              body="Every listing shows a live opening-hours readout in the shop's own timezone. Not a stale table — the dot you see is accurate to the minute."
+              title={t("how.step2Title")}
+              body={t("how.step2Body")}
             />
             <HowItWorksCard
               step="03"
               icon={<Phone aria-hidden className="size-5" />}
-              title="Call them directly"
-              body="Phone numbers, directions and service options are all on the page. We don't sit between you and the repair — no platform fee, no delayed response."
+              title={t("how.step3Title")}
+              body={t("how.step3Body")}
             />
           </div>
         </div>
@@ -264,16 +273,16 @@ export default async function HomePage() {
         <section className="mx-auto max-w-6xl px-4 py-16" aria-labelledby="featured-heading">
           <div className="flex items-end justify-between gap-4">
             <div>
-              <p className="eyebrow">Top rated</p>
+              <p className="eyebrow">{t("featured.eyebrow")}</p>
               <h2 id="featured-heading" className="mt-2 text-display-sm">
-                Well-reviewed shops in the registry
+                {t("featured.heading")}
               </h2>
             </div>
             <Link
               href="/search"
               className="hidden shrink-0 items-center gap-1.5 font-mono text-eyebrow uppercase tracking-[0.14em] text-steel transition-colors hover:text-signal sm:inline-flex"
             >
-              Browse all
+              {t("featured.cta")}
               <ArrowRight aria-hidden className="size-3" />
             </Link>
           </div>
@@ -302,7 +311,7 @@ export default async function HomePage() {
 
           <div className="mt-8 text-center">
             <Button asChild variant="secondary" size="lg">
-              <Link href="/search">Browse the full directory</Link>
+              <Link href="/search">{t("featured.cta")}</Link>
             </Button>
           </div>
         </section>
@@ -315,35 +324,35 @@ export default async function HomePage() {
       >
         <div className="mx-auto max-w-6xl px-4 py-16">
           <div className="text-center">
-            <p className="eyebrow text-steel-soft">Why FixGrid</p>
+            <p className="eyebrow text-steel-soft">{t("why.eyebrow")}</p>
             <h2
               id="why-fixgrid-heading"
               className="mt-2 text-display-sm text-bench"
             >
-              Built for the repair economy
+              {t("why.heading")}
             </h2>
           </div>
 
           <div className="mt-10 grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
             <TrustPillar
               icon={<MapPin aria-hidden className="size-5" />}
-              title="Local first"
-              body="Every shop is a real business with a real address — not a national chain or a remote call centre."
+              title={t("why.localTitle")}
+              body={t("why.localBody")}
             />
             <TrustPillar
               icon={<ShieldCheck aria-hidden className="size-5" />}
-              title="Verified listings"
-              body="Verified shops have had their address, phone number and opening hours confirmed by the FixGrid team."
+              title={t("why.verifiedTitle")}
+              body={t("why.verifiedBody")}
             />
             <TrustPillar
               icon={<Zap aria-hidden className="size-5" />}
-              title="Live status"
-              body="Opening hours are stored per-day, per-timezone and rendered in real time — not cached from last month."
+              title={t("why.liveTitle")}
+              body={t("why.liveBody")}
             />
             <TrustPillar
               icon={<Wrench aria-hidden className="size-5" />}
-              title="Repair not replace"
-              body="Every repair is an item that doesn't go to landfill. FixGrid exists because fixing things is worth doing."
+              title={t("why.repairTitle")}
+              body={t("why.repairBody")}
             />
           </div>
         </div>
@@ -354,25 +363,27 @@ export default async function HomePage() {
         <div className="mx-auto max-w-6xl px-4 py-16">
           <div className="flex flex-col items-start gap-6 sm:flex-row sm:items-center sm:justify-between">
             <div className="max-w-xl">
-              <Badge variant="verified" className="mb-3">For repair shops</Badge>
-              <h2 className="text-display-sm">
-                Run a repair business?
-              </h2>
+              <Badge variant="verified" className="mb-3">{t("join.badge")}</Badge>
+              <h2 className="text-display-sm">{t("join.heading")}</h2>
+              {/*
+                Was "Add your shop to the directory for free … without paying
+                platform commission". Listing now costs a one-time fee and the
+                shop earns a 5% rebate on submitted bills, so the free/no-
+                commission framing was no longer true.
+              */}
               <p className="mt-3 max-w-[48ch] text-sm leading-relaxed text-steel">
-                Add your shop to the directory for free. Set your hours, list
-                your services and specialisms, and let customers find you
-                without paying platform commission.
+                {t("join.body")}
               </p>
             </div>
             <div className="flex shrink-0 flex-col gap-3 sm:items-end">
               <Button asChild size="lg">
                 <Link href="/join">
-                  List your shop — free
+                  {t("join.cta")}
                   <ArrowRight aria-hidden className="size-4" />
                 </Link>
               </Button>
               <p className="font-mono text-eyebrow uppercase tracking-[0.14em] text-steel-soft">
-                No commission · No subscription
+                {t("join.note")}
               </p>
             </div>
           </div>
