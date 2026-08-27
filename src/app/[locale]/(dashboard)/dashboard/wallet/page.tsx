@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import type { Metadata } from "next";
+import { getTranslations } from "next-intl/server";
 import { Info } from "lucide-react";
 
 import { PageHeader } from "@/components/dashboard/page-header";
@@ -8,10 +9,13 @@ import { WalletTopUp } from "@/components/dashboard/wallet-topup";
 import { getCurrentUser } from "@/lib/auth/session";
 import { getWallet, listLedger } from "@/lib/wallet/server";
 
-export const metadata: Metadata = {
-  title: "Wallet",
-  robots: { index: false, follow: false },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("dashboard.wallet");
+  return {
+    title: t("metaTitle"),
+    robots: { index: false, follow: false },
+  };
+}
 
 /**
  * The customer's balance, and where they top it up.
@@ -36,12 +40,14 @@ export default async function WalletPage() {
     listLedger("user", user.id, 50),
   ]);
 
+  const t = await getTranslations("dashboard.wallet");
+
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        eyebrow="Wallet"
-        title="Your balance"
-        description="Booking fees come out of this balance. Top it up here, and every movement is listed below."
+        eyebrow={t("eyebrow")}
+        title={t("title")}
+        description={t("description")}
       />
 
       {/*
@@ -52,14 +58,14 @@ export default async function WalletPage() {
       <p className="flex items-start gap-2 rounded-machined border border-signal/30 bg-signal-wash px-4 py-3 text-sm leading-relaxed text-enamel">
         <Info aria-hidden className="mt-0.5 size-4 shrink-0 text-signal" />
         <span>
-          Payments are <strong>simulated</strong> while we finish setting up our
-          provider. Nothing is charged to a real card or account, and no card details
-          are stored — do not enter a real card number.
+          {t.rich("simulationWarning", {
+            strong: (chunks) => <strong>{chunks}</strong>,
+          })}
         </span>
       </p>
 
       <section className="rounded-machined border border-hairline bg-chalk p-5 shadow-bench">
-        <h2 className="eyebrow">Add funds</h2>
+        <h2 className="eyebrow">{t("addFunds")}</h2>
         <div className="pt-3">
           <WalletTopUp balanceMinor={wallet.balanceMinor} />
         </div>
@@ -68,8 +74,8 @@ export default async function WalletPage() {
       <WalletPanel
         wallet={wallet}
         lines={ledger}
-        title="Balance and activity"
-        emptyLabel="Nothing has moved through your balance yet. Add funds above to get started."
+        title={t("panelTitle")}
+        emptyLabel={t("panelEmpty")}
       />
     </div>
   );

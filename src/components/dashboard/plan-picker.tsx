@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { useActionState } from "react";
+import { useTranslations } from "next-intl";
 import { Check, Zap } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -33,6 +34,7 @@ export function PlanPicker({
   balanceMinor: number;
 }) {
   const [state, submit, pending] = useActionState(subscribeToPlan, PLAN_INITIAL_STATE);
+  const t = useTranslations("dashboard.planPicker");
 
   /**
    * Which paid plan the sheet is open for, by code.
@@ -74,14 +76,14 @@ export function PlanPicker({
                 <h3 className="font-display text-base uppercase tracking-wide text-enamel">
                   {plan.name}
                 </h3>
-                {current ? <Badge variant="signal">Current</Badge> : null}
+                {current ? <Badge variant="signal">{t("current")}</Badge> : null}
               </div>
 
               <p className="pt-2 font-mono text-display-xs tabular-nums text-enamel">
-                {plan.priceMinor === 0 ? "Free" : formatMoney(plan.priceMinor, plan.currency)}
+                {plan.priceMinor === 0 ? t("free") : formatMoney(plan.priceMinor, plan.currency)}
                 {plan.priceMinor > 0 ? (
                   <span className="pl-1 font-sans text-xs text-steel">
-                    / {plan.periodDays} days
+                    {t("perDays", { days: plan.periodDays })}
                   </span>
                 ) : null}
               </p>
@@ -94,15 +96,15 @@ export function PlanPicker({
                 <li className="flex items-start gap-2 text-enamel">
                   <Check aria-hidden className="mt-0.5 size-3.5 shrink-0 text-verdigris" />
                   {plan.bookingsIncluded === null
-                    ? "Unlimited repairs, no booking fee"
+                    ? t("featUnlimited")
                     : plan.bookingsIncluded === 0
-                      ? "Booking fee applies to every repair"
-                      : `${plan.bookingsIncluded} repairs a month with no booking fee`}
+                      ? t("featFee")
+                      : t("featIncluded", { count: plan.bookingsIncluded })}
                 </li>
                 {plan.priority ? (
                   <li className="flex items-start gap-2 text-enamel">
                     <Zap aria-hidden className="mt-0.5 size-3.5 shrink-0 text-signal" />
-                    Your requests go to the front of a shop&rsquo;s queue
+                    {t("featPriority")}
                   </li>
                 ) : null}
               </ul>
@@ -121,7 +123,7 @@ export function PlanPicker({
                     className="w-full"
                     disabled={pending || current}
                   >
-                    {current ? "Your plan" : "Switch to pay as you go"}
+                    {current ? t("yourPlan") : t("switchFree")}
                   </Button>
                 </form>
               ) : (
@@ -135,8 +137,8 @@ export function PlanPicker({
                     onClick={() => setPaying(plan.code)}
                   >
                     {current
-                      ? "Your plan"
-                      : `Pay ${formatMoney(plan.priceMinor, plan.currency)}`}
+                      ? t("yourPlan")
+                      : t("pay", { amount: formatMoney(plan.priceMinor, plan.currency) })}
                   </Button>
                 </div>
               )}
@@ -145,8 +147,7 @@ export function PlanPicker({
                   net-banking route, so an empty balance is not a dead end. */}
               {!affordable && !current ? (
                 <p className="pt-2 text-xs leading-relaxed text-steel">
-                  Pay by card or UPI, or top up your{" "}
-                  {formatMoney(balanceMinor, plan.currency)} balance first.
+                  {t("topupHint", { balance: formatMoney(balanceMinor, plan.currency) })}
                 </p>
               ) : null}
             </div>
@@ -160,11 +161,11 @@ export function PlanPicker({
           onClose={() => setPaying(null)}
           amountMinor={payingPlan.priceMinor}
           balanceMinor={balanceMinor}
-          title={`Subscribe to ${payingPlan.name}`}
-          description={`${payingPlan.periodDays} days of ${payingPlan.name}. Choose how you want to pay — nothing leaves your balance until you do.`}
+          title={t("subscribeTitle", { name: payingPlan.name })}
+          description={t("subscribeDesc", { days: payingPlan.periodDays, name: payingPlan.name })}
           purchaseFields={{ planCode: payingPlan.code }}
           purchaseAction={purchasePlan}
-          confirmLabel="Done"
+          confirmLabel={t("done")}
         />
       ) : null}
     </div>

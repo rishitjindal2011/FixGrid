@@ -1,4 +1,5 @@
 import { ArrowDownLeft, ArrowUpRight, Wallet } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { EmptyState } from "@/components/dashboard/empty-state";
 import { formatDay, formatMoney } from "@/lib/format";
@@ -19,38 +20,12 @@ import { cn } from "@/lib/utils";
  * deriving it from the number cannot be wrong.
  */
 
-/** Human wording for `ledger_entries.kind`. */
-const KIND_LABELS: Record<string, string> = {
-  charge: "Repair payment",
-  fee: "Platform fee",
-  refund: "Refund",
-  payout: "Payout",
-  adjustment: "Adjustment",
-  topup: "Money added",
-  rebate: "Bill rebate",
-  subscription: "Plan payment",
-  enrollment: "Listing fee",
-  enrollment_refund: "Listing fee refunded",
-  extra_request: "Extra booking request",
-};
-
-/**
- * An unrecognised kind renders as itself rather than as "Unknown".
- *
- * The column is free text, so a kind added in SQL before it is added here is a
- * real possibility. Showing `some_new_kind` is ugly but honest, and a person
- * reading their own statement can still tell what moved.
- */
-function kindLabel(kind: string): string {
-  return KIND_LABELS[kind] ?? kind.replace(/_/g, " ");
-}
-
 export function WalletPanel({
   wallet,
   lines,
-  title = "Balance",
+  title,
   description,
-  emptyLabel = "Nothing has moved through your balance yet.",
+  emptyLabel,
   className,
 }: {
   wallet: WalletSummary;
@@ -60,6 +35,23 @@ export function WalletPanel({
   emptyLabel?: string;
   className?: string;
 }) {
+  const t = useTranslations("dashboard.wallet");
+
+  /**
+   * An unrecognised kind renders as itself rather than as "Unknown".
+   *
+   * The column is free text, so a kind added in SQL before it is translated
+   * here is a real possibility. Showing `some_new_kind` is ugly but honest, and
+   * a person reading their own statement can still tell what moved.
+   */
+  const kindLabel = (kind: string): string =>
+    t.has(`kind.${kind}`) ? t(`kind.${kind}`) : kind.replace(/_/g, " ");
+
+  // Optional props default to the localised wallet-panel wording rather than a
+  // hard-coded English string, so a caller that omits them stays translated.
+  const heading = title ?? t("defaultTitle");
+  const empty = emptyLabel ?? t("defaultEmpty");
+
   return (
     <section
       className={cn(
@@ -71,7 +63,7 @@ export function WalletPanel({
         <div>
           <h2 className="eyebrow flex items-center gap-2">
             <Wallet aria-hidden className="size-3.5" />
-            {title}
+            {heading}
           </h2>
           {description ? (
             <p className="pt-1 text-sm leading-relaxed text-steel">{description}</p>
@@ -92,7 +84,7 @@ export function WalletPanel({
 
       <div className="pt-4">
         {lines.length === 0 ? (
-          <EmptyState icon={Wallet} title="No activity" description={emptyLabel} />
+          <EmptyState icon={Wallet} title={t("noActivity")} description={empty} />
         ) : (
           <ul className="flex flex-col">
             {lines.map((line) => {
