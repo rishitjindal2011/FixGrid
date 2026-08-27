@@ -107,6 +107,19 @@ export const DELIVERY_MODE_LABELS: Record<DeliveryMode, string> = {
   pickup_drop: "Collection and return",
 };
 
+/**
+ * Canonical order of the delivery modes, for building choice lists.
+ *
+ * The display label now comes from the `deliveryModes` catalogue namespace,
+ * resolved with `t(mode)` at the call site — iterate this for the values and
+ * translate on render rather than reading the English `DELIVERY_MODE_LABELS`.
+ */
+export const DELIVERY_MODES: readonly DeliveryMode[] = [
+  "in_shop",
+  "home_visit",
+  "pickup_drop",
+];
+
 export const INVENTORY_CONDITIONS: readonly InventoryCondition[] = [
   "new",
   "refurbished",

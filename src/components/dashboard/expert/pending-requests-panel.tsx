@@ -3,6 +3,7 @@
 import * as React from "react";
 import { useActionState } from "react";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { AlertTriangle, Clock, Inbox, Smartphone, User } from "lucide-react";
 
 import { EmptyState } from "@/components/dashboard/empty-state";
@@ -13,7 +14,6 @@ import { transitionBooking } from "@/lib/bookings/actions";
 import { allowedActions, slotEnd, slotStart } from "@/lib/bookings/actions-map";
 import { formatMoney, formatRelative, formatSlot } from "@/lib/format";
 import {
-  DELIVERY_MODE_LABELS,
   type BookingCustomerSummary,
   type BookingRow,
   type BookingStatus,
@@ -97,6 +97,7 @@ function RequestCard({
 }) {
   const start = slotStart(request.slot);
   const end = slotEnd(request.slot);
+  const tDelivery = useTranslations("deliveryModes");
   const customerName =
     request.customer?.display_name ?? request.customer?.full_name ?? "A customer";
 
@@ -154,7 +155,7 @@ function RequestCard({
           </div>
           <div>
             <dt className="eyebrow pb-1.5">Where</dt>
-            <dd className="text-steel">{DELIVERY_MODE_LABELS[request.delivery_mode]}</dd>
+            <dd className="text-steel">{tDelivery(request.delivery_mode)}</dd>
           </div>
           {request.quoted_amount !== null ? (
             <div>

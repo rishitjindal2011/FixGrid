@@ -3,6 +3,7 @@
 import * as React from "react";
 import { useActionState, useState, useMemo } from "react";
 import { useFormStatus } from "react-dom";
+import { useTranslations } from "next-intl";
 import {
   AlertTriangle,
   ChevronDown,
@@ -60,8 +61,23 @@ import {
   type InventorySort,
   type StockFilter,
 } from "@/lib/inventory/filter";
-import { INVENTORY_CONDITION_LABELS } from "@/lib/types/marketplace";
+import { type InventoryCondition } from "@/lib/types/marketplace";
 import { cn } from "@/lib/utils";
+
+/**
+ * `condition` arrives from the database as a bare enum. The English labels used
+ * to come from `INVENTORY_CONDITION_LABELS`; the translated ones live under the
+ * `expert.inventory` namespace, keyed by condition.
+ */
+function conditionLabel(t: (key: string) => string, c: InventoryCondition): string {
+  return t(
+    c === "new"
+      ? "conditionNew"
+      : c === "refurbished"
+        ? "conditionRefurbished"
+        : "conditionUsed",
+  );
+}
 
 /** A catalogue row as this table draws it. */
 export interface CatalogueInventoryItem extends EditableInventoryItem {
@@ -239,6 +255,7 @@ function InventoryRow({
   isLast: boolean;
   canReorder: boolean;
 }) {
+  const t = useTranslations("expert.inventory");
   const lowStock = isLowStock(item);
 
   return (
@@ -268,7 +285,7 @@ function InventoryRow({
       </TableCell>
 
       <TableCell className={cn(!item.is_active && "text-steel")}>
-        {INVENTORY_CONDITION_LABELS[item.condition]}
+        {conditionLabel(t, item.condition)}
       </TableCell>
 
       <TableCell className="font-mono">

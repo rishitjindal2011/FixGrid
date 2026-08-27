@@ -11,7 +11,10 @@
     "allCategories": "সব বিভাগ",
     "browseAll": "সব দেখুন",
     "signOut": "সাইন আউট করুন",
-    "signingOut": "সাইন আউট হচ্ছে…"
+    "signingOut": "সাইন আউট হচ্ছে…",
+    "draftPreview": "খসড়া প্রিভিউ",
+    "exitPreview": "প্রিভিউ থেকে বেরিয়ে যান",
+    "pageNotFound": "পৃষ্ঠা পাওয়া যায়নি"
   },
   "header": {
     "mainNav": "প্রধান",
@@ -516,5 +519,52 @@
         "accountHint": "আপনার অ্যাকাউন্ট বন্ধ করা"
       }
     }
+  },
+  "blog": {
+    "metaTitle": "ব্লগ",
+    "metaDescription": "বিশেষজ্ঞদের কাছ থেকে সর্বশেষ খবর, গাইড এবং টিপস পড়ুন।",
+    "heading": "মেরামত ব্লগ",
+    "intro": "যারা এটি সারায় সেই টেকনিশিয়ানদের কাছ থেকে বিশেষজ্ঞ গাইড, মেরামতের টিপস এবং শিল্প সংবাদ।",
+    "empty": "এখনও কোনো প্রকাশিত পোস্ট নেই।",
+    "readMoreFallback": "এই বিষয়ে আরও পড়ুন…",
+    "readArticle": "নিবন্ধ পড়ুন",
+    "backToHome": "হোমে ফিরে যান",
+    "postNotFound": "পোস্ট পাওয়া যায়নি"
+  },
+  "statuses": {
+    "requested": "অনুরোধ করা হয়েছে",
+    "accepted": "উদ্ধৃতি প্রস্তুত",
+    "confirmed": "নিশ্চিত",
+    "in_progress": "চলমান",
+    "completed": "সম্পন্ন",
+    "closed": "বন্ধ",
+    "declined": "প্রত্যাখ্যাত",
+    "cancelled_customer": "আপনি বাতিল করেছেন",
+    "cancelled_shop": "দোকান বাতিল করেছে",
+    "no_show": "উপস্থিত হননি",
+    "expired": "মেয়াদোত্তীর্ণ",
+    "disputed": "বিতর্কিত"
+  },
+  "deliveryModes": {
+    "in_shop": "দোকানে নিয়ে আসুন",
+    "home_visit": "বাড়িতে পরিষেবা",
+    "pickup_drop": "সংগ্রহ ও ফেরত"
+  },
+  "jobTypes": {
+    "full_time": "পূর্ণ-সময়",
+    "part_time": "খণ্ডকালীন",
+    "contract": "চুক্তি",
+    "apprenticeship": "শিক্ষানবিশ / প্রশিক্ষণার্থী"
+  },
+  "workLocations": {
+    "in_shop": "দোকানে",
+    "on_field": "মাঠে / ভিজিট",
+    "hybrid": "হাইব্রিড"
+  },
+  "salaryPeriods": {
+    "month": "/ মাস",
+    "week": "/ সপ্তাহ",
+    "day": "/ দিন",
+    "per_job": "/ কাজ"
   }
 }

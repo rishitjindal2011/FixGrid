@@ -1,11 +1,11 @@
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 
 import { STATUS_TONE, slotEnd, slotStart, type StatusTone } from "@/lib/bookings/actions-map";
 import { formatTime } from "@/lib/format";
 import { parseTimeToMinutes } from "@/lib/hours";
 import type { Weekday } from "@/lib/types/database";
 import {
-  BOOKING_STATUS_LABELS,
   type BookingCustomerSummary,
   type BookingRow,
 } from "@/lib/types/marketplace";
@@ -294,6 +294,7 @@ export function WeekCalendar({
   /** `YYYY-MM-DD` of today, in the shop's zone. */
   todayKey: string;
 }) {
+  const tStatus = useTranslations("statuses");
   const formatter = zonedFormatter(timezone);
   const days = Array.from({ length: 7 }, (_, index) => addCalendarDays(weekStart, index));
   const visible = new Set(days);
@@ -532,7 +533,7 @@ export function WeekCalendar({
                       <Link
                         key={`${booking.id}-${segment.fromMinutes}`}
                         href={`/dashboard/expert/requests?booking=${encodeURIComponent(booking.reference)}`}
-                        aria-label={`${customerName}, ${window}, ${BOOKING_STATUS_LABELS[booking.status]}`}
+                        aria-label={`${customerName}, ${window}, ${tStatus(booking.status)}`}
                         className={cn(
                           "absolute z-10 flex min-h-6 flex-col overflow-hidden rounded-machined border border-l-2 px-1.5 py-1 text-left transition-shadow hover:shadow-lift",
                           BLOCK_TONE[tone],

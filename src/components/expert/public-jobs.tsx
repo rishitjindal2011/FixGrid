@@ -15,9 +15,6 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
-  JOB_TYPE_LABELS,
-  SALARY_PERIOD_LABELS,
-  WORK_LOCATION_LABELS,
   type ShopJobRow,
 } from "@/lib/types/marketplace";
 
@@ -74,12 +71,15 @@ async function PublicJobCard({
   job: ShopJobRow;
 }) {
   const t = await getTranslations("jobs");
+  const tJobType = await getTranslations("jobTypes");
+  const tWorkLoc = await getTranslations("workLocations");
+  const tSalaryPeriod = await getTranslations("salaryPeriods");
 
   // Format salary display
   let salaryText = t("salaryNegotiable");
   if (job.salary_type === "fixed" && job.salary_min) {
     salaryText = `₹${job.salary_min.toLocaleString("en-IN")} ${
-      SALARY_PERIOD_LABELS[job.salary_period] ?? ""
+      tSalaryPeriod(job.salary_period)
     }`;
   } else if (
     job.salary_type === "range" &&
@@ -88,7 +88,7 @@ async function PublicJobCard({
     const min = job.salary_min ? `₹${job.salary_min.toLocaleString("en-IN")}` : "₹0";
     const max = job.salary_max ? `₹${job.salary_max.toLocaleString("en-IN")}` : t("open");
     salaryText = `${min} – ${max} ${
-      SALARY_PERIOD_LABELS[job.salary_period] ?? ""
+      tSalaryPeriod(job.salary_period)
     }`;
   } else if (job.salary_type === "commission") {
     salaryText = t("commission");
@@ -116,12 +116,12 @@ async function PublicJobCard({
             <div className="flex flex-wrap items-center gap-2 text-xs text-steel">
               <span className="flex items-center gap-1 font-medium text-cyan">
                 <Briefcase className="size-3.5" />
-                {JOB_TYPE_LABELS[job.job_type] ?? job.job_type}
+                {tJobType(job.job_type)}
               </span>
               <span>•</span>
               <span className="flex items-center gap-1">
                 <MapPin className="size-3.5 text-indigo" />
-                {WORK_LOCATION_LABELS[job.work_location] ?? job.work_location}
+                {tWorkLoc(job.work_location)}
               </span>
               {job.experience_level && job.experience_level !== "any" && (
                 <>

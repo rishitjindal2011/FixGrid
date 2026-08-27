@@ -3,6 +3,7 @@
 import * as React from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { AlertTriangle, CalendarCheck, CheckCircle2, Clock, ShieldCheck } from "lucide-react";
 
 import { SlotPicker } from "@/components/dashboard/slot-picker";
@@ -22,7 +23,6 @@ import { BOOKING_INITIAL_STATE } from "@/lib/bookings/state";
 import { PaymentSheet } from "@/components/dashboard/payment-sheet";
 import { formatDuration, formatMoney, formatPriceRange, formatSlot } from "@/lib/format";
 import {
-  DELIVERY_MODE_LABELS,
   type DeliveryMode,
   type PriceType,
 } from "@/lib/types/marketplace";
@@ -143,6 +143,7 @@ export function BookingForm({
   addresses,
 }: BookingFormProps) {
   const router = useRouter();
+  const tDelivery = useTranslations("deliveryModes");
   const [state, setState] = React.useState(BOOKING_INITIAL_STATE);
   const [pending, setPending] = React.useState(false);
   const [faultPhotos, setFaultPhotos] = React.useState<File[]>([]);
@@ -435,7 +436,7 @@ export function BookingForm({
                     "peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-signal",
                   )}
                 >
-                  {DELIVERY_MODE_LABELS[mode]}
+                  {tDelivery(mode)}
                 </span>
               </label>
             ))}

@@ -3,6 +3,7 @@
 import * as React from "react";
 import { useActionState } from "react";
 import { useFormStatus } from "react-dom";
+import { useTranslations } from "next-intl";
 import {
   BadgeCheck,
   Briefcase,
@@ -39,9 +40,6 @@ import {
   toggleJobActive,
 } from "@/lib/dashboard/expert-actions";
 import {
-  JOB_TYPE_LABELS,
-  SALARY_PERIOD_LABELS,
-  WORK_LOCATION_LABELS,
   type ShopJobRow,
 } from "@/lib/types/marketplace";
 import { JobForm } from "@/components/dashboard/expert/job-form";
@@ -104,11 +102,15 @@ function JobCard({
 
   const [deleteOpen, setDeleteOpen] = React.useState(false);
 
+  const tJobType = useTranslations("jobTypes");
+  const tWorkLoc = useTranslations("workLocations");
+  const tSalaryPeriod = useTranslations("salaryPeriods");
+
   // Format salary display
   let salaryText = "Salary Negotiable";
   if (job.salary_type === "fixed" && job.salary_min) {
     salaryText = `₹${job.salary_min.toLocaleString("en-IN")} ${
-      SALARY_PERIOD_LABELS[job.salary_period] ?? ""
+      tSalaryPeriod(job.salary_period)
     }`;
   } else if (
     job.salary_type === "range" &&
@@ -117,7 +119,7 @@ function JobCard({
     const min = job.salary_min ? `₹${job.salary_min.toLocaleString("en-IN")}` : "₹0";
     const max = job.salary_max ? `₹${job.salary_max.toLocaleString("en-IN")}` : "Open";
     salaryText = `${min} – ${max} ${
-      SALARY_PERIOD_LABELS[job.salary_period] ?? ""
+      tSalaryPeriod(job.salary_period)
     }`;
   } else if (job.salary_type === "commission") {
     salaryText = "Commission / Per Job Basis";
@@ -147,12 +149,12 @@ function JobCard({
             <div className="flex flex-wrap items-center gap-2 pt-0.5 text-xs text-steel">
               <span className="flex items-center gap-1">
                 <Briefcase className="size-3.5 text-cyan" />
-                {JOB_TYPE_LABELS[job.job_type] ?? job.job_type}
+                {tJobType(job.job_type)}
               </span>
               <span>•</span>
               <span className="flex items-center gap-1">
                 <MapPin className="size-3.5 text-indigo" />
-                {WORK_LOCATION_LABELS[job.work_location] ?? job.work_location}
+                {tWorkLoc(job.work_location)}
               </span>
               {job.experience_level && job.experience_level !== "any" && (
                 <>

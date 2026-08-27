@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { CalendarPlus, MapPin, MessagesSquare, Phone, Search } from "lucide-react";
 
 import { BookingCountdown } from "@/components/dashboard/countdown";
@@ -8,7 +9,6 @@ import { Button } from "@/components/ui/button";
 import { slotEnd, slotStart, statusExplainer } from "@/lib/bookings/actions-map";
 import type { CustomerBooking } from "@/lib/dashboard/customer";
 import { formatMoney, formatRelative, formatSlot } from "@/lib/format";
-import { DELIVERY_MODE_LABELS } from "@/lib/types/marketplace";
 
 /**
  * The hero panel: the next repair, with a live countdown.
@@ -24,6 +24,8 @@ export function NextBookingPanel({
   booking: CustomerBooking | null;
   now: Date;
 }) {
+  const tDelivery = useTranslations("deliveryModes");
+
   if (!booking) {
     return (
       <EmptyState
@@ -74,7 +76,7 @@ export function NextBookingPanel({
 
             <div>
               <dt className="eyebrow pb-1">How</dt>
-              <dd className="text-enamel">{DELIVERY_MODE_LABELS[booking.delivery_mode]}</dd>
+              <dd className="text-enamel">{tDelivery(booking.delivery_mode)}</dd>
             </div>
 
             {booking.shop?.address ? (

@@ -1,10 +1,10 @@
 import { History } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { EmptyState } from "@/components/dashboard/empty-state";
 import { STATUS_TONE } from "@/lib/bookings/actions-map";
 import type { BookingTimelineEvent } from "@/lib/dashboard/booking-detail";
 import { formatDateTime, formatRelative } from "@/lib/format";
-import { BOOKING_STATUS_LABELS } from "@/lib/types/marketplace";
 import { cn } from "@/lib/utils";
 
 /**
@@ -38,10 +38,13 @@ function actorLabel(role: BookingTimelineEvent["actorRole"]): string | null {
  * feed the note *does* replace it; here there is room for both, and a
  * cancellation reason without the word "cancelled" above it is ambiguous.
  */
-function headline(event: BookingTimelineEvent): string {
+function headline(
+  event: BookingTimelineEvent,
+  tStatus: (key: string) => string,
+): string {
   if (!event.toStatus) return "Booking updated";
 
-  const label = BOOKING_STATUS_LABELS[event.toStatus].toLowerCase();
+  const label = tStatus(event.toStatus).toLowerCase();
   const who = actorLabel(event.actorRole);
 
   if (!event.fromStatus) {
@@ -80,6 +83,8 @@ export function BookingTimeline({
   now: Date;
   timeZone: string;
 }) {
+  const tStatus = useTranslations("statuses");
+
   if (events.length === 0) {
     return (
       <EmptyState
@@ -117,7 +122,7 @@ export function BookingTimeline({
             />
 
             <div className="min-w-0 flex-1">
-              <p className="text-sm leading-snug text-enamel">{headline(event)}</p>
+              <p className="text-sm leading-snug text-enamel">{headline(event, tStatus)}</p>
 
               {event.note?.trim() ? (
                 <p className="mt-1.5 border-l-2 border-hairline pl-3 text-sm leading-relaxed text-steel">

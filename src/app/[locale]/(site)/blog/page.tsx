@@ -1,29 +1,35 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { getLocale, getTranslations } from "next-intl/server";
 import { getAllPublishedBlogPosts } from "@/lib/queries/blog";
 
 export const revalidate = 300;
 
-export const metadata: Metadata = {
-  title: "Blog",
-  description: "Read the latest news, guides, and tips from the experts.",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("blog");
+  return {
+    title: t("metaTitle"),
+    description: t("metaDescription"),
+  };
+}
 
 export default async function BlogIndexPage() {
   const posts = await getAllPublishedBlogPosts();
+  const t = await getTranslations("blog");
+  const locale = await getLocale();
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-16 md:py-24">
       <header className="mb-16 text-center">
-        <h1 className="text-display mb-4">The Repair Blog</h1>
+        <h1 className="text-display mb-4">{t("heading")}</h1>
         <p className="text-steel max-w-2xl mx-auto text-lg">
-          Expert guides, repair tips, and industry news from the technicians who fix it.
+          {t("intro")}
         </p>
       </header>
 
       {posts.length === 0 ? (
         <div className="text-center py-24 rounded-2xl bg-white shadow-sm ring-1 ring-black/5">
-          <p className="text-steel-soft">No published posts yet.</p>
+          <p className="text-steel-soft">{t("empty")}</p>
         </div>
       ) : (
         <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
@@ -49,7 +55,7 @@ export default async function BlogIndexPage() {
               <div className="flex flex-1 flex-col p-6">
                 {post.published_at && (
                   <time className="mb-3 text-xs font-mono font-medium tracking-wider uppercase text-signal">
-                    {new Date(post.published_at).toLocaleDateString("en-US", {
+                    {new Date(post.published_at).toLocaleDateString(locale, {
                       year: "numeric",
                       month: "long",
                       day: "numeric",
@@ -60,10 +66,10 @@ export default async function BlogIndexPage() {
                   {post.title}
                 </h2>
                 <p className="mb-6 text-sm leading-relaxed text-steel line-clamp-3">
-                  {post.meta_description || "Read more about this topic..."}
+                  {post.meta_description || t("readMoreFallback")}
                 </p>
                 <div className="mt-auto flex items-center font-mono text-xs font-medium uppercase tracking-widest text-steel group-hover:text-signal transition-colors">
-                  Read Article
+                  {t("readArticle")}
                   <svg className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
                   </svg>

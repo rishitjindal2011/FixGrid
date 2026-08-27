@@ -3,6 +3,7 @@
 import * as React from "react";
 import { useActionState } from "react";
 import { useFormStatus } from "react-dom";
+import { useTranslations } from "next-intl";
 import { AlertTriangle, CheckCircle2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -23,10 +24,7 @@ import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { BOOKING_INITIAL_STATE } from "@/lib/bookings/state";
 import { upsertInventoryItem } from "@/lib/dashboard/expert-actions";
-import {
-  INVENTORY_CONDITION_LABELS,
-  type InventoryCondition,
-} from "@/lib/types/marketplace";
+import { type InventoryCondition } from "@/lib/types/marketplace";
 
 /**
  * Add or edit one stock item.
@@ -86,6 +84,20 @@ function rupeesField(pence: number | null): string {
   return pence === null ? "" : (pence / 100).toFixed(2);
 }
 
+/**
+ * `condition` is a bare enum; its translated label lives under the
+ * `expert.inventory` namespace, keyed by condition.
+ */
+function conditionLabel(t: (key: string) => string, c: InventoryCondition): string {
+  return t(
+    c === "new"
+      ? "conditionNew"
+      : c === "refurbished"
+        ? "conditionRefurbished"
+        : "conditionUsed",
+  );
+}
+
 export function InventoryForm({
   fixerId,
   categories,
@@ -124,6 +136,7 @@ function InventoryFields({
     BOOKING_INITIAL_STATE,
   );
 
+  const t = useTranslations("expert.inventory");
   const editing = item !== null;
   const fieldId = React.useId();
   const id = (field: string) => `${fieldId}-${field}`;
@@ -244,7 +257,7 @@ function InventoryFields({
                 >
                   {CONDITION_ORDER.map((value) => (
                     <option key={value} value={value}>
-                      {INVENTORY_CONDITION_LABELS[value]}
+                      {conditionLabel(t, value)}
                     </option>
                   ))}
                 </Select>

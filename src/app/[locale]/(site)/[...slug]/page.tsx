@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { draftMode } from "next/headers";
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import { getTranslations } from "next-intl/server";
 
 import { DynamicRenderer } from "@/components/cms/DynamicRenderer";
 import { JsonLd } from "@/components/seo/JsonLd";
@@ -59,7 +60,10 @@ async function resolvePage(segments: string[]) {
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
   const resolved = await resolvePage(slug);
-  if (!resolved) return { title: "Page not found" };
+  if (!resolved) {
+    const t = await getTranslations("common");
+    return { title: t("pageNotFound") };
+  }
 
   const { page, isDraft, path } = resolved;
   const globals = await getSeoGlobal();
@@ -151,12 +155,13 @@ export default async function CmsPage({ params }: PageProps) {
   );
 }
 
-function DraftBanner({ path }: { path: string }) {
+async function DraftBanner({ path }: { path: string }) {
+  const t = await getTranslations("common");
   return (
     <div className="sticky top-16 z-30 border-b border-signal/30 bg-signal-wash">
       <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-4 gap-y-1 px-4 py-2">
         <span className="font-mono text-eyebrow uppercase tracking-[0.14em] text-signal">
-          Draft preview
+          {t("draftPreview")}
         </span>
         <span className="font-mono text-eyebrow text-steel">{path}</span>
         <Link
@@ -164,7 +169,7 @@ function DraftBanner({ path }: { path: string }) {
           prefetch={false}
           className="ml-auto font-mono text-eyebrow uppercase tracking-[0.14em] text-enamel underline underline-offset-2 hover:text-signal"
         >
-          Exit preview
+          {t("exitPreview")}
         </Link>
       </div>
     </div>

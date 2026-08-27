@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { draftMode } from "next/headers";
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import { getLocale, getTranslations } from "next-intl/server";
 
 import { getPublishedBlogPost, getBlogPostForPreview, getPublishedBlogPaths } from "@/lib/queries/blog";
 import { getSeoGlobal } from "@/lib/queries/cms";
@@ -35,7 +36,10 @@ async function resolvePost(slug: string) {
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
   const resolved = await resolvePost(slug);
-  if (!resolved) return { title: "Post not found" };
+  if (!resolved) {
+    const t = await getTranslations("blog");
+    return { title: t("postNotFound") };
+  }
 
   const { post, isDraft, path } = resolved;
   const globals = await getSeoGlobal();
@@ -69,12 +73,14 @@ export default async function BlogPostPage({ params }: PageProps) {
   if (!resolved) notFound();
 
   const { post, isDraft, path } = resolved;
-  
+  const locale = await getLocale();
+  const t = await getTranslations("blog");
+
   // Sanitize HTML content before rendering
   const safeContent = sanitize(post.content || "");
 
-  const dateString = post.published_at 
-    ? new Date(post.published_at).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" }) 
+  const dateString = post.published_at
+    ? new Date(post.published_at).toLocaleDateString(locale, { year: "numeric", month: "long", day: "numeric" })
     : "";
 
   let finalHtml = "";
@@ -187,7 +193,7 @@ export default async function BlogPostPage({ params }: PageProps) {
                 <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <path d="M10 12L6 8L10 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                 </svg>
-                Back to Home
+                {t("backToHome")}
               </Link>
               
               <h1 
@@ -222,12 +228,13 @@ export default async function BlogPostPage({ params }: PageProps) {
   );
 }
 
-function DraftBanner({ path }: { path: string }) {
+async function DraftBanner({ path }: { path: string }) {
+  const t = await getTranslations("common");
   return (
     <div className="sticky top-16 z-30 border-b border-signal/30 bg-signal-wash">
       <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-4 gap-y-1 px-4 py-2">
         <span className="font-mono text-eyebrow uppercase tracking-[0.14em] text-signal">
-          Draft preview
+          {t("draftPreview")}
         </span>
         <span className="font-mono text-eyebrow text-steel">{path}</span>
         <Link
@@ -235,7 +242,7 @@ function DraftBanner({ path }: { path: string }) {
           prefetch={false}
           className="ml-auto font-mono text-eyebrow uppercase tracking-[0.14em] text-enamel underline underline-offset-2 hover:text-signal"
         >
-          Exit preview
+          {t("exitPreview")}
         </Link>
       </div>
     </div>

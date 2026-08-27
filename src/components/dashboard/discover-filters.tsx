@@ -3,13 +3,14 @@
 import * as React from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { Search, X } from "lucide-react";
 
 import { Input, Select } from "@/components/ui/input";
 import { formatMoney } from "@/lib/format";
 import type { DiscoverFilters } from "@/lib/dashboard/discover";
 import type { RepairCategoryRow } from "@/lib/types/database";
-import { DELIVERY_MODE_LABELS, type DeliveryMode } from "@/lib/types/marketplace";
+import { DELIVERY_MODES } from "@/lib/types/marketplace";
 import { cn } from "@/lib/utils";
 
 /**
@@ -70,8 +71,6 @@ const WARRANTY_CHOICES = [
  * of the URL entirely, so there is nowhere for a decimal to creep in.
  */
 const PRICE_CHOICES = [2_500, 5_000, 10_000, 25_000, 50_000] as const;
-
-const DELIVERY_CHOICES = Object.entries(DELIVERY_MODE_LABELS) as [DeliveryMode, string][];
 
 /** The rail's controls, as strings — one field per URL parameter. */
 interface RailState {
@@ -153,6 +152,7 @@ export function DiscoverFilterRail({
 }: DiscoverFilterRailProps) {
   const router = useRouter();
   const [isPending, startTransition] = React.useTransition();
+  const tDelivery = useTranslations("deliveryModes");
 
   const urlState = toRailState(filters);
 
@@ -327,9 +327,9 @@ export function DiscoverFilterRail({
           onChange={(event) => commit({ ...draft, delivery: event.target.value })}
         >
           <option value="">Any arrangement</option>
-          {DELIVERY_CHOICES.map(([mode, label]) => (
+          {DELIVERY_MODES.map((mode) => (
             <option key={mode} value={mode}>
-              {label}
+              {tDelivery(mode)}
             </option>
           ))}
         </Select>
