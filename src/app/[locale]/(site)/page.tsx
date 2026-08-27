@@ -23,7 +23,7 @@ import {
   getFeaturedFixers,
   toHoursInput,
 } from "@/lib/queries/search";
-import { absoluteUrl, SITE_DESCRIPTION, SITE_NAME, SITE_TAGLINE } from "@/lib/site";
+import { absoluteUrl, SITE_DESCRIPTION, SITE_KEYWORDS, SITE_NAME, SITE_TAGLINE } from "@/lib/site";
 
 export const revalidate = 900;
 
@@ -45,17 +45,7 @@ export const metadata: Metadata = {
     title: `FixGrid — ${SITE_TAGLINE}`,
     description: SITE_DESCRIPTION,
   },
-  keywords: [
-    "local repair shops",
-    "find repair expert",
-    "phone repair",
-    "appliance repair",
-    "bike repair",
-    "watch repair",
-    "local fixers",
-    "repair directory",
-    "verified repair shops",
-  ],
+  keywords: SITE_KEYWORDS,
 };
 
 export default async function HomePage() {

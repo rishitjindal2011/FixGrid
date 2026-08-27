@@ -22,7 +22,7 @@ import {
   type SearchFilters,
 } from "@/lib/queries/search";
 import { buildBreadcrumbs, buildWebPage, type Thing, type WithContext } from "@/lib/seo/jsonld";
-import { absoluteUrl } from "@/lib/site";
+import { absoluteUrl, SITE_KEYWORDS } from "@/lib/site";
 
 // Results depend on the query string and on data that changes as shops are
 // added, so this page is always rendered per-request.
@@ -57,6 +57,9 @@ export async function generateMetadata({ searchParams }: PageProps): Promise<Met
   let title = "Find a repair expert near you";
   let description =
     "Search local repair shops by category, rating and service type. See who is open right now, what they fix, and how to reach them.";
+  // Every /search view carries the site keyword set; a category view leads with
+  // its own, more specific terms so the tag echoes the page's actual topic.
+  let keywords: string[] = SITE_KEYWORDS;
 
   if (filters.category) {
     const categories = await getCategories();
@@ -66,6 +69,14 @@ export async function generateMetadata({ searchParams }: PageProps): Promise<Met
       description =
         match.description ??
         `Browse ${match.name.toLowerCase()} repair specialists. Compare ratings, opening hours and service options.`;
+      const term = match.name.toLowerCase();
+      keywords = [
+        `${term} repair`,
+        `${term} repair shops`,
+        `${term} repair near me`,
+        `${term} repair experts`,
+        ...SITE_KEYWORDS,
+      ];
     }
   }
 
@@ -76,6 +87,7 @@ export async function generateMetadata({ searchParams }: PageProps): Promise<Met
   return {
     title,
     description,
+    keywords,
     alternates: { canonical: absoluteUrl(`/search${canonicalQuery}`) },
     robots: indexable ? undefined : { index: false, follow: true },
     openGraph: {

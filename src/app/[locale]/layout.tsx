@@ -15,7 +15,7 @@ import {
 
 import { JsonLd } from "@/components/seo/JsonLd";
 import { buildOrganization, buildWebSite } from "@/lib/seo/jsonld";
-import { SITE_DESCRIPTION, SITE_NAME, SITE_ORIGIN } from "@/lib/site";
+import { SITE_DESCRIPTION, SITE_KEYWORDS, SITE_NAME, SITE_ORIGIN } from "@/lib/site";
 import { isLocale, LOCALES, LOCALE_META, type Locale, type Script } from "@/i18n/config";
 
 import "../globals.css";
@@ -119,6 +119,7 @@ export const metadata: Metadata = {
     template: `%s · ${SITE_NAME}`,
   },
   description: SITE_DESCRIPTION,
+  keywords: SITE_KEYWORDS,
   applicationName: SITE_NAME,
   alternates: { canonical: "/" },
   openGraph: {

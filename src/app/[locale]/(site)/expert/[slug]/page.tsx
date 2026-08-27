@@ -27,7 +27,7 @@ import { getShopStatus, type HoursInput } from "@/lib/hours";
 import { buildBreadcrumbs, buildLocalBusiness, type Thing, type WithContext } from "@/lib/seo/jsonld";
 import { localeAlternates } from "@/lib/seo/alternates";
 import { isLocale, withLocale } from "@/i18n/config";
-import { absoluteUrl } from "@/lib/site";
+import { absoluteUrl, SITE_KEYWORDS } from "@/lib/site";
 import { truncate } from "@/lib/utils";
 import type { ExpertProfile } from "@/lib/types/database";
 
@@ -75,9 +75,23 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     ? truncate(profile.bio, 155)
     : t("metaDescription", { shopName: profile.shop_name, address: profile.address });
 
+  // Keyword tag led by this shop's own services ("screen repair", "bike
+  // repair"), then the site defaults — so the tag describes this page, not just
+  // the site. Deduped because a category name and a default term can collide.
+  const keywords = Array.from(
+    new Set([
+      ...profile.categories.map((category) => `${category.name} repair`),
+      ...(primaryCategory ? [`${primaryCategory} repair shop near me`] : []),
+      profile.shop_name,
+      "repair shop",
+      ...SITE_KEYWORDS,
+    ]),
+  );
+
   return {
     title,
     description,
+    keywords,
     // Self-canonical per locale, plus hreflang for the other six. The
     // id-fallback route still never competes for indexing: it is not listed.
     alternates: localeAlternates(`/expert/${profile.slug}`, locale),

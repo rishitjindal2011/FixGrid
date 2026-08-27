@@ -81,7 +81,7 @@ export function ResultCard({
           {photo ? (
             <Image
               src={photo}
-              alt=""
+              alt={shopName}
               fill
               sizes="112px"
               className="object-cover"

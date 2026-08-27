@@ -57,8 +57,8 @@
   },
   "home": {
     "eyebrow": "Local repair directory",
-    "heading": "Someone near you can fix that",
-    "intro": "Find a verified local repair shop, see who is open right now, and book with a warranty on the work.",
+    "heading": "Find a local repair shop that can actually fix it",
+    "intro": "Search verified local repair shops and experts, see who is open right now, and book with a warranty on the work.",
     "searchLabel": "What needs fixing?",
     "searchPlaceholder": "Cracked screen, leaking tap, torn seam…",
     "trustLine": "Live opening hours · Verified shops · Warranty on every listing",
@@ -95,7 +95,7 @@
     },
     "why": {
       "eyebrow": "Why FixGrid",
-      "heading": "Built for the repair economy",
+      "heading": "FixGrid is built for the repair economy",
       "localTitle": "Local first",
       "localBody": "Every shop is a real business with a real address — not a national chain or a remote call centre.",
       "verifiedTitle": "Verified listings",

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { getLocale, getTranslations } from "next-intl/server";
 import { getAllPublishedBlogPosts } from "@/lib/queries/blog";
+import { SITE_KEYWORDS } from "@/lib/site";
 
 export const revalidate = 300;
 
@@ -10,6 +11,7 @@ export async function generateMetadata(): Promise<Metadata> {
   return {
     title: t("metaTitle"),
     description: t("metaDescription"),
+    keywords: ["repair guides", "repair tips", "repair blog", "how to fix", ...SITE_KEYWORDS],
   };
 }
 
@@ -45,7 +47,7 @@ export default async function BlogIndexPage() {
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
                     src={post.og_image_url}
-                    alt=""
+                    alt={post.title}
                     className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
                   />
                 ) : (

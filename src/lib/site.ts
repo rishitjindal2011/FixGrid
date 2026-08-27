@@ -58,10 +58,51 @@ export const CANONICAL_ORIGIN: string =
 
 export const SITE_NAME = "FixGrid";
 
-export const SITE_TAGLINE = "Find someone who can actually fix it.";
+/**
+ * The home page renders this straight into the `<title>` as
+ * `FixGrid — <tagline>`, so it carries the primary keywords a search engine
+ * looks for in the title tag: "repair", "shops" and "experts". The old
+ * personality line ("Find someone who can actually fix it.") reads well but
+ * named none of them, which is what a title-tag keyword audit flags.
+ */
+export const SITE_TAGLINE = "Find local repair shops and experts near you";
 
+/**
+ * Site-wide meta description and OpenGraph fallback. Written to distribute the
+ * page's core keywords — repair, shop(s), verified, diagnostics — instead of
+ * describing the login flow, and kept under ~160 characters so search engines
+ * render it without truncation.
+ */
 export const SITE_DESCRIPTION =
-  "FixGrid is a directory by Vytron built to help users securely log in, create a profile, and find verified local repair experts.";
+  "FixGrid by Vytron is a directory of verified local repair shops and experts. Compare ratings, warranties and diagnostics, then book a repair shop near you.";
+
+/**
+ * Default `keywords` meta tag for the whole site.
+ *
+ * Google ignores this tag, but the SEO audits people actually run (and Bing)
+ * still check that it exists and that it echoes the page's primary terms — an
+ * empty keywords tag is a red mark in those reports. Set once here and applied
+ * in the root layout so every route inherits it; pages with a narrower topic
+ * (a shop, a category, a blog post) override with their own, more specific set.
+ */
+export const SITE_KEYWORDS: string[] = [
+  "repair shops",
+  "local repair shops",
+  "repair shop near me",
+  "find a repair expert",
+  "repair experts",
+  "phone repair",
+  "laptop repair",
+  "appliance repair",
+  "bike repair",
+  "watch repair",
+  "repair diagnostics",
+  "verified repair shops",
+  "repair directory",
+  "local fixers",
+  "book a repair",
+  "FixGrid",
+];
 
 /**
  * Build an absolute URL from a site-relative path.
