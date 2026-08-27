@@ -352,13 +352,30 @@ export const config = {
    * build output, image optimiser, metadata files and static assets. This keeps
    * the proxy off the hot path for the majority of requests.
    *
-   * A gap here now breaks localization as well as sessions, and it does so
-   * silently: a path the proxy never sees is never rewritten onto the `[locale]`
-   * segment, so it 404s or renders without messages rather than erroring
-   * somewhere findable. Anything added to this list should be a URL that must
-   * not be localized at all.
+   * The hazard cuts both ways, and both are silent.
+   *
+   *   • Exclude a path that SHOULD be localized and it is never rewritten onto
+   *     the `[locale]` segment — it 404s or renders without messages.
+   *
+   *   • Match a path that must NOT be localized and next-intl rewrites it onto
+   *     `/en/…` anyway. For a page under `[locale]` that is harmless, but the
+   *     route handlers and dynamic metadata routes live OUTSIDE `[locale]`:
+   *     `/auth/callback`, `/api/*`, `/icon`, `/apple-icon` have no `/en/…`
+   *     twin, so the rewrite lands on nothing and they 404. This is exactly how
+   *     the Google/OAuth callback broke — `/auth/callback?code=…` was rewritten
+   *     to `/en/auth/callback` and served the localized 404 instead of
+   *     exchanging the code.
+   *
+   * So the negative lookahead below also drops those four namespaces. They are
+   * anchored with `(?:/|$)` so a real localized page like `/apixyz` or
+   * `/iconography` is not caught by the `api`/`icon` prefixes. `robots.txt`,
+   * `sitemap.xml` and `favicon.ico` (the served URLs of `robots.ts`,
+   * `sitemap.ts` and the favicon) are already covered above.
+   *
+   * Anything added here must be a URL that neither carries a session nor should
+   * ever be localized.
    */
   matcher: [
-    "/((?!_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml|.*\\.(?:svg|png|jpg|jpeg|gif|webp|avif|ico|css|js|woff|woff2|ttf)$).*)",
+    "/((?!_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml|(?:api|auth|icon|apple-icon)(?:/|$)|.*\\.(?:svg|png|jpg|jpeg|gif|webp|avif|ico|css|js|woff|woff2|ttf)$).*)",
   ],
 };
