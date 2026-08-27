@@ -3,6 +3,7 @@
 import * as React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { Menu, Store, Wrench } from "lucide-react";
 
 import { type NavCounts, NavItemLink, navSections } from "@/components/dashboard/nav";
@@ -56,12 +57,13 @@ function NavList({
   onNavigate?: () => void;
 }) {
   const counts: NavCounts = { pendingRequests, openDisputes };
+  const t = useTranslations("dashboard.nav");
 
   return (
-    <nav aria-label="Dashboard" className="flex flex-1 flex-col gap-6 p-3">
+    <nav aria-label={t("landmark")} className="flex flex-1 flex-col gap-6 p-3">
       {navSections(hasShop, pathname).map((section) => (
         <div
-          key={section.title}
+          key={section.titleKey}
           className={cn(
             /* Full-bleed rule: an indented one reads as a gap between two lists,
                and the point here is that it is a boundary between two roles. */
@@ -69,7 +71,7 @@ function NavList({
           )}
         >
           <div className="px-2.5 pb-2">
-            <p className="eyebrow">{section.title}</p>
+            <p className="eyebrow">{t(`sections.${section.titleKey}`)}</p>
             {section.separated && shopName ? (
               /* Someone who is both a customer and an owner needs the shop named
                  here, not just the section — "Your shop" alone does not say
@@ -105,7 +107,7 @@ function NavList({
        */}
       {hasShop ? null : (
         <div className="mt-auto">
-          <p className="eyebrow px-2.5 pb-2">Own a shop?</p>
+          <p className="eyebrow px-2.5 pb-2">{t("ownShopEyebrow")}</p>
           <Link
             href="/join"
             onClick={onNavigate}
@@ -119,10 +121,10 @@ function NavList({
             </span>
             <span className="min-w-0">
               <span className="block truncate font-display text-sm uppercase tracking-wide text-enamel">
-                List your shop
+                {t("listShop")}
               </span>
               <span className="block truncate text-xs text-steel">
-                Manage bookings and earnings
+                {t("listShopDesc")}
               </span>
             </span>
           </Link>
@@ -198,6 +200,7 @@ export function DashboardSidebarSheet({
   openDisputes = 0,
 }: SidebarProps) {
   const pathname = usePathname();
+  const t = useTranslations("dashboard.nav");
 
   /*
    * Open state is stored as *the path the sheet was opened on*, so a route
@@ -217,14 +220,14 @@ export function DashboardSidebarSheet({
       <SheetTrigger asChild>
         <Button variant="ghost" size="icon" className="lg:hidden">
           <Menu aria-hidden />
-          <span className="sr-only">Open menu</span>
+          <span className="sr-only">{t("openMenu")}</span>
         </Button>
       </SheetTrigger>
 
       <SheetContent side="left" className="p-0">
-        <SheetTitle className="sr-only">Dashboard menu</SheetTitle>
+        <SheetTitle className="sr-only">{t("menuTitle")}</SheetTitle>
         <SheetDescription className="sr-only">
-          Navigate between your bookings, messages and account settings.
+          {t("menuDescription")}
         </SheetDescription>
 
         <Brand onNavigate={() => setOpenedAt(null)} />

@@ -1,4 +1,5 @@
 import * as React from "react";
+import { getTranslations } from "next-intl/server";
 import {
   BadgeCheck,
   Briefcase,
@@ -20,13 +21,15 @@ import {
   type ShopJobRow,
 } from "@/lib/types/marketplace";
 
-export function PublicJobs({
+export async function PublicJobs({
   shopName,
   jobs,
 }: {
   shopName: string;
   jobs: ShopJobRow[];
 }) {
+  const t = await getTranslations("jobs");
+
   if (jobs.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center rounded-machined border border-hairline bg-surface p-12 text-center">
@@ -34,10 +37,10 @@ export function PublicJobs({
           <Briefcase className="size-6" />
         </div>
         <h3 className="mt-4 font-display font-semibold text-lg text-enamel">
-          No Active Vacancies
+          {t("noVacanciesTitle")}
         </h3>
         <p className="mt-1.5 max-w-sm text-sm text-steel">
-          {shopName} does not have any open positions at the moment. Check back soon!
+          {t("noVacanciesBody", { shopName })}
         </p>
       </div>
     );
@@ -47,10 +50,10 @@ export function PublicJobs({
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-1">
         <h2 className="font-display font-semibold text-xl text-enamel">
-          We&apos;re Hiring at {shopName}
+          {t("hiringHeading", { shopName })}
         </h2>
         <p className="text-sm text-steel">
-          Join our local team of repair experts. Apply directly with no middlemen.
+          {t("hiringIntro")}
         </p>
       </div>
 
@@ -63,15 +66,17 @@ export function PublicJobs({
   );
 }
 
-function PublicJobCard({
+async function PublicJobCard({
   shopName,
   job,
 }: {
   shopName: string;
   job: ShopJobRow;
 }) {
+  const t = await getTranslations("jobs");
+
   // Format salary display
-  let salaryText = "Salary Negotiable";
+  let salaryText = t("salaryNegotiable");
   if (job.salary_type === "fixed" && job.salary_min) {
     salaryText = `₹${job.salary_min.toLocaleString("en-IN")} ${
       SALARY_PERIOD_LABELS[job.salary_period] ?? ""
@@ -81,19 +86,19 @@ function PublicJobCard({
     (job.salary_min || job.salary_max)
   ) {
     const min = job.salary_min ? `₹${job.salary_min.toLocaleString("en-IN")}` : "₹0";
-    const max = job.salary_max ? `₹${job.salary_max.toLocaleString("en-IN")}` : "Open";
+    const max = job.salary_max ? `₹${job.salary_max.toLocaleString("en-IN")}` : t("open");
     salaryText = `${min} – ${max} ${
       SALARY_PERIOD_LABELS[job.salary_period] ?? ""
     }`;
   } else if (job.salary_type === "commission") {
-    salaryText = "Commission / Per-Job Basis";
+    salaryText = t("commission");
   }
 
   // Pre-filled WhatsApp message
   const whatsappNumber = (job.contact_whatsapp || job.contact_phone || "")
     .replace(/[^0-9]/g, "");
   const whatsappText = encodeURIComponent(
-    `Hello! I saw your job opening for "${job.title}" at ${shopName} on FixGrid and would like to apply.`,
+    t("whatsappMessage", { title: job.title, shopName }),
   );
   const whatsappUrl = whatsappNumber
     ? `https://wa.me/${whatsappNumber}?text=${whatsappText}`
@@ -123,7 +128,7 @@ function PublicJobCard({
                   <span>•</span>
                   <span className="flex items-center gap-1">
                     <Clock className="size-3.5 text-steel" />
-                    Exp: {job.experience_level}
+                    {t("experience", { level: job.experience_level })}
                   </span>
                 </>
               )}
@@ -137,7 +142,7 @@ function PublicJobCard({
             </span>
             {job.salary_negotiable && (
               <span className="text-[11px] text-muted-foreground">
-                Negotiable based on skills
+                {t("negotiableNote")}
               </span>
             )}
           </div>
@@ -152,7 +157,7 @@ function PublicJobCard({
         {job.skills_required && job.skills_required.length > 0 && (
           <div className="flex flex-col gap-1.5 pt-2">
             <span className="font-mono text-[11px] uppercase tracking-wider text-steel">
-              Skills / Expertise:
+              {t("skills")}
             </span>
             <div className="flex flex-wrap gap-1.5">
               {job.skills_required.map((skill, idx) => (
@@ -171,7 +176,7 @@ function PublicJobCard({
       {/* Action Footer */}
       <div className="flex flex-wrap items-center justify-between gap-3 border-t border-hairline pt-4">
         <span className="text-xs text-steel">
-          Posted directly by {shopName}
+          {t("postedBy", { shopName })}
         </span>
 
         <div className="flex flex-wrap items-center gap-2.5">
@@ -184,7 +189,7 @@ function PublicJobCard({
                 className="flex items-center gap-1.5"
               >
                 <MessageCircle className="size-4" />
-                Apply via WhatsApp
+                {t("applyWhatsapp")}
               </a>
             </Button>
           )}
@@ -193,7 +198,7 @@ function PublicJobCard({
             <Button asChild variant="outline" size="sm">
               <a href={`tel:${job.contact_phone}`} className="flex items-center gap-1.5">
                 <Phone className="size-4" />
-                Call {job.contact_phone}
+                {t("call", { phone: job.contact_phone })}
               </a>
             </Button>
           )}

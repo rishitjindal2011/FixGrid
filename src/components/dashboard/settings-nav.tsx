@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useTranslations } from "next-intl";
 
 import { cn } from "@/lib/utils";
 
@@ -20,33 +21,36 @@ import { cn } from "@/lib/utils";
 
 interface SettingsTab {
   href: string;
-  label: string;
-  /** Announced after the label — "Account, deletes your account" reads better
-   *  than a bare word on a destructive destination. */
-  description: string;
+  /** Key into `dashboard.settingsNav.tabs`. */
+  labelKey: string;
+  /** Announced after the label — "Account, closing your account" reads better
+   *  than a bare word on a destructive destination. Key into the same tabs
+   *  namespace. */
+  descKey: string;
 }
 
 const TABS: SettingsTab[] = [
-  { href: "/dashboard/settings/profile", label: "Profile", description: "your details" },
+  { href: "/dashboard/settings/profile", labelKey: "profile", descKey: "profileHint" },
   {
     href: "/dashboard/settings/notifications",
-    label: "Notifications",
-    description: "what we email and text you",
+    labelKey: "notifications",
+    descKey: "notificationsHint",
   },
   {
     href: "/dashboard/settings/addresses",
-    label: "Addresses",
-    description: "where we send engineers",
+    labelKey: "addresses",
+    descKey: "addressesHint",
   },
-  { href: "/dashboard/settings/security", label: "Security", description: "password and sessions" },
-  { href: "/dashboard/settings/danger", label: "Account", description: "closing your account" },
+  { href: "/dashboard/settings/security", labelKey: "security", descKey: "securityHint" },
+  { href: "/dashboard/settings/danger", labelKey: "account", descKey: "accountHint" },
 ];
 
 export function SettingsNav() {
   const pathname = usePathname();
+  const t = useTranslations("dashboard.settingsNav");
 
   return (
-    <nav aria-label="Settings sections" className="border-b border-hairline">
+    <nav aria-label={t("aria")} className="border-b border-hairline">
       {/* Horizontal scroll rather than wrap: four condensed labels overflow a
           375px viewport, and a second row of tabs reads as a second nav. The
           negative margin lets the focus ring of the first tab clear the edge. */}
@@ -72,8 +76,8 @@ export function SettingsNav() {
                     : "border-transparent text-steel hover:text-enamel",
                 )}
               >
-                {tab.label}
-                <span className="sr-only">, {tab.description}</span>
+                {t(`tabs.${tab.labelKey}`)}
+                <span className="sr-only">, {t(`tabs.${tab.descKey}`)}</span>
               </Link>
             </li>
           );

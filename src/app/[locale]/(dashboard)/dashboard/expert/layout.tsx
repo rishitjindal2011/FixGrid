@@ -1,5 +1,6 @@
-import { redirect } from "next/navigation";
+import { getLocale } from "next-intl/server";
 
+import { redirect } from "@/i18n/navigation";
 import { getCurrentUser } from "@/lib/auth/session";
 import { getMyShop } from "@/lib/dashboard/claims";
 
@@ -27,13 +28,19 @@ export default async function ExpertDashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
+  const locale = await getLocale();
+
   const user = await getCurrentUser();
-  if (!user) redirect("/login?next=/dashboard/expert");
+  // `return` narrows `user` to non-null for `getMyShop` below; `redirect` throws
+  // regardless, so nothing after it runs.
+  if (!user) {
+    return redirect({ href: { pathname: "/login", query: { next: "/dashboard/expert" } }, locale });
+  }
 
   // `getMyShop` is cached for the request, so the page underneath calls the
   // same read without a second database round-trip.
   const shop = await getMyShop(user.id);
-  if (!shop) redirect("/join");
+  if (!shop) return redirect({ href: "/join", locale });
 
   return <>{children}</>;
 }

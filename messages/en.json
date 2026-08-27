@@ -9,7 +9,9 @@
     "chooseLanguage": "Choose a language",
     "verified": "Verified",
     "allCategories": "All categories",
-    "browseAll": "Browse all"
+    "browseAll": "Browse all",
+    "signOut": "Sign out",
+    "signingOut": "Signing out…"
   },
   "header": {
     "mainNav": "Main",
@@ -358,6 +360,161 @@
     "notices": {
       "signupConfirm": "Check your inbox — we've sent a link to confirm your address. It expires in an hour.",
       "resetSent": "If that address has an account, a reset link is on its way. Check spam if it hasn't arrived in a few minutes."
+    }
+  },
+  "join": {
+    "metaTitle": "List your repair shop",
+    "metaDescription": "Add your repair business to FixGrid. Free to list, no booking fees, and your dashboard opens as soon as you submit.",
+    "eyebrow": "For repair businesses",
+    "heading": "List your repair shop",
+    "intro": "FixGrid is a directory of repair shops people can actually book. Listing is free, there are no booking fees, and you keep control of your own hours and prices.",
+    "benefit1Title": "Your dashboard opens immediately",
+    "benefit1Body": "Add services, opening hours and photos the moment you submit — no waiting on us to start building your page.",
+    "benefit2Title": "We check every shop",
+    "benefit2Body": "A person reviews your details before the listing goes live. It keeps the directory worth trusting, which is what makes it worth being in.",
+    "benefit3Title": "Bookings, not just a phone number",
+    "benefit3Body": "Customers request a slot against your real availability. You accept, decline or propose another time.",
+    "claim": "Already listed but not the owner? <find>Find your shop</find> and claim it instead — that keeps your existing reviews.",
+    "formHeading": "Tell us about your shop",
+    "signedInAs": "Signed in as {email}.",
+    "signInHeading": "Sign in to continue",
+    "signInBody": "A shop has to belong to an account — that is what gives you the dashboard, your bookings and your messages. It takes a minute.",
+    "createAccount": "Create an account",
+    "haveAccount": "I already have one",
+    "form": {
+      "shopName": "Shop name",
+      "shopNameHint": "The name customers know you by.",
+      "address": "Address",
+      "addressHint": "Street, town and postcode. Customers use this to find you.",
+      "contactPhone": "Contact phone",
+      "contactPhoneHint": "Shown on your public page once approved.",
+      "evidence": "Proof of business",
+      "evidenceHint": "A licence, your storefront or a business card. Up to {max} files, 5 MB each. Only our review team sees these.",
+      "uploading": "Uploading…",
+      "notes": "Anything else (optional)",
+      "notesHint": "Trading years, registration number, or anything that helps us verify you.",
+      "submit": "Submit for review",
+      "submitting": "Submitting…",
+      "waitingUploads": "Waiting for uploads…",
+      "afterSubmit": "Your dashboard opens straight away so you can add services, hours and photos. The shop appears in search once we have checked your details.",
+      "listingFee": "Listing fee",
+      "listingFeeDesc": "A one-off fee to list your shop, refunded in full if we cannot verify it. Choose how you want to pay.",
+      "remove": "Remove {name}",
+      "errorTooBig": "\"{name}\" is over 5 MB.",
+      "errorType": "\"{name}\" must be a JPEG, PNG, WebP, HEIC or PDF.",
+      "errorUpload": "\"{name}\" could not be uploaded. Try again."
+    }
+  },
+  "account": {
+    "metaTitle": "Your account",
+    "heading": "Your account",
+    "passwordUpdated": "Your password has been updated.",
+    "name": "Name",
+    "email": "Email",
+    "password": "Password",
+    "sendResetLink": "Send a reset link"
+  },
+  "jobs": {
+    "noVacanciesTitle": "No active vacancies",
+    "noVacanciesBody": "{shopName} does not have any open positions at the moment. Check back soon!",
+    "hiringHeading": "We're hiring at {shopName}",
+    "hiringIntro": "Join our local team of repair experts. Apply directly with no middlemen.",
+    "salaryNegotiable": "Salary negotiable",
+    "commission": "Commission / per-job basis",
+    "open": "Open",
+    "negotiableNote": "Negotiable based on skills",
+    "experience": "Exp: {level}",
+    "skills": "Skills / expertise:",
+    "postedBy": "Posted directly by {shopName}",
+    "applyWhatsapp": "Apply via WhatsApp",
+    "call": "Call {phone}",
+    "whatsappMessage": "Hello! I saw your job opening for \"{title}\" at {shopName} on FixGrid and would like to apply."
+  },
+  "errorPage": {
+    "eyebrow": "Something broke",
+    "heading": "That didn't load",
+    "body": "An unexpected error stopped this page from rendering. Trying again usually works — if it doesn't, the problem is on our side.",
+    "reference": "Reference {digest}",
+    "tryAgain": "Try again"
+  },
+  "notFound": {
+    "eyebrow": "404",
+    "heading": "This page isn't here",
+    "body": "The address may be mistyped, or the page may have been retired. The directory is the best place to pick the thread back up.",
+    "findExpert": "Find a repair expert",
+    "backHome": "Back to the home page"
+  },
+  "dashboard": {
+    "nav": {
+      "landmark": "Dashboard",
+      "sections": {
+        "workspace": "Workspace",
+        "account": "Your account",
+        "shop": "Your shop"
+      },
+      "items": {
+        "overview": "Overview",
+        "discover": "Discover experts",
+        "saved": "Saved shops",
+        "bookings": "Bookings",
+        "messages": "Messages",
+        "wallet": "Wallet",
+        "plan": "Plan",
+        "payments": "Payments",
+        "reviews": "Reviews",
+        "warranty": "Warranty & claims",
+        "settings": "Settings",
+        "requests": "Requests",
+        "schedule": "Schedule",
+        "clients": "Clients",
+        "earnings": "Earnings",
+        "services": "Services",
+        "inventory": "Inventory",
+        "hiring": "Hiring & Jobs",
+        "shopProfile": "Shop profile",
+        "clientInbox": "Client inbox",
+        "warrantyClaims": "Warranty claims"
+      },
+      "awaitingReply": "{count} awaiting reply",
+      "ownShopEyebrow": "Own a shop?",
+      "listShop": "List your shop",
+      "listShopDesc": "Manage bookings and earnings",
+      "openMenu": "Open menu",
+      "menuTitle": "Dashboard menu",
+      "menuDescription": "Navigate between your bookings, messages and account settings."
+    },
+    "topbar": {
+      "findExpert": "Find an expert",
+      "notifications": "Notifications",
+      "notificationsUnread": "Notifications, {count} unread",
+      "openAccountMenu": "Open account menu",
+      "yourProfile": "Your profile",
+      "settings": "Settings",
+      "expertDashboard": "Expert dashboard",
+      "listShop": "List your shop"
+    },
+    "roleToggle": {
+      "aria": "Switch between your customer and shop dashboards",
+      "customer": "Customer",
+      "shop": "Shop"
+    },
+    "settingsNav": {
+      "aria": "Settings sections",
+      "eyebrow": "Your account",
+      "title": "Settings",
+      "description": "Your details, what we send you, and how you sign in.",
+      "tabs": {
+        "profile": "Profile",
+        "profileHint": "your details",
+        "notifications": "Notifications",
+        "notificationsHint": "what we email and text you",
+        "addresses": "Addresses",
+        "addressesHint": "where we send engineers",
+        "security": "Security",
+        "securityHint": "password and sessions",
+        "account": "Account",
+        "accountHint": "closing your account"
+      }
     }
   }
 }

@@ -1,3 +1,5 @@
+import { getTranslations } from "next-intl/server";
+
 import { PageHeader } from "@/components/dashboard/page-header";
 import { SettingsNav } from "@/components/dashboard/settings-nav";
 
@@ -11,13 +13,15 @@ import { SettingsNav } from "@/components/dashboard/settings-nav";
  *
  * The auth gate is the dashboard layout's; nothing is repeated here.
  */
-export default function SettingsLayout({ children }: { children: React.ReactNode }) {
+export default async function SettingsLayout({ children }: { children: React.ReactNode }) {
+  const t = await getTranslations("dashboard.settingsNav");
+
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        eyebrow="Your account"
-        title="Settings"
-        description="Your details, what we send you, and how you sign in."
+        eyebrow={t("eyebrow")}
+        title={t("title")}
+        description={t("description")}
       />
 
       <SettingsNav />

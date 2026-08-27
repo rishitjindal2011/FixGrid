@@ -1,6 +1,7 @@
 "use client";
 
 import { useTransition } from "react";
+import { useTranslations } from "next-intl";
 import { LogOut } from "lucide-react";
 
 import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
@@ -26,6 +27,7 @@ import { signOut } from "@/lib/auth/actions";
  */
 export function SignOutMenuItem() {
   const [pending, startTransition] = useTransition();
+  const t = useTranslations("common");
 
   return (
     <DropdownMenuItem
@@ -38,7 +40,7 @@ export function SignOutMenuItem() {
       }}
     >
       <LogOut aria-hidden className="size-4" />
-      {pending ? "Signing out…" : "Sign out"}
+      {pending ? t("signingOut") : t("signOut")}
     </DropdownMenuItem>
   );
 }

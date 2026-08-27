@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { Store, UserRound } from "lucide-react";
 
 import { cn } from "@/lib/utils";
@@ -25,6 +26,7 @@ import { cn } from "@/lib/utils";
  */
 export function RoleToggle({ hasShop }: { hasShop: boolean }) {
   const pathname = usePathname();
+  const t = useTranslations("dashboard.roleToggle");
 
   if (!hasShop) return null;
 
@@ -35,20 +37,20 @@ export function RoleToggle({ hasShop }: { hasShop: boolean }) {
   return (
     <div
       role="group"
-      aria-label="Switch between your customer and shop dashboards"
+      aria-label={t("aria")}
       className="inline-flex items-center gap-0.5 rounded-machined border border-hairline bg-bench p-0.5"
     >
       <ToggleLink
         href="/dashboard"
         active={!onShopSide}
         icon={UserRound}
-        label="Customer"
+        label={t("customer")}
       />
       <ToggleLink
         href="/dashboard/expert"
         active={onShopSide}
         icon={Store}
-        label="Shop"
+        label={t("shop")}
       />
     </div>
   );

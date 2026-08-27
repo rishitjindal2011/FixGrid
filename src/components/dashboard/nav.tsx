@@ -2,6 +2,7 @@
 
 import type { ComponentType } from "react";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import {
   Boxes,
   Briefcase,
@@ -39,7 +40,12 @@ export type NavCounts = Partial<Record<NavCountKey, number>>;
 
 export type NavItem = {
   href: string;
-  label: string;
+  /**
+   * Key into the `dashboard.nav.items` namespace, resolved with `useTranslations`
+   * at render. A key rather than a literal so this static config stays a
+   * server/client-shared module and the label lands in the visitor's language.
+   */
+  labelKey: string;
   icon: ComponentType<{ className?: string; "aria-hidden"?: boolean }>;
   /**
    * URL-prefix that also activates this item, for pages that live underneath
@@ -53,7 +59,8 @@ export type NavItem = {
 };
 
 export type NavSection = {
-  title: string;
+  /** Key into the `dashboard.nav.sections` namespace. */
+  titleKey: string;
   items: NavItem[];
   /**
    * Draw a rule above this section. Reserved for a change of *side* — customer
@@ -65,56 +72,56 @@ export type NavSection = {
 /** Sections of the sidebar, in the order they render. */
 export const NAV_SECTIONS: NavSection[] = [
   {
-    title: "Workspace",
+    titleKey: "workspace",
     items: [
-      { href: "/dashboard", label: "Overview", icon: LayoutGrid },
+      { href: "/dashboard", labelKey: "overview", icon: LayoutGrid },
       {
         href: "/dashboard/discover",
-        label: "Discover experts",
+        labelKey: "discover",
         icon: Search,
         match: "/dashboard/discover",
       },
       {
         href: "/dashboard/saved",
-        label: "Saved shops",
+        labelKey: "saved",
         icon: Heart,
         match: "/dashboard/saved",
       },
       {
         href: "/dashboard/bookings",
-        label: "Bookings",
+        labelKey: "bookings",
         icon: CalendarDays,
         match: "/dashboard/bookings",
       },
       {
         href: "/dashboard/messages",
-        label: "Messages",
+        labelKey: "messages",
         icon: MessagesSquare,
         match: "/dashboard/messages",
       },
     ],
   },
   {
-    title: "Your account",
+    titleKey: "account",
     items: [
       // Above Payments on purpose: the balance is what a booking spends, so
       // somebody who has just been told they have too little goes looking for
       // this one, not for their invoice history.
-      { href: "/dashboard/wallet", label: "Wallet", icon: Wallet, match: "/dashboard/wallet" },
+      { href: "/dashboard/wallet", labelKey: "wallet", icon: Wallet, match: "/dashboard/wallet" },
       // Next to Wallet, because a plan is bought with the balance and the two are
       // read together: "can I afford this" is a question about both.
-      { href: "/dashboard/plan", label: "Plan", icon: Sparkles, match: "/dashboard/plan" },
-      { href: "/dashboard/billing", label: "Payments", icon: CreditCard, match: "/dashboard/billing" },
-      { href: "/dashboard/reviews", label: "Reviews", icon: Star, match: "/dashboard/reviews" },
+      { href: "/dashboard/plan", labelKey: "plan", icon: Sparkles, match: "/dashboard/plan" },
+      { href: "/dashboard/billing", labelKey: "payments", icon: CreditCard, match: "/dashboard/billing" },
+      { href: "/dashboard/reviews", labelKey: "reviews", icon: Star, match: "/dashboard/reviews" },
       {
         href: "/dashboard/warranty",
-        label: "Warranty & claims",
+        labelKey: "warranty",
         icon: ShieldCheck,
         match: "/dashboard/warranty",
       },
       {
         href: "/dashboard/settings/profile",
-        label: "Settings",
+        labelKey: "settings",
         icon: Settings,
         match: "/dashboard/settings",
       },
@@ -128,68 +135,68 @@ export const NAV_SECTIONS: NavSection[] = [
  * section of the product they cannot enter.
  */
 export const EXPERT_NAV_SECTION: NavSection = {
-  title: "Your shop",
+  titleKey: "shop",
   separated: true,
   items: [
-    { href: "/dashboard/expert", label: "Overview", icon: LayoutDashboard },
+    { href: "/dashboard/expert", labelKey: "overview", icon: LayoutDashboard },
     {
       href: "/dashboard/expert/requests",
-      label: "Requests",
+      labelKey: "requests",
       icon: Inbox,
       match: "/dashboard/expert/requests",
       count: "pendingRequests",
     },
     {
       href: "/dashboard/expert/schedule",
-      label: "Schedule",
+      labelKey: "schedule",
       icon: CalendarClock,
       match: "/dashboard/expert/schedule",
     },
     {
       href: "/dashboard/expert/clients",
-      label: "Clients",
+      labelKey: "clients",
       icon: Users,
       match: "/dashboard/expert/clients",
     },
     {
       href: "/dashboard/expert/earnings",
-      label: "Earnings",
+      labelKey: "earnings",
       icon: Wallet,
       match: "/dashboard/expert/earnings",
     },
     {
       href: "/dashboard/expert/services",
-      label: "Services",
+      labelKey: "services",
       icon: Wrench,
       match: "/dashboard/expert/services",
     },
     {
       href: "/dashboard/expert/inventory",
-      label: "Inventory",
+      labelKey: "inventory",
       icon: Boxes,
       match: "/dashboard/expert/inventory",
     },
     {
       href: "/dashboard/expert/hiring",
-      label: "Hiring & Jobs",
+      labelKey: "hiring",
       icon: Briefcase,
       match: "/dashboard/expert/hiring",
     },
     {
       href: "/dashboard/expert/profile",
-      label: "Shop profile",
+      labelKey: "shopProfile",
       icon: Store,
       match: "/dashboard/expert/profile",
     },
     {
       href: "/dashboard/expert/messages",
-      label: "Client inbox",
+      labelKey: "clientInbox",
       icon: MessagesSquare,
       match: "/dashboard/expert/messages",
     },
     {
       href: "/dashboard/expert/disputes",
-      label: "Warranty claims",
+      labelKey: "warrantyClaims",
       icon: Scale,
       match: "/dashboard/expert/disputes",
       count: "openDisputes",
@@ -251,13 +258,15 @@ export function NavItemLink({
   const active = isNavActive(pathname, item);
   const Icon = item.icon;
   const showCount = count > 0;
+  const t = useTranslations("dashboard.nav");
+  const label = t(`items.${item.labelKey}`);
 
   return (
     <Link
       href={item.href}
       onClick={onNavigate}
       aria-current={active ? "page" : undefined}
-      title={compact ? item.label : undefined}
+      title={compact ? label : undefined}
       className={cn(
         "relative flex h-10 items-center gap-3 rounded-machined px-2.5 text-sm transition-colors",
         "font-display uppercase tracking-wide",
@@ -268,7 +277,7 @@ export function NavItemLink({
       )}
     >
       <Icon aria-hidden className={cn("size-4 shrink-0", active && "text-bench")} />
-      <span className={cn("truncate", compact && "sr-only")}>{item.label}</span>
+      <span className={cn("truncate", compact && "sr-only")}>{label}</span>
 
       {showCount ? (
         <>
@@ -291,7 +300,7 @@ export function NavItemLink({
           )}
           {/* Announced as "Requests, 3 awaiting reply" — a bare numeral after
               the label is ambiguous read aloud. */}
-          <span className="sr-only">, {count} awaiting reply</span>
+          <span className="sr-only">, {t("awaitingReply", { count })}</span>
         </>
       ) : null}
     </Link>
