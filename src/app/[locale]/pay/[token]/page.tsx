@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
+import { getTranslations } from "next-intl/server";
 import { ShieldAlert } from "lucide-react";
 
 import { PayPinSheet } from "@/components/dashboard/pay-pin-sheet";
@@ -7,10 +8,13 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { PAYEE_NAME, PAYEE_VPA } from "@/lib/wallet/upi";
 import { formatMoney } from "@/lib/format";
 
-export const metadata: Metadata = {
-  title: "Pay",
-  robots: { index: false, follow: false, nocache: true },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("wallet");
+  return {
+    title: t("page.metaTitle"),
+    robots: { index: false, follow: false, nocache: true },
+  };
+}
 
 /**
  * Where a scanned payment QR lands.
@@ -48,6 +52,8 @@ export default async function PayPage({
   // Bounded before it reaches a query. The column is 32 bytes base64url.
   if (!token || token.length < 32 || token.length > 64) notFound();
 
+  const t = await getTranslations("wallet");
+
   const { data: attempt, error } = await createAdminClient()
     .from("wallet_topups")
     .select("reference, amount_minor, status, method")
@@ -65,7 +71,7 @@ export default async function PayPage({
     <main className="mx-auto flex min-h-dvh w-full max-w-sm flex-col justify-center gap-5 bg-slate-50 px-5 py-10">
       <div className="text-center">
         <p className="text-xs uppercase tracking-widest text-slate-400">
-          Secure payment
+          {t("page.securePayment")}
         </p>
         <p className="pt-1 text-lg font-semibold text-slate-900">{PAYEE_NAME}</p>
       </div>
@@ -77,8 +83,9 @@ export default async function PayPage({
       <p className="flex items-start gap-2 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2.5 text-xs leading-relaxed text-amber-900">
         <ShieldAlert aria-hidden className="mt-0.5 size-4 shrink-0 text-amber-600" />
         <span>
-          <strong>This is a simulation.</strong> No bank is involved and no money
-          moves. Do not enter a real UPI PIN.
+          {t.rich("page.simulationWarning", {
+            strong: (chunks) => <strong>{chunks}</strong>,
+          })}
         </span>
       </p>
 
@@ -93,12 +100,12 @@ export default async function PayPage({
       ) : (
         <div className="rounded-2xl border border-slate-200 bg-white p-6 text-center">
           <p className="text-lg font-semibold text-slate-900">
-            {attempt.status === "succeeded" ? "Already paid" : "Payment closed"}
+            {attempt.status === "succeeded" ? t("page.alreadyPaid") : t("page.paymentClosed")}
           </p>
           <p className="pt-2 text-sm leading-relaxed text-slate-600">
             {attempt.status === "succeeded"
-              ? `${formatMoney(attempt.amount_minor)} was already added. Nothing further to do.`
-              : "This payment was declined or cancelled. Start a new one from your wallet."}
+              ? t("page.alreadyAddedNote", { amount: formatMoney(attempt.amount_minor) })
+              : t("page.declinedNote")}
           </p>
           <p className="pt-3 font-mono text-xs uppercase tracking-widest text-slate-400">
             {attempt.reference}

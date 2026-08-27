@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { useActionState } from "react";
+import { useTranslations } from "next-intl";
 import {
   AlertTriangle,
   CheckCircle2,
@@ -56,29 +57,35 @@ import { cn } from "@/lib/utils";
 
 type Step = "choose" | "gateway" | "working" | "done" | "failed";
 
-const METHODS: { key: TopUpMethod; label: string; icon: typeof CreditCard }[] = [
-  { key: "card", label: "Card", icon: CreditCard },
-  { key: "upi", label: "UPI", icon: Smartphone },
-  { key: "netbanking", label: "Net banking", icon: Landmark },
+const METHODS: { key: TopUpMethod; icon: typeof CreditCard }[] = [
+  { key: "card", icon: CreditCard },
+  { key: "upi", icon: Smartphone },
+  { key: "netbanking", icon: Landmark },
 ];
 
-/** What the simulated gateway asks for, and how to make it refuse. */
-const METHOD_FIELDS: Record<
-  TopUpMethod,
-  { label: string; placeholder: string; hint: string } | null
-> = {
-  card: {
-    label: "Card number",
-    placeholder: "4111 1111 1111 1111",
-    hint: "Any 16 digits works. End it in 0000 to see a declined payment.",
-  },
-  upi: {
-    label: "UPI ID",
-    placeholder: "you@bank",
-    hint: "Any id in name@bank form works. Start it with fail@ to see a decline.",
-  },
-  netbanking: null,
+const METHOD_MSG: Record<TopUpMethod, string> = {
+  card: "methodCard",
+  upi: "methodUpi",
+  netbanking: "methodNetbanking",
 };
+
+/**
+ * What the simulated gateway asks for. Net banking has no field — it is simulated
+ * end to end. The label, placeholder and hint come from the catalogue's
+ * `card*`/`upi*` keys rather than being duplicated here.
+ */
+function credentialField(
+  t: (key: string) => string,
+  method: TopUpMethod,
+): { label: string; placeholder: string; hint: string } | null {
+  if (method === "netbanking") return null;
+  const prefix = method === "card" ? "card" : "upi";
+  return {
+    label: t(`${prefix}Label`),
+    placeholder: t(`${prefix}Placeholder`),
+    hint: t(`${prefix}Hint`),
+  };
+}
 
 function randomKey(): string {
   if (typeof crypto !== "undefined" && "randomUUID" in crypto) return crypto.randomUUID();
@@ -129,6 +136,8 @@ export function PaymentSheet({
   const [note, setNote] = React.useState<string | null>(null);
   const [key, setKey] = React.useState(randomKey);
 
+  const t = useTranslations("wallet");
+
   const [intentState, startIntent, starting] = useActionState(
     createTopUpIntent,
     TOPUP_INITIAL_STATE,
@@ -161,13 +170,13 @@ export function PaymentSheet({
     const result = await purchaseAction(formData);
 
     if (result.success) {
-      setNote(result.message ?? "Payment complete.");
+      setNote(result.message ?? t("sheet.paymentComplete"));
       setStep("done");
     } else {
-      setNote(result.error ?? "That payment could not be completed.");
+      setNote(result.error ?? t("sheet.paymentUnavailable"));
       setStep("failed");
     }
-  }, [purchaseAction, purchaseFields, onFunded]);
+  }, [purchaseAction, purchaseFields, onFunded, t]);
 
   /*
    * Confirm the gateway leg, then buy.
@@ -186,7 +195,7 @@ export function PaymentSheet({
 
     if (!outcome.outcome?.ok) {
       setNote(
-        outcome.outcome?.message ?? outcome.error ?? "That payment was declined.",
+        outcome.outcome?.message ?? outcome.error ?? t("sheet.declined"),
       );
       setStep("failed");
       return;
@@ -208,7 +217,7 @@ export function PaymentSheet({
   }
 
   const intent = intentState.intent;
-  const field = METHOD_FIELDS[method];
+  const field = credentialField(t, method);
 
   return (
     <Dialog open={open} onOpenChange={(next) => { if (!next) close(); }}>
@@ -222,7 +231,7 @@ export function PaymentSheet({
         {/* The amount, always visible. Nothing below it changes what is being
             charged, so it sits outside the step machine. */}
         <p className="flex items-baseline justify-between gap-3 rounded-machined border border-hairline bg-bench px-3 py-2.5">
-          <span className="text-sm text-steel">Amount</span>
+          <span className="text-sm text-steel">{t("sheet.amount")}</span>
           <span className="font-mono text-lg tabular-nums text-enamel">
             {formatMoney(amountMinor)}
           </span>
@@ -232,7 +241,7 @@ export function PaymentSheet({
           <div className="flex flex-col items-center gap-3 py-8">
             <Loader2 aria-hidden className="size-8 animate-spin text-signal" />
             <p className="text-sm text-steel" role="status">
-              Completing your payment…
+              {t("sheet.completing")}
             </p>
           </div>
         ) : null}
@@ -258,7 +267,7 @@ export function PaymentSheet({
               {note}
             </p>
             <p className="text-xs leading-relaxed text-steel">
-              Nothing further has been charged.
+              {t("sheet.nothingCharged")}
             </p>
           </div>
         ) : null}
@@ -279,10 +288,10 @@ export function PaymentSheet({
               <span className="flex items-center gap-2">
                 <Wallet aria-hidden className="size-4 shrink-0 text-steel-soft" />
                 <span>
-                  <span className="block text-sm text-enamel">Pay from balance</span>
+                  <span className="block text-sm text-enamel">{t("sheet.payFromBalance")}</span>
                   <span className="block text-xs text-steel">
-                    {formatMoney(balanceMinor)} available
-                    {canPayFromBalance ? "" : " — not enough for this"}
+                    {t("sheet.available", { amount: formatMoney(balanceMinor) })}
+                    {canPayFromBalance ? "" : t("sheet.notEnough")}
                   </span>
                 </span>
               </span>
@@ -296,10 +305,10 @@ export function PaymentSheet({
               <CreditCard aria-hidden className="size-4 shrink-0 text-steel-soft" />
               <span>
                 <span className="block text-sm text-enamel">
-                  Pay by card, UPI or net banking
+                  {t("sheet.payByGateway")}
                 </span>
                 <span className="block text-xs text-steel">
-                  Simulated — nothing is charged to a real account
+                  {t("sheet.simulatedNote")}
                 </span>
               </span>
             </button>
@@ -313,9 +322,9 @@ export function PaymentSheet({
             <input type="hidden" name="amount" value={(amountMinor / 100).toFixed(2)} />
 
             <div className="flex flex-col gap-1.5">
-              <span className="eyebrow">Pay with</span>
+              <span className="eyebrow">{t("sheet.payWith")}</span>
               <div className="grid gap-2 sm:grid-cols-3">
-                {METHODS.map(({ key: value, label, icon: Icon }) => (
+                {METHODS.map(({ key: value, icon: Icon }) => (
                   <button
                     key={value}
                     type="button"
@@ -329,7 +338,7 @@ export function PaymentSheet({
                     )}
                   >
                     <Icon aria-hidden className="size-4 shrink-0" />
-                    {label}
+                    {t(METHOD_MSG[value])}
                   </button>
                 ))}
               </div>
@@ -342,7 +351,7 @@ export function PaymentSheet({
             ) : null}
 
             <Button type="submit" size="sm" disabled={starting}>
-              {starting ? "Starting…" : "Continue"}
+              {starting ? t("sheet.starting") : t("sheet.continue")}
             </Button>
           </form>
         ) : null}
@@ -369,7 +378,7 @@ export function PaymentSheet({
               </div>
             ) : (
               <p className="text-sm leading-relaxed text-steel">
-                Net banking is simulated end to end — there is no login step.
+                {t("sheet.netbankingNote")}
               </p>
             )}
 
@@ -378,7 +387,7 @@ export function PaymentSheet({
             </p>
 
             <Button type="submit" size="sm">
-              Pay {formatMoney(amountMinor)}
+              {t("sheet.pay", { amount: formatMoney(amountMinor) })}
             </Button>
           </form>
         ) : null}
@@ -387,15 +396,15 @@ export function PaymentSheet({
       <DialogFooter>
         {step === "done" ? (
           <Button type="button" onClick={close}>
-            {confirmLabel ?? "Done"}
+            {confirmLabel ?? t("sheet.done")}
           </Button>
         ) : step === "failed" ? (
           <>
             <Button type="button" variant="ghost" onClick={close}>
-              Close
+              {t("sheet.close")}
             </Button>
             <Button type="button" onClick={reset}>
-              Try again
+              {t("sheet.tryAgain")}
             </Button>
           </>
         ) : (
@@ -405,7 +414,7 @@ export function PaymentSheet({
             onClick={close}
             disabled={step === "working"}
           >
-            Cancel
+            {t("sheet.cancel")}
           </Button>
         )}
       </DialogFooter>
