@@ -1,15 +1,24 @@
 import type { Metadata } from "next";
+import { getTranslations } from "next-intl/server";
 
 import { AuthLink, AuthShell } from "@/components/auth/auth-shell";
 import { ResetPasswordForm } from "@/components/auth/reset-password-form";
 import { getCurrentUser } from "@/lib/auth/session";
+import { DEFAULT_LOCALE, isLocale } from "@/i18n/config";
 
 export const dynamic = "force-dynamic";
 
-export const metadata: Metadata = {
-  title: "Set a new password",
-  robots: { index: false, follow: false },
-};
+type PageProps = { params: Promise<{ locale: string }> };
+
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  const { locale: rawLocale } = await params;
+  const locale = isLocale(rawLocale) ? rawLocale : DEFAULT_LOCALE;
+  const t = await getTranslations({ locale, namespace: "auth" });
+  return {
+    title: t("reset.metaTitle"),
+    robots: { index: false, follow: false },
+  };
+}
 
 /**
  * Reached from the emailed recovery link, which passes through
@@ -20,20 +29,21 @@ export const metadata: Metadata = {
  * `updateUser` requires a session, so the submit would bounce regardless.
  */
 export default async function ResetPasswordPage() {
+  const t = await getTranslations("auth");
   const user = await getCurrentUser();
 
   if (!user) {
     return (
       <AuthShell
-        title="Link expired"
-        intro="Password reset links are single-use and expire after an hour."
-        footer={<AuthLink href="/login">Back to sign in</AuthLink>}
+        title={t("reset.expiredTitle")}
+        intro={t("reset.expiredIntro")}
+        footer={<AuthLink href="/login">{t("reset.back")}</AuthLink>}
       >
         <p className="text-sm leading-relaxed text-steel">
-          Request a fresh link and use it as soon as it arrives.
+          {t("reset.expiredBody")}
         </p>
         <div className="mt-4">
-          <AuthLink href="/forgot-password">Send a new reset link</AuthLink>
+          <AuthLink href="/forgot-password">{t("reset.expiredCta")}</AuthLink>
         </div>
       </AuthShell>
     );
@@ -41,8 +51,8 @@ export default async function ResetPasswordPage() {
 
   return (
     <AuthShell
-      title="Set a new password"
-      intro={`Choose a new password for ${user.email ?? "your account"}.`}
+      title={t("reset.title")}
+      intro={t("reset.intro", { email: user.email ?? t("reset.yourAccount") })}
     >
       <ResetPasswordForm />
     </AuthShell>

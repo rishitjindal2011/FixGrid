@@ -3,11 +3,12 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { headers } from "next/headers";
+import { getLocale, getTranslations } from "next-intl/server";
 import { z } from "zod";
 
 import { createClient } from "@/lib/supabase/server";
 import { authCallbackUrl } from "@/lib/auth/origin";
-import { safeNextPath } from "@/lib/auth/paths";
+import { localizedTarget, safeNextPath } from "@/lib/auth/paths";
 import type { AuthState } from "@/lib/auth/state";
 import { CANONICAL_ORIGIN } from "@/lib/site";
 
@@ -31,6 +32,11 @@ import { CANONICAL_ORIGIN } from "@/lib/site";
  *
  * Cookie writes work here because Server Actions run before headers are sealed —
  * unlike Server Components, where `createClient` swallows the attempt.
+ *
+ * User-facing copy is resolved through `getTranslations("auth")` rather than
+ * module constants: a Server Action runs in the request, so the visitor's locale
+ * is available and the message comes back in their language. The vague,
+ * enumeration-safe wording is unchanged — only the language varies.
  */
 
 /* ── Validation ───────────────────────────────────────────────────────────── */
@@ -39,32 +45,15 @@ import { CANONICAL_ORIGIN } from "@/lib/site";
 // check is whether Supabase accepts it.
 const email = z.string().trim().min(3).max(320).toLowerCase();
 
-/**
- * Eight characters is Supabase's own default minimum. Enforcing it here as well
- * means the user gets a field-level message instead of a raw API error, and the
- * two limits cannot drift apart silently.
- */
-const password = z.string().min(8, "Use at least 8 characters.").max(200);
-
 const next = z.string().max(2000).optional();
 
+// No user-facing messages: sign-in reports one generic failure for any bad
+// input, so these schemas stay at module scope. The two that DO surface
+// field-level messages (sign-up, new password) are built per request, below,
+// where a translator exists.
 const SignInSchema = z.object({ email, password: z.string().min(1).max(200), next });
 
-const SignUpSchema = z.object({
-  email,
-  password,
-  displayName: z.string().trim().min(1, "Tell us what to call you.").max(80),
-  next,
-});
-
 const ResetRequestSchema = z.object({ email });
-
-const NewPasswordSchema = z
-  .object({ password, confirm: z.string().min(1).max(200) })
-  .refine((value) => value.password === value.confirm, {
-    message: "Those passwords don't match.",
-    path: ["confirm"],
-  });
 
 /* ── Action state ─────────────────────────────────────────────────────────── */
 
@@ -118,21 +107,19 @@ async function clientKey(scope: string): Promise<string> {
   return `${scope}:${ip}`;
 }
 
-const THROTTLED = "Too many attempts. Wait a few minutes and try again.";
-const GENERIC_FAILURE = "That email and password combination didn't work.";
-const UNAVAILABLE = "Sign-in is temporarily unavailable. Try again in a moment.";
-
 /* ── Sign in ──────────────────────────────────────────────────────────────── */
 
 export async function signIn(_prev: AuthState, formData: FormData): Promise<AuthState> {
+  const t = await getTranslations("auth");
+
   const parsed = SignInSchema.safeParse({
     email: formData.get("email"),
     password: formData.get("password"),
     next: formData.get("next") ?? undefined,
   });
-  if (!parsed.success) return fail(GENERIC_FAILURE);
+  if (!parsed.success) return fail(t("errors.genericFailure"));
 
-  if (!checkThrottle(await clientKey("signin"))) return fail(THROTTLED);
+  if (!checkThrottle(await clientKey("signin"))) return fail(t("errors.throttled"));
 
   const supabase = await createClient();
   const { error } = await supabase.auth.signInWithPassword({
@@ -145,18 +132,19 @@ export async function signIn(_prev: AuthState, formData: FormData): Promise<Auth
     // correct, and "wrong password" would send the user in circles resetting a
     // password that works. It reveals only what they already know.
     if (error.code === "email_not_confirmed") {
-      return fail("Confirm your email address first — check your inbox for the link.");
+      return fail(t("errors.emailNotConfirmed"));
     }
-    if (error.status === 429) return fail(THROTTLED);
-    if (error.code === "invalid_credentials") return fail(GENERIC_FAILURE);
+    if (error.status === 429) return fail(t("errors.throttled"));
+    if (error.code === "invalid_credentials") return fail(t("errors.genericFailure"));
 
     console.error("[auth] sign-in failed", { code: error.code, status: error.status });
-    return fail(GENERIC_FAILURE);
+    return fail(t("errors.genericFailure"));
   }
 
   // The header renders session state, so every cached shell is now stale.
   revalidatePath("/", "layout");
-  redirect(safeNextPath(parsed.data.next)); // throws — nothing below runs
+  // Locale-preserving: a Hindi sign-in lands on `/hi/…`, not the English page.
+  redirect(localizedTarget(safeNextPath(parsed.data.next), await getLocale())); // throws
 }
 
 export async function signInWithGoogle(formData: FormData): Promise<void> {
@@ -174,7 +162,7 @@ export async function signInWithGoogle(formData: FormData): Promise<void> {
 
   if (error) {
     console.error("[auth] Google sign-in failed", { code: error.code, message: error.message });
-    redirect("/login?error=oauth_failed");
+    redirect(localizedTarget("/login?error=oauth_failed", await getLocale()));
   }
 
   if (data.url) {
@@ -185,6 +173,17 @@ export async function signInWithGoogle(formData: FormData): Promise<void> {
 /* ── Sign up ──────────────────────────────────────────────────────────────── */
 
 export async function signUp(_prev: AuthState, formData: FormData): Promise<AuthState> {
+  const t = await getTranslations("auth");
+
+  // Built here rather than at module scope so the field messages are in the
+  // visitor's language.
+  const SignUpSchema = z.object({
+    email,
+    password: z.string().min(8, t("errors.use8Chars")).max(200),
+    displayName: z.string().trim().min(1, t("errors.tellUsName")).max(80),
+    next,
+  });
+
   const parsed = SignUpSchema.safeParse({
     email: formData.get("email"),
     password: formData.get("password"),
@@ -192,10 +191,10 @@ export async function signUp(_prev: AuthState, formData: FormData): Promise<Auth
     next: formData.get("next") ?? undefined,
   });
   if (!parsed.success) {
-    return fail(firstIssue(parsed.error, "Check the details and try again."));
+    return fail(firstIssue(parsed.error, t("errors.checkDetails")));
   }
 
-  if (!checkThrottle(await clientKey("signup"))) return fail(THROTTLED);
+  if (!checkThrottle(await clientKey("signup"))) return fail(t("errors.throttled"));
 
   const supabase = await createClient();
   const { data, error } = await supabase.auth.signUp({
@@ -211,12 +210,12 @@ export async function signUp(_prev: AuthState, formData: FormData): Promise<Auth
   });
 
   if (error) {
-    if (error.status === 429) return fail(THROTTLED);
+    if (error.status === 429) return fail(t("errors.throttled"));
     if (error.code === "weak_password") {
-      return fail("That password is too easy to guess. Try a longer one.");
+      return fail(t("errors.weakPassword"));
     }
     console.error("[auth] sign-up failed", { code: error.code, status: error.status });
-    return fail("We couldn't create that account. Try again in a moment.");
+    return fail(t("errors.signUpFailed"));
   }
 
   // When confirmations are on, Supabase returns a user with no session and — for
@@ -225,13 +224,10 @@ export async function signUp(_prev: AuthState, formData: FormData): Promise<Auth
   // registered" would confirm who has an account here.
   if (data.session) {
     revalidatePath("/", "layout");
-    redirect(safeNextPath(parsed.data.next));
+    redirect(localizedTarget(safeNextPath(parsed.data.next), await getLocale()));
   }
 
-  return notify(
-    "Check your inbox — we've sent a link to confirm your address. " +
-      "It expires in an hour.",
-  );
+  return notify(t("notices.signupConfirm"));
 }
 
 /* ── Sign out ─────────────────────────────────────────────────────────────── */
@@ -246,7 +242,7 @@ export async function signOut(): Promise<void> {
   if (error) console.error("[auth] sign-out failed", error.message);
 
   revalidatePath("/", "layout");
-  redirect("/");
+  redirect(localizedTarget("/", await getLocale()));
 }
 
 /* ── Password reset ───────────────────────────────────────────────────────── */
@@ -260,14 +256,13 @@ export async function requestPasswordReset(
   _prev: AuthState,
   formData: FormData,
 ): Promise<AuthState> {
-  const SENT =
-    "If that address has an account, a reset link is on its way. " +
-    "Check spam if it hasn't arrived in a few minutes.";
+  const t = await getTranslations("auth");
+  const SENT = t("notices.resetSent");
 
   const parsed = ResetRequestSchema.safeParse({ email: formData.get("email") });
   if (!parsed.success) return notify(SENT);
 
-  if (!checkThrottle(await clientKey("reset"))) return fail(THROTTLED);
+  if (!checkThrottle(await clientKey("reset"))) return fail(t("errors.throttled"));
 
   const supabase = await createClient();
   const { error } = await supabase.auth.resetPasswordForEmail(parsed.data.email, {
@@ -289,12 +284,21 @@ export async function updatePassword(
   _prev: AuthState,
   formData: FormData,
 ): Promise<AuthState> {
+  const t = await getTranslations("auth");
+
+  const NewPasswordSchema = z
+    .object({ password: z.string().min(8, t("errors.use8Chars")).max(200), confirm: z.string().min(1).max(200) })
+    .refine((value) => value.password === value.confirm, {
+      message: t("errors.passwordsDontMatch"),
+      path: ["confirm"],
+    });
+
   const parsed = NewPasswordSchema.safeParse({
     password: formData.get("password"),
     confirm: formData.get("confirm"),
   });
   if (!parsed.success) {
-    return fail(firstIssue(parsed.error, "Check the password and try again."));
+    return fail(firstIssue(parsed.error, t("errors.checkPassword")));
   }
 
   const supabase = await createClient();
@@ -302,15 +306,15 @@ export async function updatePassword(
 
   if (error) {
     if (error.code === "same_password") {
-      return fail("That's already your password. Choose a different one.");
+      return fail(t("errors.samePassword"));
     }
     if (error.status === 401 || error.code === "session_not_found") {
-      return fail("That reset link has expired. Request a new one.");
+      return fail(t("errors.resetLinkExpired"));
     }
     console.error("[auth] password update failed", { code: error.code });
-    return fail(UNAVAILABLE);
+    return fail(t("errors.unavailable"));
   }
 
   revalidatePath("/", "layout");
-  redirect("/account?updated=password");
+  redirect(localizedTarget("/account?updated=password", await getLocale()));
 }

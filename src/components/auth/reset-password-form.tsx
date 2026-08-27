@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
+import { useTranslations } from "next-intl";
 
 import { AuthMessage, Field } from "@/components/auth/auth-shell";
 import { SubmitButton } from "@/components/auth/submit-button";
@@ -9,11 +10,12 @@ import { updatePassword } from "@/lib/auth/actions";
 import { AUTH_INITIAL_STATE } from "@/lib/auth/state";
 
 export function ResetPasswordForm() {
+  const t = useTranslations("auth");
   const [state, formAction] = useActionState(updatePassword, AUTH_INITIAL_STATE);
 
   return (
     <form action={formAction} className="flex flex-col gap-4" noValidate>
-      <Field label="New password" htmlFor="password" hint="At least 8 characters.">
+      <Field label={t("fields.newPassword")} htmlFor="password" hint={t("hints.atLeast8")}>
         <Input
           id="password"
           name="password"
@@ -26,7 +28,7 @@ export function ResetPasswordForm() {
         />
       </Field>
 
-      <Field label="Confirm password" htmlFor="confirm">
+      <Field label={t("fields.confirmPassword")} htmlFor="confirm">
         <Input
           id="confirm"
           name="confirm"
@@ -39,7 +41,7 @@ export function ResetPasswordForm() {
 
       <AuthMessage state={state} />
 
-      <SubmitButton pendingLabel="Saving…">Set new password</SubmitButton>
+      <SubmitButton pendingLabel={t("actions.saving")}>{t("actions.setNewPassword")}</SubmitButton>
     </form>
   );
 }

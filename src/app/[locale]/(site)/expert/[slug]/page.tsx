@@ -57,7 +57,8 @@ function hoursOf(profile: ExpertProfile): HoursInput {
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
-  const { locale, slug } = await params;
+  const { locale: rawLocale, slug } = await params;
+  const locale = isLocale(rawLocale) ? rawLocale : "en";
   const t = await getTranslations({ locale, namespace: "expert" });
 
   const profile = await getExpertBySlug(slug);
@@ -84,14 +85,15 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       type: "profile",
       title,
       description,
-      url: absoluteUrl(withLocale(`/expert/${profile.slug}`, isLocale(locale) ? locale : "en")),
+      url: absoluteUrl(withLocale(`/expert/${profile.slug}`, locale)),
       images: profile.photos[0] ? [profile.photos[0]] : undefined,
     },
   };
 }
 
 export default async function ExpertPage({ params }: PageProps) {
-  const { locale, slug } = await params;
+  const { locale: rawLocale, slug } = await params;
+  const locale = isLocale(rawLocale) ? rawLocale : "en";
   const t = await getTranslations({ locale, namespace: "expert" });
 
   const profile = await getExpertBySlug(slug);

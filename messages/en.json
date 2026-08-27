@@ -268,5 +268,96 @@
     "update": "Update review",
     "success": "Thanks — your review is live.",
     "ratingAria": "Rated {rating} out of 5 from {count, plural, one {# review} other {# reviews}}"
+  },
+  "auth": {
+    "login": {
+      "metaTitle": "Sign in",
+      "metaDescription": "Sign in to write reviews and manage your FixGrid account.",
+      "title": "Sign in",
+      "intro": "Write reviews, and keep track of the shops you've used.",
+      "footerPrompt": "New here?",
+      "footerCta": "Create an account"
+    },
+    "signup": {
+      "metaTitle": "Create an account",
+      "metaDescription": "Create a FixGrid account to review the shops you've used.",
+      "title": "Create an account",
+      "intro": "You only need one to leave a review. Browsing the directory needs nothing at all.",
+      "footerPrompt": "Already have an account?",
+      "footerCta": "Sign in",
+      "expertTitle": "Are you a repair expert?",
+      "expertBody": "Register your shop to take bookings, set your prices and manage your calendar.",
+      "expertCta": "List your shop",
+      "checkSpam": "Didn't get it? The link can take a minute, and it sometimes lands in spam. Reload this page to send another."
+    },
+    "forgot": {
+      "metaTitle": "Reset your password",
+      "title": "Reset your password",
+      "intro": "We'll email you a link to set a new one.",
+      "back": "Back to sign in"
+    },
+    "reset": {
+      "metaTitle": "Set a new password",
+      "title": "Set a new password",
+      "intro": "Choose a new password for {email}.",
+      "yourAccount": "your account",
+      "expiredTitle": "Link expired",
+      "expiredIntro": "Password reset links are single-use and expire after an hour.",
+      "expiredBody": "Request a fresh link and use it as soon as it arrives.",
+      "expiredCta": "Send a new reset link",
+      "back": "Back to sign in"
+    },
+    "fields": {
+      "email": "Email",
+      "password": "Password",
+      "newPassword": "New password",
+      "confirmPassword": "Confirm password",
+      "yourName": "Your name"
+    },
+    "hints": {
+      "nameOnReviews": "Shown on any reviews you write.",
+      "atLeast8": "At least 8 characters."
+    },
+    "placeholders": {
+      "email": "you@example.com",
+      "name": "Alex Fernandes"
+    },
+    "divider": {
+      "email": "Or continue with email",
+      "signupEmail": "Or sign up with email"
+    },
+    "actions": {
+      "signIn": "Sign in",
+      "signingIn": "Signing in…",
+      "createAccount": "Create account",
+      "creatingAccount": "Creating account…",
+      "sendResetLink": "Send reset link",
+      "sending": "Sending…",
+      "setNewPassword": "Set new password",
+      "saving": "Saving…",
+      "forgotPassword": "Forgot your password?",
+      "google": "Continue with Google",
+      "googlePending": "Connecting to Google…"
+    },
+    "errors": {
+      "linkExpiredOrUsed": "That link has expired or was already used. Sign in, or request a new one.",
+      "throttled": "Too many attempts. Wait a few minutes and try again.",
+      "genericFailure": "That email and password combination didn't work.",
+      "unavailable": "Sign-in is temporarily unavailable. Try again in a moment.",
+      "emailNotConfirmed": "Confirm your email address first — check your inbox for the link.",
+      "signUpFailed": "We couldn't create that account. Try again in a moment.",
+      "weakPassword": "That password is too easy to guess. Try a longer one.",
+      "samePassword": "That's already your password. Choose a different one.",
+      "resetLinkExpired": "That reset link has expired. Request a new one.",
+      "checkDetails": "Check the details and try again.",
+      "checkPassword": "Check the password and try again.",
+      "use8Chars": "Use at least 8 characters.",
+      "tellUsName": "Tell us what to call you.",
+      "passwordsDontMatch": "Those passwords don't match."
+    },
+    "notices": {
+      "signupConfirm": "Check your inbox — we've sent a link to confirm your address. It expires in an hour.",
+      "resetSent": "If that address has an account, a reset link is on its way. Check spam if it hasn't arrived in a few minutes."
+    }
   }
 }

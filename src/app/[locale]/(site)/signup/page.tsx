@@ -1,37 +1,50 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 import { Store } from "lucide-react";
 
 import { AuthLink, AuthShell } from "@/components/auth/auth-shell";
 import { SignUpForm } from "@/components/auth/sign-up-form";
-import { DEFAULT_SIGNED_IN_PATH, safeNextPath } from "@/lib/auth/paths";
+import { DEFAULT_SIGNED_IN_PATH, localizedTarget, safeNextPath } from "@/lib/auth/paths";
 import { getCurrentUser } from "@/lib/auth/session";
+import { DEFAULT_LOCALE, isLocale } from "@/i18n/config";
 
 export const dynamic = "force-dynamic";
 
-export const metadata: Metadata = {
-  title: "Create an account",
-  description: "Create a FixGrid account to review the shops you've used.",
-  robots: { index: false, follow: false },
+type PageProps = {
+  params: Promise<{ locale: string }>;
+  searchParams: Promise<{ next?: string }>;
 };
 
-type PageProps = { searchParams: Promise<{ next?: string }> };
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  const { locale: rawLocale } = await params;
+  const locale = isLocale(rawLocale) ? rawLocale : DEFAULT_LOCALE;
+  const t = await getTranslations({ locale, namespace: "auth" });
+  return {
+    title: t("signup.metaTitle"),
+    description: t("signup.metaDescription"),
+    robots: { index: false, follow: false },
+  };
+}
 
-export default async function SignUpPage({ searchParams }: PageProps) {
+export default async function SignUpPage({ params, searchParams }: PageProps) {
+  const { locale: rawLocale } = await params;
+  const locale = isLocale(rawLocale) ? rawLocale : DEFAULT_LOCALE;
   const { next } = await searchParams;
   const target = safeNextPath(next);
+  const t = await getTranslations({ locale, namespace: "auth" });
 
-  if (await getCurrentUser()) redirect(target);
+  if (await getCurrentUser()) redirect(localizedTarget(target, locale));
 
   return (
     <AuthShell
-      title="Create an account"
-      intro="You only need one to leave a review. Browsing the directory needs nothing at all."
+      title={t("signup.title")}
+      intro={t("signup.intro")}
       footer={
         <>
-          Already have an account?{" "}
+          {t("signup.footerPrompt")}{" "}
           <AuthLink href={next ? `/login?next=${encodeURIComponent(target)}` : "/login"}>
-            Sign in
+            {t("signup.footerCta")}
           </AuthLink>
         </>
       }
@@ -55,12 +68,11 @@ export default async function SignUpPage({ searchParams }: PageProps) {
         </span>
         <div className="min-w-0">
           <p className="font-display text-sm uppercase tracking-wide text-enamel">
-            Are you a repair expert?
+            {t("signup.expertTitle")}
           </p>
           <p className="mt-0.5 text-sm leading-relaxed text-steel">
-            Register your shop to take bookings, set your prices and manage your
-            calendar.{" "}
-            <AuthLink href="/join">List your shop</AuthLink>
+            {t("signup.expertBody")}{" "}
+            <AuthLink href="/join">{t("signup.expertCta")}</AuthLink>
           </p>
         </div>
       </div>

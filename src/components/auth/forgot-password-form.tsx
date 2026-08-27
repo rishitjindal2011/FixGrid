@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
+import { useTranslations } from "next-intl";
 
 import { AuthMessage, Field } from "@/components/auth/auth-shell";
 import { SubmitButton } from "@/components/auth/submit-button";
@@ -9,6 +10,7 @@ import { requestPasswordReset } from "@/lib/auth/actions";
 import { AUTH_INITIAL_STATE } from "@/lib/auth/state";
 
 export function ForgotPasswordForm() {
+  const t = useTranslations("auth");
   const [state, formAction] = useActionState(requestPasswordReset, AUTH_INITIAL_STATE);
 
   // The notice is deliberately the same whether or not the address exists, so
@@ -17,7 +19,7 @@ export function ForgotPasswordForm() {
 
   return (
     <form action={formAction} className="flex flex-col gap-4" noValidate>
-      <Field label="Email" htmlFor="email">
+      <Field label={t("fields.email")} htmlFor="email">
         <Input
           id="email"
           name="email"
@@ -26,13 +28,13 @@ export function ForgotPasswordForm() {
           required
           autoFocus
           spellCheck={false}
-          placeholder="you@example.com"
+          placeholder={t("placeholders.email")}
         />
       </Field>
 
       <AuthMessage state={state} />
 
-      <SubmitButton pendingLabel="Sending…">Send reset link</SubmitButton>
+      <SubmitButton pendingLabel={t("actions.sending")}>{t("actions.sendResetLink")}</SubmitButton>
     </form>
   );
 }
