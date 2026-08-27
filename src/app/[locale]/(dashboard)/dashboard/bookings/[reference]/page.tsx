@@ -3,6 +3,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import type { Metadata } from "next";
+import { getTranslations } from "next-intl/server";
+import { useTranslations } from "next-intl";
 import {
   ArrowLeft,
   Building2,
@@ -40,15 +42,17 @@ import {
   formatSlot,
 } from "@/lib/format";
 import {
-  DELIVERY_MODE_LABELS,
   type AttachmentKind,
   type DeliveryMode,
 } from "@/lib/types/marketplace";
 
-export const metadata: Metadata = {
-  title: "Booking",
-  robots: { index: false, follow: false },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("dashboard.bookingDetail");
+  return {
+    title: t("metaTitle"),
+    robots: { index: false, follow: false },
+  };
+}
 
 const MODE_ICON: Record<DeliveryMode, typeof Building2> = {
   in_shop: Building2,
@@ -56,10 +60,10 @@ const MODE_ICON: Record<DeliveryMode, typeof Building2> = {
   pickup_drop: Car,
 };
 
-const ATTACHMENT_LABELS: Record<AttachmentKind, string> = {
-  fault: "What was wrong",
-  completion: "After the repair",
-  evidence: "Claim evidence",
+const ATTACHMENT_KEY: Record<AttachmentKind, string> = {
+  fault: "attFault",
+  completion: "attCompletion",
+  evidence: "attEvidence",
 };
 
 /**
@@ -140,8 +144,9 @@ function AttachmentTile({
   item: BookingAttachment;
   url: string | null;
 }) {
+  const t = useTranslations("dashboard.bookingDetail");
   const isImage = (item.mimeType ?? "").startsWith("image/");
-  const label = item.fileName ?? ATTACHMENT_LABELS[item.kind];
+  const label = item.fileName ?? t(ATTACHMENT_KEY[item.kind]);
 
   // `unoptimized` deliberately: the route requires the caller's session cookie,
   // and the image optimiser fetches server-side without one — it would get a 404
@@ -163,7 +168,7 @@ function AttachmentTile({
           className="h-24 w-full object-cover transition-opacity group-hover:opacity-90"
         />
         <span className="block truncate px-2 py-1.5 text-xs text-steel">
-          {ATTACHMENT_LABELS[item.kind]}
+          {t(ATTACHMENT_KEY[item.kind])}
         </span>
       </a>
     );
@@ -187,7 +192,7 @@ function AttachmentTile({
     </a>
   ) : (
     <span
-      title="This file cannot be shown right now."
+      title={t("fileUnavailable")}
       className="flex items-center gap-2 rounded-machined border border-dashed border-hairline bg-bench/40 px-3 py-2.5 text-sm text-steel-soft"
     >
       {chip}
@@ -260,7 +265,9 @@ export default async function BookingDetailPage({
 
   const ModeIcon = MODE_ICON[booking.delivery_mode];
   const lines = addressLines(booking);
-  const title = booking.service?.name ?? booking.device_details ?? "Repair booking";
+  const t = await getTranslations("dashboard.bookingDetail");
+  const tDelivery = await getTranslations("deliveryModes");
+  const title = booking.service?.name ?? booking.device_details ?? t("repairFallback");
 
   return (
     <div className="flex flex-col gap-6">
@@ -270,7 +277,7 @@ export default async function BookingDetailPage({
           className="inline-flex items-center gap-1.5 font-mono text-eyebrow uppercase tracking-[0.14em] text-steel hover:text-signal"
         >
           <ArrowLeft aria-hidden className="size-3.5" />
-          All bookings
+          {t("allBookings")}
         </Link>
       </div>
 
@@ -294,7 +301,7 @@ export default async function BookingDetailPage({
                   {booking.shop.shop_name}
                 </Link>
               ) : (
-                (booking.shop?.shop_name ?? "Shop removed")
+                (booking.shop?.shop_name ?? t("shopRemoved"))
               )}
             </p>
 
@@ -308,7 +315,7 @@ export default async function BookingDetailPage({
               <Button asChild variant="outline" size="sm">
                 <Link href={`/dashboard/messages/${thread.id}`}>
                   <MessagesSquare aria-hidden />
-                  Message the shop
+                  {t("messageShop")}
                 </Link>
               </Button>
             </div>
@@ -320,16 +327,16 @@ export default async function BookingDetailPage({
         <div className="flex flex-col gap-6 lg:col-span-3">
           <section>
             <h2 className="pb-3 font-display text-lg uppercase tracking-wide text-enamel">
-              Timeline
+              {t("timeline")}
             </h2>
             <BookingTimeline events={booking.events} now={now} timeZone={timeZone} />
           </section>
 
           {booking.device_details?.trim() || booking.customer_notes?.trim() ? (
-            <Panel title="The job" icon={Wrench}>
+            <Panel title={t("jobPanel")} icon={Wrench}>
               <dl className="flex flex-col gap-4">
                 {booking.device_details?.trim() ? (
-                  <Field label="Device">
+                  <Field label={t("deviceLabel")}>
                     <span className="whitespace-pre-wrap break-words leading-relaxed">
                       {booking.device_details}
                     </span>
@@ -337,7 +344,7 @@ export default async function BookingDetailPage({
                 ) : null}
 
                 {booking.customer_notes?.trim() ? (
-                  <Field label="Your notes">
+                  <Field label={t("notesLabel")}>
                     <span className="whitespace-pre-wrap break-words leading-relaxed text-steel">
                       {booking.customer_notes}
                     </span>
@@ -348,7 +355,7 @@ export default async function BookingDetailPage({
           ) : null}
 
           {booking.cancellation_reason?.trim() ? (
-            <Panel title="Reason given">
+            <Panel title={t("reasonGiven")}>
               <p className="whitespace-pre-wrap break-words text-sm leading-relaxed text-steel">
                 {booking.cancellation_reason}
               </p>
@@ -356,7 +363,7 @@ export default async function BookingDetailPage({
           ) : null}
 
           {booking.attachments.length > 0 ? (
-            <Panel title="Photos" icon={Paperclip}>
+            <Panel title={t("photos")} icon={Paperclip}>
               <div className="grid gap-2 sm:grid-cols-3">
                 {booking.attachments.map((item) => (
                   <AttachmentTile
@@ -372,7 +379,7 @@ export default async function BookingDetailPage({
 
         <aside className="flex flex-col gap-6 lg:col-span-2">
           {actions.length > 0 || canReschedule || showCalendar ? (
-            <Panel title="What you can do">
+            <Panel title={t("whatYouCanDo")}>
               <div className="flex flex-col gap-3">
                 <BookingActions
                   bookingId={booking.id}
@@ -394,7 +401,7 @@ export default async function BookingDetailPage({
                 {showCalendar && start && end ? (
                   <AddToCalendar
                     reference={booking.reference}
-                    summary={`${title} — ${booking.shop?.shop_name ?? "Repair"}`}
+                    summary={`${title} — ${booking.shop?.shop_name ?? t("repairShopFallback")}`}
                     start={start}
                     end={end}
                     location={
@@ -402,44 +409,47 @@ export default async function BookingDetailPage({
                         ? (booking.shop?.address ?? null)
                         : lines.join(", ")
                     }
-                    description={`Booking ${booking.reference}. ${DELIVERY_MODE_LABELS[booking.delivery_mode]}.`}
+                    description={t("calDescription", {
+                      reference: booking.reference,
+                      mode: tDelivery(booking.delivery_mode),
+                    })}
                   />
                 ) : null}
               </div>
             </Panel>
           ) : null}
 
-          <Panel title="Appointment">
+          <Panel title={t("appointment")}>
             <dl className="flex flex-col gap-4">
-              <Field label="Slot">
+              <Field label={t("slotLabel")}>
                 {start && end ? (
                   <span className="font-mono tabular-nums">
                     {formatSlot(start, end, timeZone)}
                   </span>
                 ) : (
-                  <span className="text-steel">No time agreed yet</span>
+                  <span className="text-steel">{t("noTimeAgreed")}</span>
                 )}
               </Field>
 
-              <Field label="Runs for">
+              <Field label={t("runsFor")}>
                 <span className="font-mono tabular-nums">
                   {formatDuration(durationMinutes)}
                 </span>
               </Field>
 
-              <Field label="How">
+              <Field label={t("howLabel")}>
                 <span className="flex items-center gap-2">
                   <ModeIcon aria-hidden className="size-4 shrink-0 text-steel-soft" />
-                  {DELIVERY_MODE_LABELS[booking.delivery_mode]}
+                  {tDelivery(booking.delivery_mode)}
                 </span>
               </Field>
 
-              <Field label={booking.delivery_mode === "in_shop" ? "Shop address" : "Address"}>
+              <Field label={booking.delivery_mode === "in_shop" ? t("shopAddressLabel") : t("addressLabel")}>
                 {booking.delivery_mode === "in_shop" ? (
                   <span className="flex items-start gap-2">
                     <MapPin aria-hidden className="mt-0.5 size-4 shrink-0 text-steel-soft" />
                     <span className="leading-relaxed">
-                      {booking.shop?.address ?? "Address unavailable"}
+                      {booking.shop?.address ?? t("addressUnavailable")}
                     </span>
                   </span>
                 ) : lines.length > 0 ? (
@@ -454,13 +464,13 @@ export default async function BookingDetailPage({
                     </span>
                   </span>
                 ) : (
-                  <span className="text-steel">No address on this booking</span>
+                  <span className="text-steel">{t("noAddress")}</span>
                 )}
               </Field>
             </dl>
           </Panel>
 
-          <Panel title="Cost" icon={Receipt}>
+          <Panel title={t("cost")} icon={Receipt}>
             {servicePence !== null && totalPence !== null ? (
               <>
                 <CostBreakdown
@@ -473,74 +483,74 @@ export default async function BookingDetailPage({
 
                 {booking.final_amount === null && booking.quoted_amount !== null ? (
                   <p className="pt-3 text-xs leading-relaxed text-steel">
-                    This is the quote. The final figure is set when the shop marks the
-                    repair complete.
+                    {t("quoteNote")}
                   </p>
                 ) : null}
 
                 <div className="pt-4">
                   <Button asChild variant="outline" size="sm" className="w-full">
-                    <Link href={`/dashboard/billing/${booking.reference}`}>View invoice</Link>
+                    <Link href={`/dashboard/billing/${booking.reference}`}>{t("viewInvoice")}</Link>
                   </Button>
                 </div>
               </>
             ) : (
               <p className="text-sm leading-relaxed text-steel">
-                No price agreed yet. The shop sends a quote once they have looked at what
-                you have described.
+                {t("noPriceYet")}
               </p>
             )}
           </Panel>
 
-          <Panel title="Warranty" icon={ShieldCheck}>
+          <Panel title={t("warranty")} icon={ShieldCheck}>
             {booking.warranty_expires_at ? (
               warrantyOpen ? (
                 <div className="flex flex-col gap-2">
                   <p className="font-mono text-2xl leading-none tabular-nums text-verdigris">
                     {daysUntil(booking.warranty_expires_at, now)}
-                    <span className="pl-2 font-sans text-sm text-steel">days left</span>
+                    <span className="pl-2 font-sans text-sm text-steel">{t("daysLeft")}</span>
                   </p>
                   <p className="text-sm leading-relaxed text-steel">
-                    Covered until {formatDateLong(booking.warranty_expires_at, timeZone)}. If
-                    the fault comes back inside the window, raise a claim.
+                    {t("coveredUntil", {
+                      date: formatDateLong(booking.warranty_expires_at, timeZone),
+                    })}
                   </p>
                   <Button asChild variant="outline" size="sm" className="mt-1 w-full">
                     <Link
                       href={`/dashboard/warranty/new?booking=${encodeURIComponent(booking.reference)}`}
                     >
-                      Raise a claim
+                      {t("raiseClaim")}
                     </Link>
                   </Button>
                 </div>
               ) : (
                 <p className="text-sm leading-relaxed text-steel">
-                  The warranty on this repair closed on{" "}
-                  {formatDateLong(booking.warranty_expires_at, timeZone)}.
+                  {t("warrantyClosed", {
+                    date: formatDateLong(booking.warranty_expires_at, timeZone),
+                  })}
                 </p>
               )
             ) : (
               <p className="text-sm leading-relaxed text-steel">
                 {booking.warranty_days > 0
-                  ? `${booking.warranty_days} days of cover start the moment the shop marks this repair complete.`
-                  : "No warranty is recorded on this booking."}
+                  ? t("coverStarts", { days: booking.warranty_days })
+                  : t("noWarranty")}
               </p>
             )}
           </Panel>
 
-          <Panel title="Shop">
+          <Panel title={t("shopPanel")}>
             <dl className="flex flex-col gap-4">
-              <Field label="Name">
+              <Field label={t("nameLabel")}>
                 {booking.shop?.slug ? (
                   <Link href={`/expert/${booking.shop.slug}`} className="hover:text-signal">
                     {booking.shop.shop_name}
                   </Link>
                 ) : (
-                  (booking.shop?.shop_name ?? "Shop removed")
+                  (booking.shop?.shop_name ?? t("shopRemoved"))
                 )}
               </Field>
 
               {booking.shop?.contact_phone ? (
-                <Field label="Phone">
+                <Field label={t("phoneLabel")}>
                   <a
                     href={`tel:${booking.shop.contact_phone}`}
                     className="font-mono tabular-nums hover:text-signal"
@@ -550,7 +560,7 @@ export default async function BookingDetailPage({
                 </Field>
               ) : null}
 
-              <Field label="Reference">
+              <Field label={t("referenceLabel")}>
                 <span className="font-mono uppercase tracking-[0.08em]">
                   {booking.reference}
                 </span>
@@ -562,12 +572,12 @@ export default async function BookingDetailPage({
                 <Button asChild variant="outline" size="sm" className="w-full">
                   <Link href={`/dashboard/messages/${thread.id}`}>
                     <MessagesSquare aria-hidden />
-                    Open the thread
+                    {t("openThread")}
                   </Link>
                 </Button>
               ) : (
                 <p className="text-xs leading-relaxed text-steel-soft">
-                  Messaging is unavailable for this booking right now.
+                  {t("messagingUnavailable")}
                 </p>
               )}
             </div>

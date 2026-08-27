@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { useActionState } from "react";
+import { useTranslations } from "next-intl";
 import { AlertTriangle, CalendarClock, CheckCircle2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -124,6 +125,7 @@ function RescheduleForm({
 
   const startId = React.useId();
   const noteId = React.useId();
+  const t = useTranslations("dashboard.reschedule");
 
   /**
    * Rewrites the typed wall clock into absolute instants before the server
@@ -149,24 +151,23 @@ function RescheduleForm({
     return (
       <>
         <DialogHeader>
-          <DialogTitle>Time proposed</DialogTitle>
+          <DialogTitle>{t("proposedTitle")}</DialogTitle>
           <DialogDescription>
-            {state.message ?? "New time proposed."}
+            {state.message ?? t("proposedDefault")}
           </DialogDescription>
         </DialogHeader>
 
         <DialogBody>
           <p className="flex items-start gap-2 rounded-machined border border-verdigris/30 bg-verdigris-wash px-3 py-2.5 text-sm text-enamel">
             <CheckCircle2 aria-hidden className="mt-0.5 size-4 shrink-0 text-verdigris" />
-            The shop has it in their thread and on this booking&apos;s timeline. Your
-            existing slot stands until they agree.
+            {t("proposedBody")}
           </p>
         </DialogBody>
 
         <DialogFooter>
           <DialogClose asChild>
             <Button type="button" size="sm">
-              Done
+              {t("done")}
             </Button>
           </DialogClose>
         </DialogFooter>
@@ -179,16 +180,16 @@ function RescheduleForm({
       <input type="hidden" name="bookingId" value={bookingId} />
 
       <DialogHeader>
-        <DialogTitle>Propose a new time</DialogTitle>
+        <DialogTitle>{t("propose")}</DialogTitle>
         <DialogDescription>
-          This sends the shop a suggestion. Nothing moves until they accept it.
+          {t("formDesc")}
         </DialogDescription>
       </DialogHeader>
 
       <DialogBody className="flex flex-col gap-4">
         <div className="flex flex-col gap-1.5">
           <label htmlFor={startId} className="eyebrow">
-            New start time
+            {t("startLabel")}
           </label>
           <input
             id={startId}
@@ -200,21 +201,21 @@ function RescheduleForm({
             className="w-full rounded-machined border border-hairline bg-chalk px-3 py-2 font-mono text-[0.95rem] tabular-nums text-enamel focus:border-signal focus:outline-none"
           />
           <p className="text-xs text-steel">
-            {zoneLabel ? `Times are the shop's local clock (${zoneLabel}). ` : ""}
-            Runs for {formatDuration(durationMinutes)}.
+            {zoneLabel ? t("zoneHint", { zone: zoneLabel }) : ""}
+            {t("runsFor", { duration: formatDuration(durationMinutes) })}
           </p>
         </div>
 
         <div className="flex flex-col gap-1.5">
           <label htmlFor={noteId} className="eyebrow">
-            Note — optional
+            {t("noteLabel")}
           </label>
           <Textarea
             id={noteId}
             name="note"
             rows={3}
             maxLength={2000}
-            placeholder="Anything that helps them say yes — when you are free, why the change."
+            placeholder={t("notePlaceholder")}
           />
         </div>
 
@@ -233,11 +234,11 @@ function RescheduleForm({
       <DialogFooter>
         <DialogClose asChild>
           <Button type="button" variant="outline" size="sm">
-            Back
+            {t("back")}
           </Button>
         </DialogClose>
         <Button type="submit" size="sm" disabled={pending}>
-          {pending ? "Sending…" : "Send proposal"}
+          {pending ? t("sending") : t("send")}
         </Button>
       </DialogFooter>
     </form>
@@ -245,12 +246,13 @@ function RescheduleForm({
 }
 
 export function RescheduleDialog(props: RescheduleProps) {
+  const t = useTranslations("dashboard.reschedule");
   return (
     <Dialog>
       <DialogTrigger asChild>
         <Button variant="outline" size="sm" className="w-full">
           <CalendarClock aria-hidden />
-          Propose a new time
+          {t("propose")}
         </Button>
       </DialogTrigger>
 

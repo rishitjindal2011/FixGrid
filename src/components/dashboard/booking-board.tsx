@@ -16,13 +16,14 @@ import { type BookingStatus } from "@/lib/types/marketplace";
  * Deliberately not derived from `ACTIVE_BOOKING_STATUSES`: that constant is a
  * membership test and its order carries no promise, where these are columns
  * whose sequence *is* the meaning. The blurb answers the only question a
- * customer has about a column — whose move is it.
+ * customer has about a column — whose move is it. The blurb is carried as a
+ * message key rather than English text so the column stays translated.
  */
-const COLUMNS: readonly { status: BookingStatus; blurb: string }[] = [
-  { status: "requested", blurb: "Waiting on the shop" },
-  { status: "accepted", blurb: "Waiting on you" },
-  { status: "confirmed", blurb: "Booked in" },
-  { status: "in_progress", blurb: "On the bench" },
+const COLUMNS: readonly { status: BookingStatus; blurbKey: string }[] = [
+  { status: "requested", blurbKey: "blurbRequested" },
+  { status: "accepted", blurbKey: "blurbAccepted" },
+  { status: "confirmed", blurbKey: "blurbConfirmed" },
+  { status: "in_progress", blurbKey: "blurbInProgress" },
 ];
 
 /**
@@ -42,9 +43,11 @@ const COLUMNS: readonly { status: BookingStatus; blurb: string }[] = [
  */
 export function BookingBoard({ bookings }: { bookings: CustomerBooking[] }) {
   const tStatus = useTranslations("statuses");
+  const tBoard = useTranslations("dashboard.bookingBoard");
   const columns = COLUMNS.map((column) => ({
     ...column,
     label: tStatus(column.status),
+    blurb: tBoard(column.blurbKey),
     bookings: bookings.filter((booking) => booking.status === column.status),
   }));
 
@@ -73,7 +76,7 @@ export function BookingBoard({ bookings }: { bookings: CustomerBooking[] }) {
                 ))
               ) : (
                 <p className="rounded-machined border border-dashed border-hairline px-3 py-6 text-center text-xs text-steel-soft">
-                  Nothing here
+                  {tBoard("nothingHere")}
                 </p>
               )}
             </div>
@@ -107,7 +110,7 @@ export function BookingBoard({ bookings }: { bookings: CustomerBooking[] }) {
                   </div>
                 ) : (
                   <p className="rounded-machined border border-dashed border-hairline px-3 py-5 text-center text-xs text-steel-soft">
-                    Nothing at this stage
+                    {tBoard("nothingStage")}
                   </p>
                 )}
               </AccordionContent>

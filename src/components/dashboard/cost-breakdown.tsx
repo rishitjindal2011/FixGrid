@@ -1,3 +1,5 @@
+import { useTranslations } from "next-intl";
+
 import { formatMoney } from "@/lib/format";
 
 /**
@@ -29,17 +31,18 @@ export function CostBreakdown({
   currency?: string;
   refundedPence?: number;
 }) {
+  const t = useTranslations("dashboard.costBreakdown");
   return (
     <dl className="flex flex-col gap-2">
-      <Row label="Service" value={formatMoney(servicePence, currency)} />
-      <Row label="Platform fee" value={formatMoney(platformFeePence, currency)} />
+      <Row label={t("service")} value={formatMoney(servicePence, currency)} />
+      <Row label={t("platformFee")} value={formatMoney(platformFeePence, currency)} />
       {/* A shop that charges no VAT must not be asked to explain a ₹0 row. */}
       {taxPence > 0 ? (
-        <Row label="VAT" value={formatMoney(taxPence, currency)} />
+        <Row label={t("vat")} value={formatMoney(taxPence, currency)} />
       ) : null}
 
       <div className="flex items-baseline justify-between gap-4 border-t border-hairline pt-2.5">
-        <dt className="font-display text-sm uppercase tracking-wide text-enamel">Total</dt>
+        <dt className="font-display text-sm uppercase tracking-wide text-enamel">{t("total")}</dt>
         <dd className="font-mono text-lg font-semibold tabular-nums text-enamel">
           {formatMoney(totalPence, currency)}
         </dd>
@@ -47,7 +50,7 @@ export function CostBreakdown({
 
       {refundedPence > 0 ? (
         <div className="flex items-baseline justify-between gap-4">
-          <dt className="text-sm text-steel">Refunded</dt>
+          <dt className="text-sm text-steel">{t("refunded")}</dt>
           <dd className="font-mono tabular-nums text-verdigris">
             {formatMoney(refundedPence, currency)}
           </dd>

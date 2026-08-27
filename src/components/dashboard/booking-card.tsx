@@ -41,6 +41,7 @@ export function BookingCard({
   const end = slotEnd(booking.slot);
   const ModeIcon = MODE_ICON[booking.delivery_mode];
   const tDelivery = useTranslations("deliveryModes");
+  const t = useTranslations("dashboard.bookingCard");
 
   // The quote once it exists, the final price once the job is done. Before
   // either, no number at all — "₹0" would read as free.
@@ -64,23 +65,23 @@ export function BookingCard({
         </div>
 
         <p className="truncate pt-2 font-display text-base uppercase tracking-wide text-enamel">
-          {booking.service?.name ?? booking.device_details ?? "Repair booking"}
+          {booking.service?.name ?? booking.device_details ?? t("repairFallback")}
         </p>
 
         <p className="truncate pt-0.5 text-sm text-steel">
-          {booking.shop?.shop_name ?? "Shop removed"}
+          {booking.shop?.shop_name ?? t("shopRemoved")}
         </p>
 
         <dl className="flex flex-wrap items-center gap-x-4 gap-y-1 pt-2.5 text-xs text-steel">
           {start && end ? (
             <div className="flex items-center gap-1.5">
-              <dt className="sr-only">Slot</dt>
+              <dt className="sr-only">{t("srSlot")}</dt>
               <dd className="font-mono tabular-nums">{formatSlot(start, end, timeZone)}</dd>
             </div>
           ) : null}
 
           <div className="flex items-center gap-1.5">
-            <dt className="sr-only">Service type</dt>
+            <dt className="sr-only">{t("srServiceType")}</dt>
             <dd className="flex items-center gap-1.5">
               <ModeIcon aria-hidden className="size-3.5 text-steel-soft" />
               {tDelivery(booking.delivery_mode)}
@@ -89,7 +90,7 @@ export function BookingCard({
 
           {booking.address_city ? (
             <div className="flex items-center gap-1.5">
-              <dt className="sr-only">Location</dt>
+              <dt className="sr-only">{t("srLocation")}</dt>
               <dd className="flex items-center gap-1.5">
                 <MapPin aria-hidden className="size-3.5 text-steel-soft" />
                 {booking.address_city}

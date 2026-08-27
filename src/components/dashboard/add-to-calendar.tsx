@@ -1,4 +1,5 @@
 import { CalendarPlus, Download } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { Button } from "@/components/ui/button";
 
@@ -35,6 +36,7 @@ export function AddToCalendar({
   location?: string | null;
   description?: string | null;
 }) {
+  const t = useTranslations("dashboard.addToCalendar");
   const google = new URL("https://calendar.google.com/calendar/render");
   google.searchParams.set("action", "TEMPLATE");
   google.searchParams.set("text", summary);
@@ -49,14 +51,14 @@ export function AddToCalendar({
             as the route segment, "calendar", with no extension. */}
         <a href={`/dashboard/bookings/${encodeURIComponent(reference)}/calendar`} download={`${reference}.ics`}>
           <Download aria-hidden />
-          Download .ics
+          {t("downloadIcs")}
         </a>
       </Button>
 
       <Button asChild variant="outline" size="sm" className="w-full">
         <a href={google.toString()} target="_blank" rel="noreferrer noopener">
           <CalendarPlus aria-hidden />
-          Add to Google Calendar
+          {t("addGoogle")}
         </a>
       </Button>
     </div>
