@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { getTranslations } from "next-intl/server";
 import { Bell, Search, Settings, Store, UserRound } from "lucide-react";
 
 import { DashboardSidebarSheet } from "@/components/dashboard/sidebar";
@@ -25,7 +26,7 @@ import type { OwnedShop } from "@/lib/dashboard/owned-shop";
  * the session read stays on the server and the bell's unread count arrives with
  * the HTML rather than after a round-trip.
  */
-export function DashboardTopbar({
+export async function DashboardTopbar({
   user,
   shop,
   unreadCount,
@@ -43,6 +44,8 @@ export function DashboardTopbar({
   pendingRequests?: number;
   openDisputes?: number;
 }) {
+  const t = await getTranslations("dashboard.topbar");
+
   return (
     <header className="sticky top-0 z-20 flex h-16 items-center gap-2 border-b border-hairline bg-bench/85 px-4 backdrop-blur-sm">
       {/* Only the mobile trigger lives here. The desktop rail is rendered by the
@@ -63,7 +66,7 @@ export function DashboardTopbar({
       <Button asChild variant="ghost" size="sm" className="hidden sm:inline-flex">
         <Link href="/dashboard/discover">
           <Search aria-hidden />
-          Find an expert
+          {t("findExpert")}
         </Link>
       </Button>
 
@@ -85,11 +88,11 @@ export function DashboardTopbar({
                   {unreadCount > 9 ? "9+" : unreadCount}
                 </span>
                 <span className="sr-only">
-                  Notifications, {unreadCount} unread
+                  {t("notificationsUnread", { count: unreadCount })}
                 </span>
               </>
             ) : (
-              <span className="sr-only">Notifications</span>
+              <span className="sr-only">{t("notifications")}</span>
             )}
           </Link>
         </Button>
@@ -104,7 +107,7 @@ export function DashboardTopbar({
               <span className="hidden max-w-[14ch] truncate font-display text-sm uppercase tracking-wide text-enamel md:inline">
                 {user.displayName}
               </span>
-              <span className="sr-only">Open account menu</span>
+              <span className="sr-only">{t("openAccountMenu")}</span>
             </button>
           </DropdownMenuTrigger>
 
@@ -123,21 +126,21 @@ export function DashboardTopbar({
             <DropdownMenuItem asChild>
               <Link href="/dashboard/settings/profile">
                 <UserRound aria-hidden className="size-4" />
-                Your profile
+                {t("yourProfile")}
               </Link>
             </DropdownMenuItem>
 
             <DropdownMenuItem asChild>
               <Link href="/dashboard/settings/notifications">
                 <Settings aria-hidden className="size-4" />
-                Settings
+                {t("settings")}
               </Link>
             </DropdownMenuItem>
 
             <DropdownMenuItem asChild>
               <Link href={shop ? "/dashboard/expert" : "/join"}>
                 <Store aria-hidden className="size-4" />
-                {shop ? "Expert dashboard" : "List your shop"}
+                {shop ? t("expertDashboard") : t("listShop")}
               </Link>
             </DropdownMenuItem>
 

@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 
 /**
@@ -19,27 +20,28 @@ export default function GlobalError({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
+  const t = useTranslations("errorPage");
+
   React.useEffect(() => {
     console.error("[app] unhandled error:", error);
   }, [error]);
 
   return (
     <div className="mx-auto max-w-lg px-4 py-24 text-center">
-      <p className="eyebrow text-rust">Something broke</p>
-      <h1 className="mt-3 text-display">That didn&apos;t load</h1>
+      <p className="eyebrow text-rust">{t("eyebrow")}</p>
+      <h1 className="mt-3 text-display">{t("heading")}</h1>
       <p className="mt-4 leading-relaxed text-steel">
-        An unexpected error stopped this page from rendering. Trying again usually works —
-        if it doesn&apos;t, the problem is on our side.
+        {t("body")}
       </p>
 
       {error.digest ? (
         <p className="mt-6 font-mono text-eyebrow uppercase tracking-[0.14em] text-steel-soft">
-          Reference {error.digest}
+          {t("reference", { digest: error.digest })}
         </p>
       ) : null}
 
       <Button size="lg" className="mt-8" onClick={reset}>
-        Try again
+        {t("tryAgain")}
       </Button>
     </div>
   );

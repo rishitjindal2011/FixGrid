@@ -1,9 +1,10 @@
 import { headers } from "next/headers";
-import { redirect } from "next/navigation";
+import { getLocale } from "next-intl/server";
 
 import { OnboardingGate } from "@/components/dashboard/onboarding-gate";
 import { DashboardSidebarRail } from "@/components/dashboard/sidebar";
 import { DashboardTopbar } from "@/components/dashboard/topbar";
+import { redirect } from "@/i18n/navigation";
 import { getCurrentUser } from "@/lib/auth/session";
 import { safeNextPath } from "@/lib/auth/paths";
 import { getPendingRequestCount } from "@/lib/dashboard/expert";
@@ -44,7 +45,17 @@ export default async function DashboardLayout({
     // own proxy: it is still derived from the request line, and this is the one
     // place a hostile value would be handed straight back as a redirect target.
     const requested = (await headers()).get(PATHNAME_HEADER);
-    redirect(`/login?next=${encodeURIComponent(safeNextPath(requested))}`);
+    // Locale-aware `redirect` from `@/i18n/navigation`: a signed-out Hindi
+    // visitor bounces to `/hi/login`, not the English form. The `next` value
+    // stays a bare path — `safeNextPath` does not localise it — because the
+    // sign-in action re-localises it through `localizedTarget` on success.
+    //
+    // `return` rather than a bare call: `redirect` throws, but returning it is
+    // what narrows `user` to non-null for the reads below.
+    return redirect({
+      href: { pathname: "/login", query: { next: safeNextPath(requested) } },
+      locale: await getLocale(),
+    });
   }
 
   // Both are per-request reads the shell needs on every page; running them

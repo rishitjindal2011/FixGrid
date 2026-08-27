@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { useActionState, useState } from "react";
+import { useTranslations } from "next-intl";
 import { Building2, Loader2, MapPin, Phone, Upload, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -91,6 +92,7 @@ export function JoinForm({
    * refusal. Now the button opens the payment sheet, and the real submit only
    * happens once the money is there — by balance or by card.
    */
+  const t = useTranslations("join.form");
   const formRef = React.useRef<HTMLFormElement>(null);
   const [paying, setPaying] = React.useState(false);
   const [state, action, pending] = useActionState(submitShop, JOIN_INITIAL_STATE);
@@ -114,11 +116,11 @@ export function JoinForm({
 
     for (const file of chosen) {
       if (file.size > MAX_BYTES) {
-        setUploadError(`"${file.name}" is over 5 MB.`);
+        setUploadError(t("errorTooBig", { name: file.name }));
         continue;
       }
       if (!ALLOWED.includes(file.type)) {
-        setUploadError(`"${file.name}" must be a JPEG, PNG, WebP, HEIC or PDF.`);
+        setUploadError(t("errorType", { name: file.name }));
         continue;
       }
 
@@ -137,7 +139,7 @@ export function JoinForm({
         .upload(path, file, { contentType: file.type, upsert: false });
 
       if (error) {
-        setUploadError(`"${file.name}" could not be uploaded. Try again.`);
+        setUploadError(t("errorUpload", { name: file.name }));
         continue;
       }
 
@@ -173,31 +175,31 @@ export function JoinForm({
       ))}
 
       <Field
-        label="Shop name"
+        label={t("shopName")}
         htmlFor="shopName"
         icon={Building2}
         invalid={state.field === "shopName"}
-        hint="The name customers know you by."
+        hint={t("shopNameHint")}
       >
         <Input id="shopName" name="shopName" required minLength={2} maxLength={120} />
       </Field>
 
       <Field
-        label="Address"
+        label={t("address")}
         htmlFor="address"
         icon={MapPin}
         invalid={state.field === "address"}
-        hint="Street, town and postcode. Customers use this to find you."
+        hint={t("addressHint")}
       >
         <Textarea id="address" name="address" required rows={2} minLength={6} maxLength={300} />
       </Field>
 
       <Field
-        label="Contact phone"
+        label={t("contactPhone")}
         htmlFor="contactPhone"
         icon={Phone}
         invalid={state.field === "contactPhone"}
-        hint="Shown on your public page once approved."
+        hint={t("contactPhoneHint")}
       >
         <Input
           id="contactPhone"
@@ -211,11 +213,11 @@ export function JoinForm({
       </Field>
 
       <Field
-        label="Proof of business"
+        label={t("evidence")}
         htmlFor="evidence"
         icon={Upload}
         invalid={state.field === "evidence"}
-        hint={`A licence, your storefront or a business card. Up to ${MAX_FILES} files, 5 MB each. Only our review team sees these.`}
+        hint={t("evidenceHint", { max: MAX_FILES })}
       >
         <input
           key={inputKey}
@@ -237,7 +239,7 @@ export function JoinForm({
       {uploading ? (
         <p className="flex items-center gap-2 text-sm text-steel" aria-live="polite">
           <Loader2 aria-hidden className="size-4 animate-spin" />
-          Uploading…
+          {t("uploading")}
         </p>
       ) : null}
 
@@ -264,7 +266,7 @@ export function JoinForm({
                 className="grid size-6 shrink-0 place-items-center rounded-machined text-steel transition-colors hover:bg-bench-sunk hover:text-rust"
               >
                 <X aria-hidden className="size-3.5" />
-                <span className="sr-only">Remove {file.name}</span>
+                <span className="sr-only">{t("remove", { name: file.name })}</span>
               </button>
             </li>
           ))}
@@ -272,10 +274,10 @@ export function JoinForm({
       ) : null}
 
       <Field
-        label="Anything else (optional)"
+        label={t("notes")}
         htmlFor="notes"
         icon={Building2}
-        hint="Trading years, registration number, or anything that helps us verify you."
+        hint={t("notesHint")}
       >
         <Textarea id="notes" name="notes" rows={3} maxLength={2000} />
       </Field>
@@ -291,12 +293,11 @@ export function JoinForm({
       ) : null}
 
       <Button type="button" size="lg" disabled={busy} onClick={() => setPaying(true)}>
-        {pending ? "Submitting…" : uploading ? "Waiting for uploads…" : "Submit for review"}
+        {pending ? t("submitting") : uploading ? t("waitingUploads") : t("submit")}
       </Button>
 
       <p className="text-xs text-steel">
-        Your dashboard opens straight away so you can add services, hours and
-        photos. The shop appears in search once we have checked your details.
+        {t("afterSubmit")}
       </p>
 
       {paying ? (
@@ -305,8 +306,8 @@ export function JoinForm({
           onClose={() => setPaying(false)}
           amountMinor={enrollmentFeeMinor}
           balanceMinor={balanceMinor}
-          title="Listing fee"
-          description="A one-off fee to list your shop, refunded in full if we cannot verify it. Choose how you want to pay."
+          title={t("listingFee")}
+          description={t("listingFeeDesc")}
           purchaseFields={{}}
           /* The purchase here is the whole submission, which this form already
              owns — so the sheet only assures the funds and hands back. */
