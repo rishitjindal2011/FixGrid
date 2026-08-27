@@ -1,6 +1,7 @@
 "use client";
 
 import { Printer } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { Button } from "@/components/ui/button";
 
@@ -14,6 +15,7 @@ import { Button } from "@/components/ui/button";
  * the layout the print stylesheet already produces.
  */
 export function PrintInvoiceButton() {
+  const t = useTranslations("dashboard.invoiceDetail");
   return (
     <Button
       type="button"
@@ -24,7 +26,7 @@ export function PrintInvoiceButton() {
       className="print:hidden"
     >
       <Printer aria-hidden />
-      Print / Save as PDF
+      {t("print")}
     </Button>
   );
 }

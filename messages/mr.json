@@ -821,6 +821,66 @@
       "attCompletion": "दुरुस्तीनंतर",
       "attEvidence": "दाव्याचा पुरावा",
       "calDescription": "बुकिंग {reference}. {mode}."
+    },
+    "billing": {
+      "metaTitle": "पेमेंट",
+      "eyebrow": "पेमेंट",
+      "title": "बिलिंग",
+      "description": "तुम्ही पैसे भरलेली प्रत्येक दुरुस्ती, वॉरंटीच्या बदल्यात आता काय रोखून ठेवले आहे, आणि दोन्हींमागील बिले.",
+      "statTotalSpent": "एकूण खर्च",
+      "statTotalSpentHint": "पूर्ण झालेल्या दुरुस्त्यांमध्ये",
+      "statInEscrow": "एस्क्रोमध्ये",
+      "statInEscrowHint": "वॉरंटी बंद होईपर्यंत रोखलेले",
+      "statRefunded": "परतावा दिला",
+      "statRefundedHint": "तुम्हाला परत केले",
+      "statOpenInvoices": "खुली बिले",
+      "statOpenInvoicesHint": "पेमेंटच्या प्रतीक्षेत",
+      "statBalance": "शिल्लक",
+      "statBalanceHint": "टॉप अप करण्यासाठी टॅप करा",
+      "invoiceHistory": "बिल इतिहास",
+      "invoiceCount": "{count, plural, one {# बिल} other {# बिले}}",
+      "noInvoicesTitle": "अजून कोणतेही बिल नाही",
+      "noInvoicesDesc": "दुरुस्ती पूर्ण झाल्यावर, तिचे बिल संपूर्ण तपशिलासह येथे येते — सेवा, प्लॅटफॉर्म शुल्क आणि कर.",
+      "findExpert": "तज्ज्ञ शोधा",
+      "refunds": "परतावे",
+      "noRefundsTitle": "कोणताही परतावा नाही",
+      "noRefundsDesc": "एखादी दुरुस्ती परताव्याने दुरुस्त केल्यास, ती जे बिल उलटवते त्यापासून वेगळी येथे सूचीबद्ध केली जाते.",
+      "escrowTitle": "एस्क्रोमध्ये रोखलेले",
+      "escrowIntro": "दुरुस्ती पूर्ण झाल्यावर वॉरंटी विंडो बंद होईपर्यंत तुमचे पैसे रोखून ठेवले जातात, जेणेकरून बिघाड पुन्हा आल्यास तो दुरुस्त करण्यासाठी काहीतरी असेल.",
+      "repairFallback": "दुरुस्ती",
+      "warrantyWindowAria": "{reference} साठी वॉरंटी विंडो",
+      "releasesToday": "आज सोडले जाईल",
+      "releasesIn": "{days, plural, one {# दिवसात सोडले जाईल} other {# दिवसांत सोडले जाईल}}",
+      "nothingHeld": "सध्या काहीही रोखलेले नाही. दुरुस्ती पूर्ण होणे आणि तिची वॉरंटी विंडो बंद होणे यादरम्यान पैसे येथे दिसतात."
+    },
+    "invoiceTable": {
+      "colDate": "तारीख",
+      "colReference": "संदर्भ",
+      "colShop": "दुकान",
+      "colTotal": "एकूण",
+      "colStatus": "स्थिती",
+      "srInvoice": "बिल",
+      "viewInvoiceSr": "बिल {reference} पाहा",
+      "colReason": "कारण",
+      "colRefunded": "परतावा"
+    },
+    "invoiceDetail": {
+      "metaTitle": "बिल {reference}",
+      "billing": "बिलिंग",
+      "print": "प्रिंट / PDF म्हणून जतन करा",
+      "notFoundTitle": "बिल सापडले नाही",
+      "notFoundDesc": "तुमच्या खात्यावर {reference} अंतर्गत कोणतेही बिल आम्हाला सापडले नाही. संदर्भ तपासा, किंवा तुमच्या बिलिंग इतिहासातून ते उघडा.",
+      "backToBilling": "बिलिंगकडे परत",
+      "invoiceEyebrow": "बिल",
+      "issued": "जारी केले",
+      "billedTo": "बिल यांच्या नावे",
+      "repairedBy": "दुरुस्ती करणारे",
+      "lineItems": "तपशील",
+      "colDescription": "वर्णन",
+      "colAmount": "रक्कम",
+      "repairFallback": "दुरुस्ती",
+      "refundsAgainst": "या बिलाविरुद्ध परतावे",
+      "footerNote": "रक्कम {currency} मध्ये आहे आणि त्यात दाखवलेले प्लॅटफॉर्म शुल्क समाविष्ट आहे. या दुरुस्तीची वॉरंटी विंडो बंद होईपर्यंत पेमेंट रोखले जाते. हे बिल जपून ठेवा — त्याचा संदर्भच एखादे दुकान किंवा आमची सहाय्य टीम विचारेल."
     }
   },
   "blog": {
@@ -942,5 +1002,13 @@
       "alreadyAddedNote": "{amount} आधीच जोडले गेले आहे. आणखी काही करण्याची गरज नाही.",
       "declinedNote": "हे पेमेंट नाकारले किंवा रद्द केले गेले होते. तुमच्या वॉलेटमधून नवीन सुरू करा."
     }
+  },
+  "paymentStatuses": {
+    "pending": "पेमेंटच्या प्रतीक्षेत",
+    "authorized": "अधिकृत",
+    "captured": "पैसे भरले",
+    "refunded": "परतावा दिला",
+    "partially_refunded": "अंशतः परतावा",
+    "failed": "पेमेंट अयशस्वी"
   }
 }

@@ -821,6 +821,66 @@
       "attCompletion": "মেরামতের পরে",
       "attEvidence": "ক্লেমের প্রমাণ",
       "calDescription": "বুকিং {reference}। {mode}।"
+    },
+    "billing": {
+      "metaTitle": "পেমেন্ট",
+      "eyebrow": "পেমেন্ট",
+      "title": "বিলিং",
+      "description": "আপনি যত মেরামতের জন্য পেমেন্ট করেছেন, ওয়ারান্টির বিপরীতে এখন যা আটকে আছে, এবং দুটোর পেছনের ইনভয়েসগুলো।",
+      "statTotalSpent": "মোট খরচ",
+      "statTotalSpentHint": "সম্পন্ন মেরামতগুলোতে",
+      "statInEscrow": "এসক্রোতে",
+      "statInEscrowHint": "ওয়ারান্টি বন্ধ হওয়া পর্যন্ত আটকে রাখা",
+      "statRefunded": "ফেরত দেওয়া হয়েছে",
+      "statRefundedHint": "আপনাকে ফেরত দেওয়া",
+      "statOpenInvoices": "খোলা ইনভয়েস",
+      "statOpenInvoicesHint": "পেমেন্টের অপেক্ষায়",
+      "statBalance": "ব্যালেন্স",
+      "statBalanceHint": "টপ আপ করতে ট্যাপ করুন",
+      "invoiceHistory": "ইনভয়েস ইতিহাস",
+      "invoiceCount": "{count, plural, one {# ইনভয়েস} other {# ইনভয়েস}}",
+      "noInvoicesTitle": "এখনো কোনো ইনভয়েস নেই",
+      "noInvoicesDesc": "কোনো মেরামত শেষ হলে, তার ইনভয়েস পূর্ণ বিবরণসহ এখানে আসে — সার্ভিস, প্ল্যাটফর্ম ফি এবং ভ্যাট।",
+      "findExpert": "বিশেষজ্ঞ খুঁজুন",
+      "refunds": "ফেরত",
+      "noRefundsTitle": "কোনো ফেরত নেই",
+      "noRefundsDesc": "কোনো মেরামত ফেরত দিয়ে ঠিক করা হলে, সেটি যে ইনভয়েস বাতিল করে তার থেকে আলাদাভাবে এখানে তালিকাভুক্ত করা হয়।",
+      "escrowTitle": "এসক্রোতে আটকে রাখা",
+      "escrowIntro": "কোনো মেরামত শেষ হলে ওয়ারান্টি উইন্ডো বন্ধ না হওয়া পর্যন্ত আপনার টাকা আটকে রাখা হয়, যাতে সমস্যা আবার ফিরে এলে তা ঠিক করার সুযোগ থাকে।",
+      "repairFallback": "মেরামত",
+      "warrantyWindowAria": "{reference}-এর জন্য ওয়ারান্টি উইন্ডো",
+      "releasesToday": "আজ ছাড়া হবে",
+      "releasesIn": "{days, plural, one {# দিনে ছাড়া হবে} other {# দিনে ছাড়া হবে}}",
+      "nothingHeld": "এই মুহূর্তে কিছুই আটকে রাখা হয়নি। মেরামত শেষ হওয়া এবং তার ওয়ারান্টি উইন্ডো বন্ধ হওয়ার মাঝে টাকা এখানে দেখা যায়।"
+    },
+    "invoiceTable": {
+      "colDate": "তারিখ",
+      "colReference": "রেফারেন্স",
+      "colShop": "দোকান",
+      "colTotal": "মোট",
+      "colStatus": "অবস্থা",
+      "srInvoice": "ইনভয়েস",
+      "viewInvoiceSr": "ইনভয়েস {reference} দেখুন",
+      "colReason": "কারণ",
+      "colRefunded": "ফেরত"
+    },
+    "invoiceDetail": {
+      "metaTitle": "ইনভয়েস {reference}",
+      "billing": "বিলিং",
+      "print": "প্রিন্ট / PDF হিসেবে সংরক্ষণ করুন",
+      "notFoundTitle": "ইনভয়েস পাওয়া যায়নি",
+      "notFoundDesc": "আপনার অ্যাকাউন্টে {reference}-এর অধীনে কোনো ইনভয়েস খুঁজে পাওয়া যায়নি। রেফারেন্সটি যাচাই করুন, অথবা আপনার বিলিং ইতিহাস থেকে এটি খুলুন।",
+      "backToBilling": "বিলিং-এ ফিরুন",
+      "invoiceEyebrow": "ইনভয়েস",
+      "issued": "ইস্যু করা হয়েছে",
+      "billedTo": "যাকে বিল করা হয়েছে",
+      "repairedBy": "মেরামত করেছে",
+      "lineItems": "লাইন আইটেম",
+      "colDescription": "বিবরণ",
+      "colAmount": "পরিমাণ",
+      "repairFallback": "মেরামত",
+      "refundsAgainst": "এই ইনভয়েসের বিপরীতে ফেরত",
+      "footerNote": "পরিমাণ {currency}-এ এবং এতে দেখানো প্ল্যাটফর্ম ফি অন্তর্ভুক্ত। এই মেরামতের ওয়ারান্টি উইন্ডো বন্ধ না হওয়া পর্যন্ত পেমেন্ট আটকে রাখা হয়। এই ইনভয়েসটি রেখে দিন — এর রেফারেন্সই কোনো দোকান বা আমাদের সহায়তা দল জানতে চাইবে।"
     }
   },
   "blog": {
@@ -942,5 +1002,13 @@
       "alreadyAddedNote": "{amount} ইতিমধ্যে যোগ করা হয়েছে। আর কিছু করার নেই।",
       "declinedNote": "এই পেমেন্টটি প্রত্যাখ্যান বা বাতিল করা হয়েছিল। আপনার ওয়ালেট থেকে একটি নতুন শুরু করুন।"
     }
+  },
+  "paymentStatuses": {
+    "pending": "পেমেন্টের অপেক্ষায়",
+    "authorized": "অনুমোদিত",
+    "captured": "পরিশোধিত",
+    "refunded": "ফেরত দেওয়া হয়েছে",
+    "partially_refunded": "আংশিক ফেরত",
+    "failed": "পেমেন্ট ব্যর্থ"
   }
 }

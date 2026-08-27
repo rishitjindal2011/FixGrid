@@ -821,6 +821,66 @@
       "attCompletion": "मरम्मत के बाद",
       "attEvidence": "दावे के प्रमाण",
       "calDescription": "बुकिंग {reference}। {mode}।"
+    },
+    "billing": {
+      "metaTitle": "भुगतान",
+      "eyebrow": "भुगतान",
+      "title": "बिलिंग",
+      "description": "आपके द्वारा भुगतान की गई हर मरम्मत, वारंटी के बदले अभी क्या रोका गया है, और दोनों के पीछे के बिल।",
+      "statTotalSpent": "कुल खर्च",
+      "statTotalSpentHint": "पूरी हुई मरम्मतों में",
+      "statInEscrow": "एस्क्रो में",
+      "statInEscrowHint": "वारंटी बंद होने तक रोका गया",
+      "statRefunded": "रिफंड किया गया",
+      "statRefundedHint": "आपको लौटाया गया",
+      "statOpenInvoices": "खुले बिल",
+      "statOpenInvoicesHint": "भुगतान प्रतीक्षित",
+      "statBalance": "बैलेंस",
+      "statBalanceHint": "टॉप अप करने के लिए टैप करें",
+      "invoiceHistory": "बिल इतिहास",
+      "invoiceCount": "{count, plural, one {# बिल} other {# बिल}}",
+      "noInvoicesTitle": "अभी कोई बिल नहीं",
+      "noInvoicesDesc": "मरम्मत पूरी होने पर, उसका बिल पूरे ब्यौरे के साथ यहाँ आता है — सेवा, प्लेटफ़ॉर्म शुल्क और VAT।",
+      "findExpert": "विशेषज्ञ खोजें",
+      "refunds": "रिफंड",
+      "noRefundsTitle": "कोई रिफंड नहीं",
+      "noRefundsDesc": "यदि किसी मरम्मत को रिफंड के साथ ठीक किया जाता है, तो उसे उस बिल से अलग यहाँ सूचीबद्ध किया जाता है जिसे वह पलटता है।",
+      "escrowTitle": "एस्क्रो में रोका गया",
+      "escrowIntro": "जब कोई मरम्मत पूरी हो जाती है, तो आपका पैसा वारंटी विंडो बंद होने तक रोका जाता है, ताकि खराबी दोबारा आने पर उसे ठीक करने के लिए कुछ हो।",
+      "repairFallback": "मरम्मत",
+      "warrantyWindowAria": "{reference} के लिए वारंटी विंडो",
+      "releasesToday": "आज जारी होगा",
+      "releasesIn": "{days, plural, one {# दिन में जारी होगा} other {# दिनों में जारी होगा}}",
+      "nothingHeld": "अभी कुछ भी नहीं रोका गया है। मरम्मत पूरी होने और उसकी वारंटी विंडो बंद होने के बीच पैसा यहाँ दिखता है।"
+    },
+    "invoiceTable": {
+      "colDate": "तारीख",
+      "colReference": "संदर्भ",
+      "colShop": "दुकान",
+      "colTotal": "कुल",
+      "colStatus": "स्थिति",
+      "srInvoice": "बिल",
+      "viewInvoiceSr": "बिल {reference} देखें",
+      "colReason": "कारण",
+      "colRefunded": "रिफंड किया गया"
+    },
+    "invoiceDetail": {
+      "metaTitle": "बिल {reference}",
+      "billing": "बिलिंग",
+      "print": "प्रिंट / PDF के रूप में सहेजें",
+      "notFoundTitle": "बिल नहीं मिला",
+      "notFoundDesc": "हमें आपके खाते पर {reference} के तहत कोई बिल नहीं मिला। संदर्भ जाँचें, या इसे अपने बिलिंग इतिहास से खोलें।",
+      "backToBilling": "बिलिंग पर वापस",
+      "invoiceEyebrow": "बिल",
+      "issued": "जारी किया गया",
+      "billedTo": "बिल इनके नाम",
+      "repairedBy": "मरम्मत करने वाला",
+      "lineItems": "मद विवरण",
+      "colDescription": "विवरण",
+      "colAmount": "राशि",
+      "repairFallback": "मरम्मत",
+      "refundsAgainst": "इस बिल के विरुद्ध रिफंड",
+      "footerNote": "राशि {currency} में है और इसमें दिखाया गया प्लेटफ़ॉर्म शुल्क शामिल है। भुगतान इस मरम्मत की वारंटी विंडो बंद होने तक रोका जाता है। यह बिल संभालकर रखें — इसका संदर्भ वही है जो कोई दुकान या हमारी सहायता टीम पूछेगी।"
     }
   },
   "blog": {
@@ -942,5 +1002,13 @@
       "alreadyAddedNote": "{amount} पहले ही जोड़ा जा चुका है। और कुछ करने की ज़रूरत नहीं।",
       "declinedNote": "यह भुगतान अस्वीकृत या रद्द कर दिया गया था। अपने वॉलेट से एक नया शुरू करें।"
     }
+  },
+  "paymentStatuses": {
+    "pending": "भुगतान प्रतीक्षित",
+    "authorized": "अधिकृत",
+    "captured": "भुगतान हो गया",
+    "refunded": "रिफंड किया गया",
+    "partially_refunded": "आंशिक रिफंड",
+    "failed": "भुगतान विफल"
   }
 }

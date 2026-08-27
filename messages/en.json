@@ -821,6 +821,66 @@
       "attCompletion": "After the repair",
       "attEvidence": "Claim evidence",
       "calDescription": "Booking {reference}. {mode}."
+    },
+    "billing": {
+      "metaTitle": "Payments",
+      "eyebrow": "Payments",
+      "title": "Billing",
+      "description": "Every repair you have paid for, what is still held against a warranty, and the invoices behind both.",
+      "statTotalSpent": "Total spent",
+      "statTotalSpentHint": "Across finished repairs",
+      "statInEscrow": "In escrow",
+      "statInEscrowHint": "Held until warranty closes",
+      "statRefunded": "Refunded",
+      "statRefundedHint": "Returned to you",
+      "statOpenInvoices": "Open invoices",
+      "statOpenInvoicesHint": "Awaiting payment",
+      "statBalance": "Balance",
+      "statBalanceHint": "Tap to top up",
+      "invoiceHistory": "Invoice history",
+      "invoiceCount": "{count, plural, one {# invoice} other {# invoices}}",
+      "noInvoicesTitle": "No invoices yet",
+      "noInvoicesDesc": "Once a repair is finished, its invoice lands here with the full breakdown — service, platform fee and VAT.",
+      "findExpert": "Find an expert",
+      "refunds": "Refunds",
+      "noRefundsTitle": "No refunds",
+      "noRefundsDesc": "If a repair is put right with a refund, it is listed here separately from the invoice it reverses.",
+      "escrowTitle": "Held in escrow",
+      "escrowIntro": "When a repair is finished your money is held until the warranty window closes, so there is something to put right if the fault comes back.",
+      "repairFallback": "Repair",
+      "warrantyWindowAria": "Warranty window for {reference}",
+      "releasesToday": "Releases today",
+      "releasesIn": "Releases in {days, plural, one {# day} other {# days}}",
+      "nothingHeld": "Nothing is being held right now. Money appears here between a repair being finished and its warranty window closing."
+    },
+    "invoiceTable": {
+      "colDate": "Date",
+      "colReference": "Reference",
+      "colShop": "Shop",
+      "colTotal": "Total",
+      "colStatus": "Status",
+      "srInvoice": "Invoice",
+      "viewInvoiceSr": "View invoice {reference}",
+      "colReason": "Reason",
+      "colRefunded": "Refunded"
+    },
+    "invoiceDetail": {
+      "metaTitle": "Invoice {reference}",
+      "billing": "Billing",
+      "print": "Print / Save as PDF",
+      "notFoundTitle": "Invoice not found",
+      "notFoundDesc": "We could not find an invoice under {reference} on your account. Check the reference, or open it from your billing history.",
+      "backToBilling": "Back to billing",
+      "invoiceEyebrow": "Invoice",
+      "issued": "Issued",
+      "billedTo": "Billed to",
+      "repairedBy": "Repaired by",
+      "lineItems": "Line items",
+      "colDescription": "Description",
+      "colAmount": "Amount",
+      "repairFallback": "Repair",
+      "refundsAgainst": "Refunds against this invoice",
+      "footerNote": "Amounts are in {currency} and include the platform fee shown. Payment is held until the warranty window on this repair closes. Keep this invoice — its reference is what a shop or our support team will ask for."
     }
   },
   "blog": {
@@ -942,5 +1002,13 @@
       "alreadyAddedNote": "{amount} was already added. Nothing further to do.",
       "declinedNote": "This payment was declined or cancelled. Start a new one from your wallet."
     }
+  },
+  "paymentStatuses": {
+    "pending": "Awaiting payment",
+    "authorized": "Authorised",
+    "captured": "Paid",
+    "refunded": "Refunded",
+    "partially_refunded": "Part refunded",
+    "failed": "Payment failed"
   }
 }
