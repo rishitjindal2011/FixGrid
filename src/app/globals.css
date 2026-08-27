@@ -405,3 +405,68 @@
   border-radius: 0.5rem;
   background: var(--color-bench-sunk, #eef1f4);
 }
+
+/* ── Script-aware typography ─────────────────────────────────────────────────
+ *
+ * The design's identity is Latin-only: a condensed face, set uppercase, with
+ * negative letter-spacing and sub-1.0 line-height. Applied to Devanagari,
+ * Bengali, Telugu, Tamil or Kannada, each of those three choices is wrong in a
+ * different way:
+ *
+ *   • letter-spacing pulls apart conjuncts and detaches matras. It does not
+ *     "look loose" — it renders the word incorrectly.
+ *   • line-height below 1.0 clips the marks that sit above and below the
+ *     baseline, which in Devanagari carry vowels, not decoration.
+ *   • uppercase is simply a no-op — Indic scripts are unicase — so it is left
+ *     alone. Mixed strings still capitalise their Latin parts, which is what we
+ *     want for "FixGrid".
+ *
+ * The font itself is handled in `src/app/[locale]/layout.tsx`, which repoints
+ * `--font-barlow-condensed` and `--font-public-sans` at the locale's Hind face.
+ *
+ * These rules override the TOKENS rather than the utilities. Tailwind v4 emits
+ * `letter-spacing: var(--text-display--letter-spacing)` inside `.text-display`,
+ * so redefining the token on an ancestor reaches every call site at once — no
+ * specificity war, and nothing to remember when a new heading is added. That
+ * matters here: `uppercase` appears in 124 components and `tracking-*` in 112,
+ * and editing them by hand would be both enormous and permanently out of date.
+ */
+html:not([lang="en"]) {
+  --text-eyebrow--letter-spacing: 0;
+
+  --text-display-sm--letter-spacing: 0;
+  --text-display--letter-spacing: 0;
+  --text-display-lg--letter-spacing: 0;
+
+  /* Room for matras above and vowel signs below. */
+  --text-display-sm--line-height: 1.3;
+  --text-display--line-height: 1.24;
+  --text-display-lg--line-height: 1.18;
+}
+
+/* Ad-hoc `tracking-[…]` utilities are per-component, so they cannot be reached
+   through a token. The attribute match catches every variant, arbitrary values
+   included. */
+html:not([lang="en"]) [class*="tracking-"] {
+  letter-spacing: normal;
+}
+
+/* The eyebrow is mono because it classifies rather than narrates — but IBM Plex
+   Mono has no Indic coverage, and an eyebrow is words, not digits. Digits, times
+   and ratings keep the mono face via the `--font-mono` stack in the layout. */
+html:not([lang="en"]) .eyebrow {
+  font-family: var(--font-sans);
+  letter-spacing: normal;
+}
+
+html:not([lang="en"]) .prose-registry :is(h2, h3, h4) {
+  letter-spacing: normal;
+}
+
+/* `.blog-article` sets these with `!important` to beat utilities stored in the
+   database template, so overriding it needs the same weight. */
+html:not([lang="en"]) .blog-article :is(h1, h2, h3, h4, h5, h6) {
+  text-transform: none !important;
+  letter-spacing: normal;
+  line-height: 1.3;
+}

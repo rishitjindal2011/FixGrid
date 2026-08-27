@@ -1,7 +1,14 @@
 "use client";
 
 import * as React from "react";
-import { getShopStatus, type HoursInput, type ShopStatus } from "@/lib/hours";
+import { useTranslations } from "next-intl";
+import {
+  formatClock,
+  getShopStatus,
+  type HoursInput,
+  type ShopStatus,
+  type StatusDetail,
+} from "@/lib/hours";
 import { cn } from "@/lib/utils";
 
 /**
@@ -43,32 +50,18 @@ export function StatusStrip({
     return () => window.clearInterval(interval);
   }, [hours]);
 
-  return (
-    <div
-      className={cn(
-        "flex items-center gap-2 font-mono uppercase tracking-[0.08em]",
-        size === "sm" ? "text-eyebrow" : "text-xs",
-        className,
-      )}
-    >
-      <span
-        aria-hidden
-        className={cn("status-dot", status.isOpen ? "status-dot--open" : "status-dot--closed")}
-      />
-      <span className={cn("font-semibold", status.isOpen ? "text-verdigris" : "text-steel")}>
-        {status.headline}
-      </span>
-      <span aria-hidden className="text-hairline">
-        /
-      </span>
-      <span className="text-steel-soft">{status.detail}</span>
-    </div>
-  );
+  // Markup lives in one place so a ticking card and a static profile panel can
+  // never drift apart in wording.
+  return <StaticStatusStrip status={status} size={size} className={className} />;
 }
 
 /**
- * Server-rendered variant. Identical markup, no timer, no client bundle.
- * Use inside JSON-LD-bearing server components where interactivity is wasted.
+ * No-timer variant. Same markup, no interval, cheap enough to drop into a
+ * JSON-LD-bearing page where re-evaluation buys nothing.
+ *
+ * Still a Client Component — it lives in a `"use client"` module — which is
+ * exactly why `detailParts` exists: `useTranslations` can look up a message here,
+ * but it cannot re-order an English sentence that `hours.ts` already assembled.
  */
 export function StaticStatusStrip({
   status,
@@ -79,6 +72,8 @@ export function StaticStatusStrip({
   size?: "sm" | "md";
   className?: string;
 }) {
+  const t = useTranslations("status");
+
   return (
     <div
       className={cn(
@@ -92,12 +87,42 @@ export function StaticStatusStrip({
         className={cn("status-dot", status.isOpen ? "status-dot--open" : "status-dot--closed")}
       />
       <span className={cn("font-semibold", status.isOpen ? "text-verdigris" : "text-steel")}>
-        {status.headline}
+        {t(status.isOpen ? "open" : "closed")}
       </span>
       <span aria-hidden className="text-hairline">
         /
       </span>
-      <span className="text-steel-soft">{status.detail}</span>
+      <span className="text-steel-soft">{formatDetail(t, status.detailParts)}</span>
     </div>
   );
+}
+
+/**
+ * The detail line, assembled from data rather than translated as prose.
+ *
+ * Each branch hands the catalogue a shape plus the numbers, so the message file
+ * decides where the time lands in the sentence — "Opens 9:00 am" against
+ * "9:00 am पर खुलेगा". The clock itself stays in Latin digits with am/pm: that
+ * form is read everywhere in India, and Devanagari numerals on a time invite a
+ * misreading no amount of localisation pays for.
+ */
+function formatDetail(
+  t: (key: string, values?: Record<string, string>) => string,
+  detail: StatusDetail,
+): string {
+  switch (detail.kind) {
+    case "closesAt":
+      return t("closesAt", { time: formatClock(detail.minutes) });
+    case "opensAt":
+      return t("opensAt", { time: formatClock(detail.minutes) });
+    case "opensTomorrow":
+      return t("opensTomorrow", { time: formatClock(detail.minutes) });
+    case "opensOnDay":
+      return t("opensOnDay", {
+        day: t(`weekday.${detail.day}`),
+        time: formatClock(detail.minutes),
+      });
+    case "notListed":
+      return t("notListed");
+  }
 }

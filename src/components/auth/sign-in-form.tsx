@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
+import { useTranslations } from "next-intl";
 
 import { AuthMessage, AuthLink, Field } from "@/components/auth/auth-shell";
 import { SubmitButton } from "@/components/auth/submit-button";
@@ -10,6 +11,7 @@ import { signIn } from "@/lib/auth/actions";
 import { AUTH_INITIAL_STATE } from "@/lib/auth/state";
 
 export function SignInForm({ next, linkError }: { next?: string; linkError?: boolean }) {
+  const t = useTranslations("auth");
   const [state, formAction] = useActionState(signIn, AUTH_INITIAL_STATE);
 
   // An expired link is a server-side fact carried in the query string, so it is
@@ -19,7 +21,7 @@ export function SignInForm({ next, linkError }: { next?: string; linkError?: boo
     ? state
     : linkError
       ? {
-          error: "That link has expired or was already used. Sign in, or request a new one.",
+          error: t("errors.linkExpiredOrUsed"),
           notice: null,
         }
       : state;
@@ -33,14 +35,14 @@ export function SignInForm({ next, linkError }: { next?: string; linkError?: boo
           <div className="w-full border-t border-signal/20"></div>
         </div>
         <div className="relative flex justify-center text-sm">
-          <span className="bg-white px-4 text-steel">Or continue with email</span>
+          <span className="bg-white px-4 text-steel">{t("divider.email")}</span>
         </div>
       </div>
 
       <form action={formAction} className="flex flex-col gap-4" noValidate>
         {next ? <input type="hidden" name="next" value={next} /> : null}
 
-      <Field label="Email" htmlFor="email">
+      <Field label={t("fields.email")} htmlFor="email">
         <Input
           id="email"
           name="email"
@@ -49,11 +51,11 @@ export function SignInForm({ next, linkError }: { next?: string; linkError?: boo
           required
           autoFocus
           spellCheck={false}
-          placeholder="you@example.com"
+          placeholder={t("placeholders.email")}
         />
       </Field>
 
-      <Field label="Password" htmlFor="password">
+      <Field label={t("fields.password")} htmlFor="password">
         <Input
           id="password"
           name="password"
@@ -65,10 +67,10 @@ export function SignInForm({ next, linkError }: { next?: string; linkError?: boo
 
       <AuthMessage state={shown} />
 
-      <SubmitButton pendingLabel="Signing in…">Sign in</SubmitButton>
+      <SubmitButton pendingLabel={t("actions.signingIn")}>{t("actions.signIn")}</SubmitButton>
 
       <p className="text-center text-sm text-steel">
-        <AuthLink href="/forgot-password">Forgot your password?</AuthLink>
+        <AuthLink href="/forgot-password">{t("actions.forgotPassword")}</AuthLink>
       </p>
     </form>
     </div>

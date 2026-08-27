@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { Search, X } from "lucide-react";
 
 import { Input, Select } from "@/components/ui/input";
@@ -33,8 +34,14 @@ const KEYS = {
   q: "q",
 } as const;
 
+/*
+ * Choices carry a message KEY where the label is a word, and a literal where it
+ * is a numeral. "3.0+" is the same in every language we ship; "Any" is not.
+ * Resolving at the call site rather than here because this array is module-scope
+ * and has no request — and therefore no locale — to translate against.
+ */
 const RATING_CHOICES = [
-  { value: 0, label: "Any" },
+  { value: 0, labelKey: "ratingAny" },
   { value: 3, label: "3.0+" },
   { value: 4, label: "4.0+" },
   { value: 4.5, label: "4.5+" },
@@ -49,16 +56,16 @@ const RATING_CHOICES = [
  * separates a shop standing behind its work from one that does not.
  */
 const WARRANTY_CHOICES = [
-  { value: 0, label: "Any" },
-  { value: 1, label: "Offered" },
-  { value: 30, label: "30d+" },
-  { value: 90, label: "90d+" },
+  { value: 0, labelKey: "warrantyAny" },
+  { value: 1, labelKey: "warrantyOffered" },
+  { value: 30, labelKey: "warranty30" },
+  { value: 90, labelKey: "warranty90" },
 ] as const;
 
 const SERVICE_CHOICES = [
-  { key: KEYS.inShop, label: "In-shop" },
-  { key: KEYS.homeService, label: "Home visit" },
-  { key: KEYS.pickupDrop, label: "Pickup & drop" },
+  { key: KEYS.inShop, labelKey: "inShop" },
+  { key: KEYS.homeService, labelKey: "homeVisit" },
+  { key: KEYS.pickupDrop, labelKey: "pickupDrop" },
 ] as const;
 
 export interface FilterPanelProps {
@@ -68,6 +75,10 @@ export interface FilterPanelProps {
 }
 
 export function FilterPanel({ categories, activeCount }: FilterPanelProps) {
+  // `useTranslations`, not `getTranslations`: this is a Client Component, and the
+  // messages reach it through `NextIntlClientProvider` in the locale layout.
+  const t = useTranslations("filters");
+  const tc = useTranslations("common");
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -133,7 +144,7 @@ export function FilterPanel({ categories, activeCount }: FilterPanelProps) {
         role="search"
       >
         <label htmlFor="search-q" className="eyebrow mb-2 block">
-          Shop, service or street
+          {t("queryLabel")}
         </label>
         <div className="relative">
           <Search
@@ -146,7 +157,7 @@ export function FilterPanel({ categories, activeCount }: FilterPanelProps) {
             type="search"
             value={queryDraft}
             onChange={(event) => setQueryDraft(event.target.value)}
-            placeholder="Screen repair, Elm St…"
+            placeholder={t("queryPlaceholder")}
             className="pl-9"
             maxLength={80}
           />
@@ -179,30 +190,30 @@ export function FilterPanel({ categories, activeCount }: FilterPanelProps) {
         role="search"
       >
         <label htmlFor="search-loc" className="eyebrow mb-2 block">
-          Location
+          {t("locationLabel")}
         </label>
         <div className="flex gap-2">
           <Input
             id="search-loc"
             name="location"
             type="search"
-            placeholder="City, Zip or Area..."
+            placeholder={t("locationPlaceholder")}
             maxLength={80}
           />
-          <Button type="submit" variant="outline" size="sm">Search</Button>
+          <Button type="submit" variant="outline" size="sm">{t("locationSearch")}</Button>
         </div>
       </form>
 
       <div>
         <label htmlFor="search-category" className="eyebrow mb-2 block">
-          Category
+          {t("categoryLabel")}
         </label>
         <Select
           id="search-category"
           value={currentCategory}
           onChange={(event) => setParam(KEYS.category, event.target.value || null)}
         >
-          <option value="">All categories</option>
+          <option value="">{tc("allCategories")}</option>
           {categories.map((category) => (
             <option key={category.id} value={category.slug}>
               {category.name}
@@ -212,8 +223,11 @@ export function FilterPanel({ categories, activeCount }: FilterPanelProps) {
       </div>
 
       <FloorControl
-        legend="Minimum rating"
-        choices={RATING_CHOICES}
+        legend={t("ratingLabel")}
+        choices={RATING_CHOICES.map((c) => ({
+          value: c.value,
+          label: "label" in c ? c.label : t(c.labelKey),
+        }))}
         current={currentRating}
         onSelect={(value) => setParam(KEYS.rating, value === 0 ? null : String(value))}
       />
@@ -226,14 +240,17 @@ export function FilterPanel({ categories, activeCount }: FilterPanelProps) {
         other — service type is logistics and can follow.
       */}
       <FloorControl
-        legend="Warranty"
-        choices={WARRANTY_CHOICES}
+        legend={t("warrantyLabel")}
+        choices={WARRANTY_CHOICES.map((c) => ({
+          value: c.value,
+          label: t(c.labelKey),
+        }))}
         current={currentWarranty}
         onSelect={(value) => setParam(KEYS.warranty, value === 0 ? null : String(value))}
       />
 
       <fieldset>
-        <legend className="eyebrow mb-2">Service type</legend>
+        <legend className="eyebrow mb-2">{t("serviceLabel")}</legend>
         <div className="space-y-2">
           {SERVICE_CHOICES.map((choice) => {
             const isChecked = searchParams.get(choice.key) === "1";
@@ -250,7 +267,7 @@ export function FilterPanel({ categories, activeCount }: FilterPanelProps) {
                   }
                   className="size-4 rounded-[2px] border-hairline text-signal accent-signal focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-signal"
                 />
-                {choice.label}
+                {t(choice.labelKey)}
               </label>
             );
           })}
@@ -264,7 +281,7 @@ export function FilterPanel({ categories, activeCount }: FilterPanelProps) {
           className="inline-flex items-center gap-1.5 font-mono text-eyebrow uppercase tracking-[0.14em] text-steel transition-colors hover:text-rust"
         >
           <X aria-hidden className="size-3" />
-          Clear all filters
+          {t("clearAll")}
         </button>
       ) : null}
     </div>
@@ -275,7 +292,7 @@ export function FilterPanel({ categories, activeCount }: FilterPanelProps) {
       {/* Mobile: collapsed by default so the results are the first thing seen. */}
       <details className="rounded-machined border border-hairline bg-chalk lg:hidden">
         <summary className="flex cursor-pointer list-none items-center justify-between px-4 py-3 font-display uppercase tracking-[0.08em] text-enamel">
-          Filters
+          {t("heading")}
           {activeCount > 0 ? (
             <span className="rounded-machined bg-signal px-1.5 py-0.5 font-mono text-eyebrow text-chalk">
               {activeCount}

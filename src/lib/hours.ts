@@ -31,12 +31,31 @@ export interface HoursInput {
   timezone: string;
 }
 
+/**
+ * The status detail as data rather than as a sentence.
+ *
+ * `detail` below is the English rendering, kept because JSON-LD and the expert
+ * profile's own summary line consume it directly. `detailParts` is what the UI
+ * should use: the status strip is a Client Component in seven languages, and it
+ * cannot translate a string that has already been assembled. Passing the shape
+ * and the numbers lets `messages/<locale>.json` own the word order — which
+ * matters, because "Opens 9:00 am" inverts in every Indic language on the list
+ * ("9:00 am पर खुलेगा").
+ */
+export type StatusDetail =
+  | { kind: "closesAt"; minutes: number }
+  | { kind: "opensAt"; minutes: number }
+  | { kind: "opensTomorrow"; minutes: number }
+  | { kind: "opensOnDay"; day: Weekday; minutes: number }
+  | { kind: "notListed" };
+
 export type ShopStatus =
   | {
       isOpen: true;
       headline: "Open now";
       /** e.g. "Closes 7:00 pm" */
       detail: string;
+      detailParts: StatusDetail;
       closesAtMinutes: number;
     }
   | {
@@ -44,6 +63,7 @@ export type ShopStatus =
       headline: "Closed";
       /** e.g. "Opens Monday 9:00 am", or "Opening hours not listed" */
       detail: string;
+      detailParts: StatusDetail;
       opensAtMinutes: number | null;
     };
 
@@ -193,6 +213,7 @@ export function getShopStatus(input: HoursInput, now: Date = new Date()): ShopSt
       isOpen: true,
       headline: "Open now",
       detail: `Closes ${formatClock(today.closeMinutes)}`,
+      detailParts: { kind: "closesAt", minutes: today.closeMinutes },
       closesAtMinutes: today.closeMinutes,
     };
   }
@@ -203,6 +224,7 @@ export function getShopStatus(input: HoursInput, now: Date = new Date()): ShopSt
       isOpen: false,
       headline: "Closed",
       detail: `Opens ${formatClock(today.openMinutes)}`,
+      detailParts: { kind: "opensAt", minutes: today.openMinutes },
       opensAtMinutes: today.openMinutes,
     };
   }
@@ -220,6 +242,10 @@ export function getShopStatus(input: HoursInput, now: Date = new Date()): ShopSt
       isOpen: false,
       headline: "Closed",
       detail: `Opens ${dayLabel} ${formatClock(schedule.openMinutes)}`,
+      detailParts:
+        offset === 1
+          ? { kind: "opensTomorrow", minutes: schedule.openMinutes }
+          : { kind: "opensOnDay", day: candidateDay, minutes: schedule.openMinutes },
       opensAtMinutes: schedule.openMinutes,
     };
   }
@@ -228,6 +254,7 @@ export function getShopStatus(input: HoursInput, now: Date = new Date()): ShopSt
     isOpen: false,
     headline: "Closed",
     detail: "Opening hours not listed",
+    detailParts: { kind: "notListed" },
     opensAtMinutes: null,
   };
 }

@@ -1,6 +1,8 @@
 import Link from "next/link";
+import { getTranslations } from "next-intl/server";
 import { Search, UserRound, Wrench } from "lucide-react";
 
+import { LanguageSwitcher } from "@/components/language-switcher";
 import { SignOutButton } from "@/components/auth/sign-out-button";
 import { Button } from "@/components/ui/button";
 import { getCurrentUser } from "@/lib/auth/session";
@@ -11,9 +13,21 @@ import { SITE_NAME } from "@/lib/site";
  * cannot be statically rendered into the shared layout shell. The auth actions
  * call `revalidatePath("/", "layout")` to drop the cached shell on sign-in and
  * sign-out — without that, a signed-in user keeps seeing the signed-out header.
+ *
+ * Strings come from `getTranslations`, not `useTranslations`: this component is
+ * async, and the hook form is only for synchronous ones.
+ *
+ * `href` values stay unprefixed. `Link` is re-exported from `@/i18n/navigation`
+ * elsewhere, but here the plain one is fine because next-intl's proxy rewrite
+ * already resolves an unprefixed path to the active locale — and hard-coding a
+ * prefix would strand English on `/hi/...`.
  */
 export async function SiteHeader() {
-  const user = await getCurrentUser();
+  const [user, t, tc] = await Promise.all([
+    getCurrentUser(),
+    getTranslations("header"),
+    getTranslations("common"),
+  ]);
 
   return (
     <header className="sticky top-0 z-40 border-b border-hairline bg-bench/85 backdrop-blur-sm">
@@ -28,27 +42,29 @@ export async function SiteHeader() {
           {SITE_NAME}
         </Link>
 
-        <nav aria-label="Main" className="ml-auto hidden items-center gap-6 sm:flex">
+        <nav aria-label={t("mainNav")} className="ml-auto hidden items-center gap-6 sm:flex">
           <Link
             href="/search"
             className="font-display text-base uppercase tracking-wide text-steel transition-colors hover:text-enamel"
           >
-            Browse experts
+            {t("browseExperts")}
           </Link>
           <Link
             href="/blog"
             className="font-display text-base uppercase tracking-wide text-steel transition-colors hover:text-enamel"
           >
-            Blog
+            {t("blog")}
           </Link>
         </nav>
 
         <div className="ml-auto flex items-center gap-2 sm:ml-0 sm:gap-3">
+          <LanguageSwitcher />
+
           <Button asChild size="sm">
             <Link href="/search">
               <Search aria-hidden />
-              <span className="hidden sm:inline">Find a repair</span>
-              <span className="sm:hidden">Search</span>
+              <span className="hidden sm:inline">{tc("findARepair")}</span>
+              <span className="sm:hidden">{tc("search")}</span>
             </Link>
           </Button>
 
@@ -64,7 +80,7 @@ export async function SiteHeader() {
                 <span className="hidden max-w-[12ch] truncate md:inline">
                   {user.displayName}
                 </span>
-                <span className="sr-only md:hidden">Your account</span>
+                <span className="sr-only md:hidden">{tc("yourAccount")}</span>
               </Link>
               <div className="hidden sm:block">
                 <SignOutButton />
@@ -72,7 +88,7 @@ export async function SiteHeader() {
             </>
           ) : (
             <Button asChild variant="outline" size="sm">
-              <Link href="/login">Sign in</Link>
+              <Link href="/login">{tc("signIn")}</Link>
             </Button>
           )}
         </div>

@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { useState, useMemo } from "react";
+import { useLocale, useTranslations } from "next-intl";
 import { PackageOpen, Search, FilterX } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
@@ -15,8 +16,26 @@ import {
   type StockFilter,
   type InventorySort,
 } from "@/lib/inventory/filter";
-import { INVENTORY_CONDITION_LABELS } from "@/lib/types/marketplace";
 import { formatMoney } from "@/lib/format";
+
+/**
+ * `condition` arrives from the database as a bare enum string. The English
+ * labels used to come from `INVENTORY_CONDITION_LABELS`; the translated ones
+ * live in the catalogue, and an unrecognised value falls back to the raw string
+ * rather than throwing on a missing message.
+ */
+function conditionLabel(t: (key: string) => string, condition: string): string {
+  switch (condition) {
+    case "new":
+      return t("conditionNew");
+    case "refurbished":
+      return t("conditionRefurbished");
+    case "used":
+      return t("conditionUsed");
+    default:
+      return condition;
+  }
+}
 
 export interface PublicInventoryItem {
   id: string;
@@ -41,6 +60,11 @@ export function PublicInventory({
   shopName: string;
 }) {
   const [filters, setFilters] = useState<InventoryFilters>(EMPTY_FILTERS);
+  const t = useTranslations("expert.inventory");
+  // The reset option is the same string the search filter panel uses, so it
+  // comes from `common` rather than being duplicated in seven catalogues.
+  const tc = useTranslations("common");
+  const locale = useLocale();
 
   // The public view does not care about low-stock warnings, so the lowStock check is false.
   const filtered = useMemo(
@@ -64,10 +88,13 @@ export function PublicInventory({
         map.set(item.category.id, item.category.name);
       }
     });
+    // Collate in the reader's language. Devanagari and Tamil have their own
+    // alphabetical order, and an English collator would sort them by code point.
+    const collator = new Intl.Collator(locale);
     return Array.from(map.entries())
       .map(([id, name]) => ({ id, name }))
-      .sort((a, b) => a.name.localeCompare(b.name));
-  }, [items]);
+      .sort((a, b) => collator.compare(a.name, b.name));
+  }, [items, locale]);
 
   if (items.length === 0) {
     return (
@@ -75,10 +102,8 @@ export function PublicInventory({
         <div className="flex size-12 items-center justify-center rounded-full bg-steel-wash">
           <PackageOpen aria-hidden className="size-6 text-steel" />
         </div>
-        <h2 className="mt-4 font-display text-xl">{shopName} Shop</h2>
-        <p className="mt-2 max-w-sm text-steel">
-          This shop hasn&apos;t listed any items for sale yet.
-        </p>
+        <h2 className="mt-4 font-display text-xl">{t("shopTitle", { shopName })}</h2>
+        <p className="mt-2 max-w-sm text-steel">{t("nothingListed")}</p>
       </div>
     );
   }
@@ -93,7 +118,7 @@ export function PublicInventory({
             <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-steel" />
             <Input
               type="search"
-              placeholder="Search parts & stock..."
+              placeholder={t("searchPlaceholder")}
               value={filters.search}
               onChange={(e) => setFilters((f) => ({ ...f, search: e.target.value }))}
               className="pl-9"
@@ -104,9 +129,9 @@ export function PublicInventory({
             <Select
               value={filters.categoryId}
               onChange={(e) => setFilters((f) => ({ ...f, categoryId: e.target.value }))}
-              aria-label="Filter by category"
+              aria-label={t("filterCategory")}
             >
-              <option value="">All categories</option>
+              <option value="">{tc("allCategories")}</option>
               {categories.map((c) => (
                 <option key={c.id} value={c.id}>
                   {c.name}
@@ -118,29 +143,29 @@ export function PublicInventory({
           <Select
             value={filters.stock}
             onChange={(e) => setFilters((f) => ({ ...f, stock: e.target.value as StockFilter }))}
-            aria-label="Filter by availability"
+            aria-label={t("filterAvailability")}
           >
-            <option value="all">Availability</option>
-            <option value="in_stock">In stock</option>
-            <option value="out">Out of stock</option>
+            <option value="all">{t("availability")}</option>
+            <option value="in_stock">{t("inStock")}</option>
+            <option value="out">{t("outOfStock")}</option>
           </Select>
 
           <Select
             value={filters.sort}
             onChange={(e) => setFilters((f) => ({ ...f, sort: e.target.value as InventorySort }))}
-            aria-label="Sort items"
+            aria-label={t("sort")}
           >
-            <option value="manual">Featured</option>
-            <option value="name">Name (A-Z)</option>
-            <option value="price_low">Price (Low-High)</option>
-            <option value="price_high">Price (High-Low)</option>
+            <option value="manual">{t("sortFeatured")}</option>
+            <option value="name">{t("sortName")}</option>
+            <option value="price_low">{t("sortPriceAsc")}</option>
+            <option value="price_high">{t("sortPriceDesc")}</option>
           </Select>
         </div>
 
         {isFiltering && (
           <div className="flex items-center justify-between text-sm">
             <p className="text-steel">
-              Found {filtered.length} of {items.length} items
+              {t("found", { shown: filtered.length, total: items.length })}
             </p>
             <Button
               type="button"
@@ -150,7 +175,7 @@ export function PublicInventory({
               className="-mr-2 h-auto py-1"
             >
               <FilterX aria-hidden className="mr-1.5 size-4" />
-              Clear filters
+              {t("clearFilters")}
             </Button>
           </div>
         )}
@@ -160,7 +185,7 @@ export function PublicInventory({
         {filtered.length === 0 ? (
           <div className="col-span-full flex flex-col items-center justify-center py-16 text-center text-steel">
             <PackageOpen aria-hidden className="mb-3 size-8 opacity-20" />
-            <p>No items match these filters.</p>
+            <p>{t("noMatches")}</p>
           </div>
         ) : (
           filtered.map((item) => (
@@ -171,9 +196,9 @@ export function PublicInventory({
               <div className="flex items-start justify-between gap-4">
                 <h3 className="font-medium">{item.name}</h3>
                 {item.quantity === 0 ? (
-                  <Badge variant="signal" className="shrink-0">Out of stock</Badge>
+                  <Badge variant="signal" className="shrink-0">{t("outOfStock")}</Badge>
                 ) : (
-                  <Badge variant="verified" className="shrink-0">In stock</Badge>
+                  <Badge variant="verified" className="shrink-0">{t("inStock")}</Badge>
                 )}
               </div>
 
@@ -186,7 +211,7 @@ export function PublicInventory({
 
                 <div className="flex items-center justify-between gap-4 border-t border-hairline pt-3">
                   <div className="flex items-center gap-2 text-xs text-steel">
-                    <span>{INVENTORY_CONDITION_LABELS[item.condition as keyof typeof INVENTORY_CONDITION_LABELS]}</span>
+                    <span>{conditionLabel(t, item.condition)}</span>
                     {item.brand && (
                       <>
                         <span>•</span>
@@ -197,7 +222,9 @@ export function PublicInventory({
                   
                   <div className="font-mono font-medium">
                     {item.unit_price === null ? (
-                      <span className="text-steel-soft text-sm uppercase tracking-wide">Ask</span>
+                      <span className="text-steel-soft text-sm uppercase tracking-wide">
+                        {t("ask")}
+                      </span>
                     ) : (
                       formatMoney(item.unit_price)
                     )}

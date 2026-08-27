@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 
 import { ReviewForm } from "@/components/expert/review-form";
 import { Button } from "@/components/ui/button";
@@ -96,6 +97,8 @@ function ReviewAction({
   slug: string;
   reviews: ReviewWithAuthor[];
 }) {
+  const t = useTranslations("reviews");
+
   switch (viewer.state) {
     // Reserve the space the resolved control will occupy. Collapsing to nothing
     // and then expanding shoves the review list down under the reader's cursor.
@@ -105,7 +108,7 @@ function ReviewAction({
     case "owner":
       return (
         <p className="rounded-machined border border-hairline bg-bench-sunk px-4 py-3 text-sm text-steel">
-          This is your shop, so you can&apos;t review it.
+          {t("ownShop")}
         </p>
       );
 
@@ -124,16 +127,14 @@ function ReviewAction({
       return (
         <div className="flex flex-wrap items-center justify-between gap-4 rounded-machined border border-hairline bg-chalk p-5 shadow-bench">
           <div>
-            <p className="font-display text-lg uppercase text-enamel">Used this shop?</p>
-            <p className="mt-1 text-sm text-steel">
-              Sign in to leave a review. It takes a minute.
-            </p>
+            <p className="font-display text-lg uppercase text-enamel">{t("usedThisShop")}</p>
+            <p className="mt-1 text-sm text-steel">{t("signInPrompt")}</p>
           </div>
           {/* `next` returns them to this profile on the reviews tab, rather than
               to the home page having forgotten why they signed in. */}
           <Button asChild variant="outline">
             <Link href={`/login?next=${encodeURIComponent(`/expert/${slug}?tab=reviews`)}`}>
-              Sign in to review
+              {t("signInCta")}
             </Link>
           </Button>
         </div>

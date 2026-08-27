@@ -1,5 +1,7 @@
 import { Star } from "lucide-react";
-import { cn, formatRating, pluralize } from "@/lib/utils";
+import { useTranslations } from "next-intl";
+
+import { cn, formatRating } from "@/lib/utils";
 
 /**
  * Rating display. The numeric value is set in mono because it is measured
@@ -18,10 +20,12 @@ export function RatingStars({
   showCount?: boolean;
   className?: string;
 }) {
+  const t = useTranslations("reviews");
+
   if (count === 0) {
     return (
       <span className={cn("font-mono text-eyebrow uppercase text-steel-soft", className)}>
-        No reviews yet
+        {t("noneYet")}
       </span>
     );
   }
@@ -32,7 +36,13 @@ export function RatingStars({
   return (
     <span
       className={cn("flex items-center gap-1.5", className)}
-      aria-label={`Rated ${formatRating(rating)} out of 5 from ${pluralize(count, "review")}`}
+      /*
+       * `pluralize` is gone from here. It appended an "s" to make "12 reviews",
+       * which is a rule of exactly one of the seven languages this ships in —
+       * and it also hard-coded the whole sentence's word order. The ICU plural in
+       * the catalogue does both jobs per-language instead.
+       */
+      aria-label={t("ratingAria", { rating: formatRating(rating), count })}
     >
       <span aria-hidden className="flex items-center gap-px">
         {[1, 2, 3, 4, 5].map((index) => (

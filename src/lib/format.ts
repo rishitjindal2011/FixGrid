@@ -33,6 +33,30 @@
  * never rounded away, since a total that doesn't add up is worse than a wide
  * column.
  */
+/**
+ * Money is formatted with `en-IN` on purpose, in every UI language.
+ *
+ * DO NOT make this take the active locale. It looks like an oversight after the
+ * i18n work; it is not. Verified against the runtime:
+ *
+ *   en / hi / ta / te / kn →  ₹2,500.00
+ *   mr                     →  ₹२,५००.००     (Devanagari digits)
+ *   bn                     →  ২,৫০০.০০₹     (Bengali digits, AND ₹ moves to the end)
+ *
+ * CLDR's default numbering system is `deva` for Marathi and `beng` for Bengali,
+ * and Bengali also places the currency symbol as a suffix. On a wallet balance,
+ * a fee or an invoice line that is a legibility and trust problem, not a
+ * nicety — the amount and where the ₹ sits must not change with the interface
+ * language. Amounts are also compared against SMS receipts and UPI apps, which
+ * are Latin-digit.
+ *
+ * Prose counts are different and are left to the locale: `২টি দোকান` is simply
+ * how Bengali writes "2 shops", and those go through ICU plurals in the message
+ * catalogues, not through this function.
+ *
+ * If a locale ever genuinely needs native digits for money, pin it explicitly
+ * with a `-u-nu-…` extension rather than passing the bare locale through.
+ */
 export function formatMoney(
   minor: number | null | undefined,
   currency = "INR",

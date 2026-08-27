@@ -6,6 +6,8 @@
  * endpoints from a second place.
  */
 
+import { splitLocale, withLocale, type Locale } from "@/i18n/config";
+
 /** Routes that must never be a post-sign-in destination. */
 const AUTH_ROUTES = ["/login", "/signup", "/forgot-password", "/reset-password"];
 
@@ -45,7 +47,40 @@ export function safeNextPath(candidate: string | null | undefined): string {
   if (candidate.includes("\\")) return DEFAULT_SIGNED_IN_PATH;
 
   const path = candidate.split(/[?#]/)[0] ?? "";
-  if (AUTH_ROUTES.includes(path)) return DEFAULT_SIGNED_IN_PATH;
+
+  /*
+   * Compared against the DE-LOCALIZED path.
+   *
+   * `AUTH_ROUTES` lists `/login`, and a localized candidate arrives as
+   * `/hi/login` — which does not match, so the guard that stops us bouncing a
+   * visitor back to the form they just submitted would quietly stop working for
+   * six of seven locales. The failure mode is a login → login loop, and it is
+   * reachable from a hand-edited `?next=`.
+   */
+  const { pathname: bare } = splitLocale(path);
+  if (AUTH_ROUTES.includes(bare)) return DEFAULT_SIGNED_IN_PATH;
 
   return candidate;
+}
+
+/**
+ * Re-express a safe redirect target in a specific locale, preserving any query
+ * or hash.
+ *
+ * The auth actions and the already-signed-in guards feed the result of
+ * `safeNextPath` straight into `redirect()`, which sets a bare `Location` header
+ * — so a Hindi visitor signing in would be bounced to the English `/dashboard`,
+ * dropping them out of their locale at the exact moment they commit to an
+ * account. This strips whatever prefix the candidate arrived with and reapplies
+ * the request's own, so the destination stays in-language.
+ *
+ * For the default locale `withLocale` returns the path untouched, so English
+ * redirects are byte-for-byte identical to before this existed.
+ */
+export function localizedTarget(safe: string, locale: Locale): string {
+  const cut = safe.search(/[?#]/);
+  const path = cut === -1 ? safe : safe.slice(0, cut);
+  const suffix = cut === -1 ? "" : safe.slice(cut);
+  const { pathname } = splitLocale(path);
+  return withLocale(pathname, locale) + suffix;
 }

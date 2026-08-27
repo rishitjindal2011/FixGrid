@@ -1,18 +1,20 @@
 "use client";
 
 import { useFormStatus } from "react-dom";
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { signInWithGoogle } from "@/lib/auth/actions";
 
-function GoogleButton({ pendingLabel }: { pendingLabel: string }) {
+function GoogleButton() {
+  const t = useTranslations("auth");
   const { pending } = useFormStatus();
 
   return (
-    <Button 
-      type="submit" 
-      variant="outline" 
-      size="lg" 
-      className="w-full flex items-center justify-center gap-3 font-medium" 
+    <Button
+      type="submit"
+      variant="outline"
+      size="lg"
+      className="w-full flex items-center justify-center gap-3 font-medium"
       disabled={pending}
     >
       {!pending && (
@@ -24,7 +26,7 @@ function GoogleButton({ pendingLabel }: { pendingLabel: string }) {
           <path d="M1 1h22v22H1z" fill="none"/>
         </svg>
       )}
-      {pending ? pendingLabel : "Continue with Google"}
+      {pending ? t("actions.googlePending") : t("actions.google")}
     </Button>
   );
 }
@@ -33,7 +35,7 @@ export function GoogleSignIn({ next }: { next?: string }) {
   return (
     <form action={signInWithGoogle} className="w-full">
       {next ? <input type="hidden" name="next" value={next} /> : null}
-      <GoogleButton pendingLabel="Connecting to Google…" />
+      <GoogleButton />
     </form>
   );
 }

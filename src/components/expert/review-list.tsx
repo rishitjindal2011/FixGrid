@@ -1,15 +1,22 @@
 import { MessageSquarePlus } from "lucide-react";
+import { useLocale, useTranslations } from "next-intl";
 
 import { RatingStars } from "@/components/rating-stars";
 import type { ReviewWithAuthor } from "@/lib/types/database";
 
-/** Relative date without pulling in a date library for one string. */
-function formatRelativeDate(iso: string): string {
+/**
+ * Relative date without pulling in a date library for one string.
+ *
+ * `locale` is threaded in rather than hard-coded to "en". `Intl.RelativeTimeFormat`
+ * already knows how to say "2 दिन पहले" and "3 நாட்களுக்கு முன்" — the old
+ * hard-coded "en" was the only thing stopping it.
+ */
+function formatRelativeDate(iso: string, locale: string, justNow: string): string {
   const then = new Date(iso).getTime();
   if (Number.isNaN(then)) return "";
 
   const diffSeconds = Math.round((then - Date.now()) / 1000);
-  const formatter = new Intl.RelativeTimeFormat("en", { numeric: "auto" });
+  const formatter = new Intl.RelativeTimeFormat(locale, { numeric: "auto" });
 
   const thresholds: Array<[Intl.RelativeTimeFormatUnit, number]> = [
     ["year", 60 * 60 * 24 * 365],
@@ -25,7 +32,7 @@ function formatRelativeDate(iso: string): string {
       return formatter.format(Math.round(diffSeconds / seconds), unit);
     }
   }
-  return "just now";
+  return justNow;
 }
 
 function initials(name: string): string {
@@ -37,13 +44,16 @@ function initials(name: string): string {
 }
 
 export function ReviewList({ reviews }: { reviews: ReviewWithAuthor[] }) {
+  const t = useTranslations("reviews");
+  const locale = useLocale();
+
   if (reviews.length === 0) {
     return (
       <div className="rounded-machined border border-dashed border-hairline bg-chalk p-8 text-center">
         <MessageSquarePlus aria-hidden className="mx-auto size-6 text-steel-soft" />
-        <p className="mt-3 font-display text-lg uppercase text-enamel">No reviews yet</p>
+        <p className="mt-3 font-display text-lg uppercase text-enamel">{t("noneYet")}</p>
         <p className="mx-auto mt-1 max-w-sm text-sm leading-relaxed text-steel">
-          Used this shop? Write the first review and help the next person decide.
+          {t("beFirst")}
         </p>
       </div>
     );
@@ -52,7 +62,9 @@ export function ReviewList({ reviews }: { reviews: ReviewWithAuthor[] }) {
   return (
     <ul className="space-y-4">
       {reviews.map((review) => {
-        const name = review.customer?.display_name ?? "Verified customer";
+        // Not translated: a reviewer's own display name is their content, and the
+        // fallback is a label we own, so only the fallback goes through `t`.
+        const name = review.customer?.display_name ?? t("verifiedCustomer");
         return (
           <li
             key={review.id}
@@ -73,7 +85,7 @@ export function ReviewList({ reviews }: { reviews: ReviewWithAuthor[] }) {
                     dateTime={review.created_at}
                     className="font-mono text-eyebrow uppercase text-steel-soft"
                   >
-                    {formatRelativeDate(review.created_at)}
+                    {formatRelativeDate(review.created_at, locale, t("justNow"))}
                   </time>
                 </div>
 
