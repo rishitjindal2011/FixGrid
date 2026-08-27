@@ -102,6 +102,8 @@ export const SITE_KEYWORDS: string[] = [
   "local fixers",
   "book a repair",
   "FixGrid",
+  "Vytron",
+  "Vytron FixGrid",
 ];
 
 /**

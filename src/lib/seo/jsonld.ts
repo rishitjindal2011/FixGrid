@@ -48,6 +48,12 @@ export function buildOrganization(): WithContext<Thing> {
     "@type": "Organization",
     "@id": `${SITE_ORIGIN}/#organization`,
     name: SITE_NAME,
+    // Vytron is the company behind FixGrid and the name on the domain
+    // (vytron.me). Declaring it here maps both brand terms to one entity, so a
+    // search for either "FixGrid" or "Vytron" resolves to this same site.
+    alternateName: ["Vytron", "Vytron FixGrid"],
+    description:
+      "FixGrid, by Vytron, is a directory of verified local repair shops and experts.",
     url: SITE_ORIGIN,
     logo: absoluteUrl("/icon.svg"),
   });

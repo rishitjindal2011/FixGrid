@@ -69,6 +69,12 @@ export async function SiteFooter() {
         <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-4">
           <div>
             <p className="font-display text-xl uppercase text-enamel">{SITE_NAME}</p>
+            {/* "by Vytron" is a proper noun, identical in every locale, so it is
+                not routed through the message catalogue. It keeps the parent
+                brand visible on every page for a "Vytron" brand search. */}
+            <p className="mt-0.5 font-mono text-eyebrow uppercase tracking-[0.14em] text-steel-soft">
+              by Vytron
+            </p>
             <p className="mt-2 max-w-xs text-sm leading-relaxed text-steel">
               {t("tagline")}
             </p>
