@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { BadgeCheck, MapPin, Star } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
@@ -13,6 +14,7 @@ import type { SavedExpert } from "@/lib/dashboard/customer";
  * keep in step and would break the "share this shop" link.
  */
 export function SavedExpertList({ experts }: { experts: SavedExpert[] }) {
+  const t = useTranslations("dashboard.savedList");
   return (
     <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
       {experts.map((expert) => (
@@ -26,7 +28,7 @@ export function SavedExpertList({ experts }: { experts: SavedExpert[] }) {
                 {expert.shopName}
               </p>
               {expert.verified ? (
-                <BadgeCheck aria-label="Verified" className="size-4 shrink-0 text-verdigris" />
+                <BadgeCheck aria-label={t("verified")} className="size-4 shrink-0 text-verdigris" />
               ) : null}
             </div>
 
@@ -43,9 +45,9 @@ export function SavedExpertList({ experts }: { experts: SavedExpert[] }) {
               </span>
 
               {expert.acceptsBookings ? (
-                <Badge variant="verified">Bookable</Badge>
+                <Badge variant="verified">{t("bookable")}</Badge>
               ) : (
-                <Badge variant="neutral">Enquire</Badge>
+                <Badge variant="neutral">{t("enquire")}</Badge>
               )}
             </div>
           </Link>

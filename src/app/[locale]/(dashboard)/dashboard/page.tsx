@@ -2,6 +2,7 @@ import type { ComponentType } from "react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import type { Metadata } from "next";
+import { getTranslations } from "next-intl/server";
 import {
   CalendarCheck,
   CalendarDays,
@@ -31,10 +32,13 @@ import {
 } from "@/lib/dashboard/customer";
 import { ACTIVE_BOOKING_STATUSES } from "@/lib/types/marketplace";
 
-export const metadata: Metadata = {
-  title: "Dashboard",
-  robots: { index: false, follow: false },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("dashboard.overview");
+  return {
+    title: t("metaTitle"),
+    robots: { index: false, follow: false },
+  };
+}
 
 /**
  * The customer's home screen.
@@ -54,6 +58,8 @@ export default async function DashboardOverviewPage() {
   // The layout already gated this; the redirect is here so `user` narrows.
   if (!user) redirect("/login?next=/dashboard");
 
+  const t = await getTranslations("dashboard.overview");
+
   const now = new Date();
 
   const [nextBooking, stats, activeBookings, activity, savedExperts] = await Promise.all([
@@ -69,21 +75,21 @@ export default async function DashboardOverviewPage() {
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        eyebrow="Overview"
-        title={`Hello, ${firstName}`}
-        description="Your repairs, your shops and anything waiting on you — all in one place."
+        eyebrow={t("eyebrow")}
+        title={t("greeting", { name: firstName })}
+        description={t("intro")}
         actions={
           <>
             <Button asChild variant="primary" size="sm">
               <Link href="/dashboard/discover">
                 <Search aria-hidden />
-                Find an expert
+                {t("findExpert")}
               </Link>
             </Button>
             <Button asChild variant="outline" size="sm">
               <Link href="/dashboard/bookings">
                 <CalendarDays aria-hidden />
-                All bookings
+                {t("allBookings")}
               </Link>
             </Button>
           </>
@@ -92,31 +98,31 @@ export default async function DashboardOverviewPage() {
 
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <StatTile
-          label="Active"
+          label={t("statActive")}
           value={stats.active}
-          hint="Bookings on the go"
+          hint={t("statActiveHint")}
           icon={CalendarCheck}
           href="/dashboard/bookings"
         />
         <StatTile
-          label="Awaiting reply"
+          label={t("statAwaiting")}
           value={stats.awaitingShop}
-          hint={stats.awaitingShop === 1 ? "Request sent" : "Requests sent"}
+          hint={stats.awaitingShop === 1 ? t("statAwaitingOne") : t("statAwaitingMany")}
           icon={Clock}
           href="/dashboard/bookings"
           emphasis={stats.awaitingShop > 0}
         />
         <StatTile
-          label="In warranty"
+          label={t("statWarranty")}
           value={stats.inWarranty}
-          hint="Covered right now"
+          hint={t("statWarrantyHint")}
           icon={ShieldCheck}
           href="/dashboard/warranty"
         />
         <StatTile
-          label="Completed"
+          label={t("statCompleted")}
           value={stats.completed}
-          hint="Repairs done"
+          hint={t("statCompletedHint")}
           icon={Star}
           href="/dashboard/reviews"
         />
@@ -127,13 +133,13 @@ export default async function DashboardOverviewPage() {
       <div className="grid gap-6 lg:grid-cols-5">
         <section className="lg:col-span-3">
           <SectionHeader
-            title="Active bookings"
+            title={t("activeBookings")}
             action={
               <Link
                 href="/dashboard/bookings"
                 className="font-mono text-eyebrow uppercase tracking-[0.14em] text-signal hover:underline"
               >
-                View all
+                {t("viewAll")}
               </Link>
             }
           />
@@ -147,11 +153,11 @@ export default async function DashboardOverviewPage() {
           ) : (
             <EmptyState
               icon={CalendarDays}
-              title="Nothing on the bench"
-              description="When you book a repair it shows up here, from request through to warranty."
+              title={t("emptyActiveTitle")}
+              description={t("emptyActiveDesc")}
               action={
                 <Button asChild variant="outline" size="sm">
-                  <Link href="/dashboard/discover">Find an expert</Link>
+                  <Link href="/dashboard/discover">{t("findExpert")}</Link>
                 </Button>
               }
             />
@@ -159,20 +165,20 @@ export default async function DashboardOverviewPage() {
         </section>
 
         <section className="lg:col-span-2">
-          <SectionHeader title="Recent activity" />
+          <SectionHeader title={t("recentActivity")} />
           <ActivityFeed entries={activity} now={now} />
         </section>
       </div>
 
       <section>
         <SectionHeader
-          title="Saved experts"
+          title={t("savedExperts")}
           action={
             <Link
               href="/dashboard/discover"
               className="font-mono text-eyebrow uppercase tracking-[0.14em] text-signal hover:underline"
             >
-              Browse all
+              {t("browseAll")}
             </Link>
           }
         />
@@ -181,11 +187,11 @@ export default async function DashboardOverviewPage() {
         ) : (
           <EmptyState
             icon={Heart}
-            title="No saved shops yet"
-            description="Save the shops you trust and they will be one tap away next time something breaks."
+            title={t("emptySavedTitle")}
+            description={t("emptySavedDesc")}
             action={
               <Button asChild variant="outline" size="sm">
-                <Link href="/dashboard/discover">Discover experts</Link>
+                <Link href="/dashboard/discover">{t("discoverExperts")}</Link>
               </Button>
             }
           />
@@ -196,20 +202,20 @@ export default async function DashboardOverviewPage() {
         <QuickAction
           href="/dashboard/discover"
           icon={Search}
-          title="Find an expert"
-          description="Search by device, area or rating"
+          title={t("quickFindTitle")}
+          description={t("quickFindDesc")}
         />
         <QuickAction
           href="/dashboard/messages"
           icon={MessagesSquare}
-          title="Message inbox"
-          description="Talk to a shop about a job"
+          title={t("quickMessagesTitle")}
+          description={t("quickMessagesDesc")}
         />
         <QuickAction
           href="/dashboard/bookings"
           icon={CalendarDays}
-          title="Manage bookings"
-          description="Reschedule, cancel or track"
+          title={t("quickBookingsTitle")}
+          description={t("quickBookingsDesc")}
         />
       </section>
     </div>

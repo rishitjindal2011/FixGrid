@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { BadgeCheck, CalendarPlus, MapPin, Timer } from "lucide-react";
 
 import {
@@ -30,6 +31,7 @@ export function ExpertCard({
   expert: DiscoverExpert;
   toggleSaved: ToggleSavedExpert;
 }) {
+  const t = useTranslations("dashboard.expertCard");
   const bookHref = `/dashboard/discover/${expert.slug}`;
 
   return (
@@ -42,7 +44,7 @@ export function ExpertCard({
             </Link>
             {expert.verified ? (
               <BadgeCheck
-                aria-label="Verified shop"
+                aria-label={t("verifiedShop")}
                 className="ml-1.5 inline-block size-4 -translate-y-px text-verdigris"
               />
             ) : null}
@@ -83,22 +85,22 @@ export function ExpertCard({
 
       <dl className="mt-auto flex flex-wrap items-baseline gap-x-4 gap-y-1 pt-4 text-xs text-steel">
         <div className="flex items-baseline gap-1.5">
-          <dt className="eyebrow">From</dt>
+          <dt className="eyebrow">{t("from")}</dt>
           <dd className="font-mono text-sm tabular-nums text-enamel">
             {/* No priced services is not "₹0" — it is a shop that quotes on
                 inspection, which is a legitimate way to sell a repair. */}
             {expert.priceFromPence === null
-              ? "On quote"
+              ? t("onQuote")
               : formatMoney(expert.priceFromPence)}
           </dd>
         </div>
 
         <div className="flex items-center gap-1.5">
-          <dt className="sr-only">Typical reply time</dt>
+          <dt className="sr-only">{t("replyTime")}</dt>
           <dd className="flex items-center gap-1.5">
             <Timer aria-hidden className="size-3.5 text-steel-soft" />
             <span className="font-mono tabular-nums">
-              Replies in {formatDuration(expert.responseHours * 60)}
+              {t("repliesIn", { duration: formatDuration(expert.responseHours * 60) })}
             </span>
           </dd>
         </div>
@@ -109,17 +111,17 @@ export function ExpertCard({
           <Button asChild variant="primary" size="sm" className="flex-1">
             <Link href={bookHref}>
               <CalendarPlus aria-hidden />
-              Book now
+              {t("bookNow")}
             </Link>
           </Button>
         ) : (
           <Button asChild variant="outline" size="sm" className="flex-1">
-            <Link href={`/expert/${expert.slug}`}>Enquire</Link>
+            <Link href={`/expert/${expert.slug}`}>{t("enquire")}</Link>
           </Button>
         )}
 
         <Button asChild variant="ghost" size="sm">
-          <Link href={`/expert/${expert.slug}`}>Profile</Link>
+          <Link href={`/expert/${expert.slug}`}>{t("profile")}</Link>
         </Button>
       </div>
     </article>

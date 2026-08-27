@@ -518,6 +518,66 @@
         "account": "Account",
         "accountHint": "closing your account"
       }
+    },
+    "overview": {
+      "metaTitle": "Dashboard",
+      "eyebrow": "Overview",
+      "greeting": "Hello, {name}",
+      "intro": "Your repairs, your shops and anything waiting on you — all in one place.",
+      "findExpert": "Find an expert",
+      "allBookings": "All bookings",
+      "statActive": "Active",
+      "statActiveHint": "Bookings on the go",
+      "statAwaiting": "Awaiting reply",
+      "statAwaitingOne": "Request sent",
+      "statAwaitingMany": "Requests sent",
+      "statWarranty": "In warranty",
+      "statWarrantyHint": "Covered right now",
+      "statCompleted": "Completed",
+      "statCompletedHint": "Repairs done",
+      "activeBookings": "Active bookings",
+      "viewAll": "View all",
+      "emptyActiveTitle": "Nothing on the bench",
+      "emptyActiveDesc": "When you book a repair it shows up here, from request through to warranty.",
+      "recentActivity": "Recent activity",
+      "savedExperts": "Saved experts",
+      "browseAll": "Browse all",
+      "emptySavedTitle": "No saved shops yet",
+      "emptySavedDesc": "Save the shops you trust and they will be one tap away next time something breaks.",
+      "discoverExperts": "Discover experts",
+      "quickFindTitle": "Find an expert",
+      "quickFindDesc": "Search by device, area or rating",
+      "quickMessagesTitle": "Message inbox",
+      "quickMessagesDesc": "Talk to a shop about a job",
+      "quickBookingsTitle": "Manage bookings",
+      "quickBookingsDesc": "Reschedule, cancel or track"
+    },
+    "notifications": {
+      "metaTitle": "Notifications",
+      "eyebrow": "Your account",
+      "title": "Notifications",
+      "unread": "{count} unread of the last {total}.",
+      "descDefault": "Booking updates, messages and warranty reminders.",
+      "emptyTitle": "Nothing yet",
+      "emptyDesc": "When a shop replies to a request, updates a repair or your warranty is about to lapse, it shows up here.",
+      "findExpert": "Find an expert",
+      "markAllRead": "Mark all read",
+      "markingRead": "Marking…"
+    },
+    "expertCard": {
+      "verifiedShop": "Verified shop",
+      "from": "From",
+      "onQuote": "On quote",
+      "replyTime": "Typical reply time",
+      "repliesIn": "Replies in {duration}",
+      "bookNow": "Book now",
+      "enquire": "Enquire",
+      "profile": "Profile"
+    },
+    "savedList": {
+      "verified": "Verified",
+      "bookable": "Bookable",
+      "enquire": "Enquire"
     }
   },
   "blog": {

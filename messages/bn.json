@@ -518,6 +518,66 @@
         "account": "অ্যাকাউন্ট",
         "accountHint": "আপনার অ্যাকাউন্ট বন্ধ করা"
       }
+    },
+    "overview": {
+      "metaTitle": "ড্যাশবোর্ড",
+      "eyebrow": "সারসংক্ষেপ",
+      "greeting": "নমস্কার, {name}",
+      "intro": "আপনার মেরামত, আপনার দোকান এবং আপনার অপেক্ষায় থাকা সবকিছু — এক জায়গায়।",
+      "findExpert": "বিশেষজ্ঞ খুঁজুন",
+      "allBookings": "সব বুকিং",
+      "statActive": "সক্রিয়",
+      "statActiveHint": "চলমান বুকিং",
+      "statAwaiting": "উত্তরের অপেক্ষায়",
+      "statAwaitingOne": "অনুরোধ পাঠানো হয়েছে",
+      "statAwaitingMany": "অনুরোধ পাঠানো হয়েছে",
+      "statWarranty": "ওয়ারেন্টিতে",
+      "statWarrantyHint": "এখন কভার আছে",
+      "statCompleted": "সম্পন্ন",
+      "statCompletedHint": "মেরামত সম্পন্ন",
+      "activeBookings": "সক্রিয় বুকিং",
+      "viewAll": "সব দেখুন",
+      "emptyActiveTitle": "বেঞ্চে কিছু নেই",
+      "emptyActiveDesc": "আপনি কোনো মেরামত বুক করলে সেটি এখানে দেখা যাবে — অনুরোধ থেকে ওয়ারেন্টি পর্যন্ত।",
+      "recentActivity": "সাম্প্রতিক কার্যকলাপ",
+      "savedExperts": "সংরক্ষিত বিশেষজ্ঞ",
+      "browseAll": "সব ব্রাউজ করুন",
+      "emptySavedTitle": "এখনও কোনো দোকান সংরক্ষিত নেই",
+      "emptySavedDesc": "যে দোকানগুলিতে আপনি ভরসা করেন সেগুলি সংরক্ষণ করুন — পরের বার কিছু নষ্ট হলে সেগুলি এক ট্যাপ দূরে থাকবে।",
+      "discoverExperts": "বিশেষজ্ঞ আবিষ্কার করুন",
+      "quickFindTitle": "বিশেষজ্ঞ খুঁজুন",
+      "quickFindDesc": "ডিভাইস, এলাকা বা রেটিং অনুযায়ী খুঁজুন",
+      "quickMessagesTitle": "বার্তা ইনবক্স",
+      "quickMessagesDesc": "কোনো কাজ নিয়ে দোকানের সাথে কথা বলুন",
+      "quickBookingsTitle": "বুকিং পরিচালনা করুন",
+      "quickBookingsDesc": "পুনঃনির্ধারণ, বাতিল বা ট্র্যাক করুন"
+    },
+    "notifications": {
+      "metaTitle": "বিজ্ঞপ্তি",
+      "eyebrow": "আপনার অ্যাকাউন্ট",
+      "title": "বিজ্ঞপ্তি",
+      "unread": "শেষ {total}টির মধ্যে {count}টি অপঠিত।",
+      "descDefault": "বুকিং আপডেট, বার্তা এবং ওয়ারেন্টি অনুস্মারক।",
+      "emptyTitle": "এখনও কিছু নেই",
+      "emptyDesc": "কোনো দোকান কোনো অনুরোধের উত্তর দিলে, কোনো মেরামত আপডেট করলে বা আপনার ওয়ারেন্টি শেষ হতে চললে, সেটি এখানে দেখা যাবে।",
+      "findExpert": "বিশেষজ্ঞ খুঁজুন",
+      "markAllRead": "সব পঠিত হিসাবে চিহ্নিত করুন",
+      "markingRead": "চিহ্নিত করা হচ্ছে…"
+    },
+    "expertCard": {
+      "verifiedShop": "যাচাইকৃত দোকান",
+      "from": "শুরু",
+      "onQuote": "কোটেশনে",
+      "replyTime": "সাধারণ উত্তরের সময়",
+      "repliesIn": "{duration}-এ উত্তর দেয়",
+      "bookNow": "এখনই বুক করুন",
+      "enquire": "জিজ্ঞাসা করুন",
+      "profile": "প্রোফাইল"
+    },
+    "savedList": {
+      "verified": "যাচাইকৃত",
+      "bookable": "বুকযোগ্য",
+      "enquire": "জিজ্ঞাসা করুন"
     }
   },
   "blog": {

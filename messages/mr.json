@@ -518,6 +518,66 @@
         "account": "खाते",
         "accountHint": "तुमचे खाते बंद करणे"
       }
+    },
+    "overview": {
+      "metaTitle": "डॅशबोर्ड",
+      "eyebrow": "आढावा",
+      "greeting": "नमस्कार, {name}",
+      "intro": "तुमच्या दुरुस्त्या, तुमची दुकाने आणि तुमची वाट पाहणारे सर्व काही — एकाच ठिकाणी.",
+      "findExpert": "तज्ज्ञ शोधा",
+      "allBookings": "सर्व बुकिंग",
+      "statActive": "सक्रिय",
+      "statActiveHint": "सुरू असलेली बुकिंग",
+      "statAwaiting": "उत्तराची वाट",
+      "statAwaitingOne": "विनंती पाठवली",
+      "statAwaitingMany": "विनंत्या पाठवल्या",
+      "statWarranty": "वॉरंटीमध्ये",
+      "statWarrantyHint": "आत्ता कव्हर आहे",
+      "statCompleted": "पूर्ण",
+      "statCompletedHint": "दुरुस्त्या पूर्ण",
+      "activeBookings": "सक्रिय बुकिंग",
+      "viewAll": "सर्व पहा",
+      "emptyActiveTitle": "बेंचवर काहीही नाही",
+      "emptyActiveDesc": "तुम्ही एखादी दुरुस्ती बुक केल्यावर ती इथे दिसते — विनंतीपासून वॉरंटीपर्यंत.",
+      "recentActivity": "अलीकडील क्रियाकलाप",
+      "savedExperts": "जतन केलेले तज्ज्ञ",
+      "browseAll": "सर्व ब्राउझ करा",
+      "emptySavedTitle": "अद्याप कोणतेही दुकान जतन केलेले नाही",
+      "emptySavedDesc": "तुमचा विश्वास असलेली दुकाने जतन करा — पुढच्या वेळी काही बिघडल्यास ती एका टॅपवर असतील.",
+      "discoverExperts": "तज्ज्ञ शोधा",
+      "quickFindTitle": "तज्ज्ञ शोधा",
+      "quickFindDesc": "डिव्हाइस, क्षेत्र किंवा रेटिंगनुसार शोधा",
+      "quickMessagesTitle": "संदेश इनबॉक्स",
+      "quickMessagesDesc": "एखाद्या कामाबद्दल दुकानाशी बोला",
+      "quickBookingsTitle": "बुकिंग व्यवस्थापित करा",
+      "quickBookingsDesc": "पुनर्नियोजन, रद्द किंवा ट्रॅक करा"
+    },
+    "notifications": {
+      "metaTitle": "सूचना",
+      "eyebrow": "तुमचे खाते",
+      "title": "सूचना",
+      "unread": "शेवटच्या {total} पैकी {count} न वाचलेल्या.",
+      "descDefault": "बुकिंग अपडेट, संदेश आणि वॉरंटी स्मरणपत्रे.",
+      "emptyTitle": "अद्याप काहीही नाही",
+      "emptyDesc": "एखादे दुकान विनंतीला उत्तर देते, दुरुस्ती अपडेट करते किंवा तुमची वॉरंटी संपणार असते तेव्हा ते इथे दिसते.",
+      "findExpert": "तज्ज्ञ शोधा",
+      "markAllRead": "सर्व वाचलेले म्हणून चिन्हांकित करा",
+      "markingRead": "चिन्हांकित करत आहे…"
+    },
+    "expertCard": {
+      "verifiedShop": "पडताळलेले दुकान",
+      "from": "किमान",
+      "onQuote": "कोटेशनवर",
+      "replyTime": "सामान्य उत्तर वेळ",
+      "repliesIn": "{duration} मध्ये उत्तर",
+      "bookNow": "आता बुक करा",
+      "enquire": "चौकशी करा",
+      "profile": "प्रोफाइल"
+    },
+    "savedList": {
+      "verified": "पडताळलेले",
+      "bookable": "बुक करण्यायोग्य",
+      "enquire": "चौकशी करा"
     }
   },
   "blog": {

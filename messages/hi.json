@@ -518,6 +518,66 @@
         "account": "खाता",
         "accountHint": "अपना खाता बंद करना"
       }
+    },
+    "overview": {
+      "metaTitle": "डैशबोर्ड",
+      "eyebrow": "अवलोकन",
+      "greeting": "नमस्ते, {name}",
+      "intro": "आपकी मरम्मतें, आपकी दुकानें और आपके इंतज़ार में जो कुछ भी है — सब एक ही जगह।",
+      "findExpert": "विशेषज्ञ खोजें",
+      "allBookings": "सभी बुकिंग",
+      "statActive": "सक्रिय",
+      "statActiveHint": "चल रही बुकिंग",
+      "statAwaiting": "जवाब का इंतज़ार",
+      "statAwaitingOne": "अनुरोध भेजा गया",
+      "statAwaitingMany": "अनुरोध भेजे गए",
+      "statWarranty": "वारंटी में",
+      "statWarrantyHint": "अभी कवर है",
+      "statCompleted": "पूर्ण",
+      "statCompletedHint": "मरम्मतें पूरी",
+      "activeBookings": "सक्रिय बुकिंग",
+      "viewAll": "सभी देखें",
+      "emptyActiveTitle": "बेंच पर कुछ नहीं",
+      "emptyActiveDesc": "जब आप कोई मरम्मत बुक करते हैं तो वह यहाँ दिखती है — अनुरोध से लेकर वारंटी तक।",
+      "recentActivity": "हाल की गतिविधि",
+      "savedExperts": "सहेजे गए विशेषज्ञ",
+      "browseAll": "सभी ब्राउज़ करें",
+      "emptySavedTitle": "अभी कोई दुकान सहेजी नहीं",
+      "emptySavedDesc": "जिन दुकानों पर आप भरोसा करते हैं उन्हें सहेजें — अगली बार कुछ ख़राब होने पर वे एक टैप दूर होंगी।",
+      "discoverExperts": "विशेषज्ञ खोजें",
+      "quickFindTitle": "विशेषज्ञ खोजें",
+      "quickFindDesc": "डिवाइस, क्षेत्र या रेटिंग से खोजें",
+      "quickMessagesTitle": "संदेश इनबॉक्स",
+      "quickMessagesDesc": "किसी काम के बारे में दुकान से बात करें",
+      "quickBookingsTitle": "बुकिंग प्रबंधित करें",
+      "quickBookingsDesc": "पुनर्निर्धारित करें, रद्द करें या ट्रैक करें"
+    },
+    "notifications": {
+      "metaTitle": "सूचनाएँ",
+      "eyebrow": "आपका खाता",
+      "title": "सूचनाएँ",
+      "unread": "पिछली {total} में से {count} अपठित।",
+      "descDefault": "बुकिंग अपडेट, संदेश और वारंटी अनुस्मारक।",
+      "emptyTitle": "अभी कुछ नहीं",
+      "emptyDesc": "जब कोई दुकान किसी अनुरोध का जवाब देती है, किसी मरम्मत को अपडेट करती है या आपकी वारंटी समाप्त होने वाली होती है, तो वह यहाँ दिखती है।",
+      "findExpert": "विशेषज्ञ खोजें",
+      "markAllRead": "सभी पढ़ा हुआ चिह्नित करें",
+      "markingRead": "चिह्नित कर रहे हैं…"
+    },
+    "expertCard": {
+      "verifiedShop": "सत्यापित दुकान",
+      "from": "शुरू",
+      "onQuote": "कोटेशन पर",
+      "replyTime": "सामान्य जवाब समय",
+      "repliesIn": "{duration} में जवाब",
+      "bookNow": "अभी बुक करें",
+      "enquire": "पूछताछ करें",
+      "profile": "प्रोफ़ाइल"
+    },
+    "savedList": {
+      "verified": "सत्यापित",
+      "bookable": "बुक करने योग्य",
+      "enquire": "पूछताछ करें"
     }
   },
   "blog": {
