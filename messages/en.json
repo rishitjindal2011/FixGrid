@@ -11,7 +11,10 @@
     "allCategories": "All categories",
     "browseAll": "Browse all",
     "signOut": "Sign out",
-    "signingOut": "Signing out…"
+    "signingOut": "Signing out…",
+    "draftPreview": "Draft preview",
+    "exitPreview": "Exit preview",
+    "pageNotFound": "Page not found"
   },
   "header": {
     "mainNav": "Main",
@@ -516,5 +519,16 @@
         "accountHint": "closing your account"
       }
     }
+  },
+  "blog": {
+    "metaTitle": "Blog",
+    "metaDescription": "Read the latest news, guides, and tips from the experts.",
+    "heading": "The Repair Blog",
+    "intro": "Expert guides, repair tips, and industry news from the technicians who fix it.",
+    "empty": "No published posts yet.",
+    "readMoreFallback": "Read more about this topic…",
+    "readArticle": "Read Article",
+    "backToHome": "Back to Home",
+    "postNotFound": "Post not found"
   }
 }
