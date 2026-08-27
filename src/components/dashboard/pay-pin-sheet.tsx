@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { useActionState } from "react";
+import { useTranslations } from "next-intl";
 import { AlertTriangle, CheckCircle2, Lock } from "lucide-react";
 
 import { confirmTopUpByToken } from "@/lib/wallet/topup";
@@ -42,6 +43,7 @@ export function PayPinSheet({
     TOPUP_INITIAL_STATE,
   );
   const [pin, setPin] = React.useState("");
+  const t = useTranslations("wallet");
 
   const outcome = state.outcome;
 
@@ -61,7 +63,7 @@ export function PayPinSheet({
           <AlertTriangle aria-hidden className="size-10 text-rose-600" />
         )}
         <p className="text-lg font-semibold text-slate-900">
-          {outcome.ok ? "Payment successful" : "Payment failed"}
+          {outcome.ok ? t("pin.paymentSuccessful") : t("pin.paymentFailed")}
         </p>
         <p className="text-sm leading-relaxed text-slate-600">{outcome.message}</p>
         <p className="font-mono text-xs uppercase tracking-widest text-slate-400">
@@ -69,8 +71,7 @@ export function PayPinSheet({
         </p>
         {outcome.ok ? (
           <p className="pt-2 text-sm text-slate-600">
-            You can close this tab — your balance has already updated on the other
-            device.
+            {t("pin.closeTabNote")}
           </p>
         ) : null}
       </div>
@@ -84,7 +85,7 @@ export function PayPinSheet({
       <input type="hidden" name="credential" value={`${payeeVpa}`} />
 
       <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-        <p className="text-xs uppercase tracking-widest text-slate-400">Paying</p>
+        <p className="text-xs uppercase tracking-widest text-slate-400">{t("pin.paying")}</p>
         <p className="pt-1 text-3xl font-semibold tabular-nums text-slate-900">
           {formatMoney(amountMinor)}
         </p>
@@ -100,7 +101,7 @@ export function PayPinSheet({
       <div>
         <p className="flex items-center justify-center gap-1.5 pb-3 text-center text-sm font-medium text-slate-700">
           <Lock aria-hidden className="size-3.5 text-slate-400" />
-          Enter UPI PIN
+          {t("pin.enterPin")}
         </p>
 
         <div className="flex justify-center gap-2" aria-hidden>
@@ -123,7 +124,7 @@ export function PayPinSheet({
             keypad that a screen reader cannot operate is not an improvement on a
             plain field. */}
         <label htmlFor="pin" className="sr-only">
-          UPI PIN — this is a simulation, do not enter a real PIN
+          {t("pin.pinSrLabel")}
         </label>
         <input
           id="pin"
@@ -148,12 +149,11 @@ export function PayPinSheet({
         disabled={pending || pin.length < 4}
         className="w-full rounded-xl bg-slate-900 px-4 py-3.5 text-base font-semibold text-white disabled:opacity-40"
       >
-        {pending ? "Processing…" : `Pay ${formatMoney(amountMinor)}`}
+        {pending ? t("pin.processing") : t("pin.pay", { amount: formatMoney(amountMinor) })}
       </button>
 
       <p className="text-center text-xs leading-relaxed text-slate-500">
-        Any 4–6 digits will do. Nothing is checked, nothing is stored, and no real
-        account is involved.
+        {t("pin.disclaimer")}
       </p>
     </form>
   );
