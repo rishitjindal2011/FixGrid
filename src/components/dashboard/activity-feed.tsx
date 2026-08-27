@@ -1,11 +1,11 @@
 import Link from "next/link";
 import { History } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { EmptyState } from "@/components/dashboard/empty-state";
 import { STATUS_TONE } from "@/lib/bookings/actions-map";
 import type { ActivityEntry } from "@/lib/dashboard/customer";
 import { formatRelative } from "@/lib/format";
-import { BOOKING_STATUS_LABELS } from "@/lib/types/marketplace";
 import { cn } from "@/lib/utils";
 
 /**
@@ -16,11 +16,14 @@ import { cn } from "@/lib/utils";
  * because "Waiting on a screen from our supplier" tells the customer more than
  * "Confirmed → In progress" ever will.
  */
-function describe(entry: ActivityEntry): string {
+function describe(
+  entry: ActivityEntry,
+  tStatus: (key: string) => string,
+): string {
   if (entry.note?.trim()) return entry.note.trim();
 
   if (entry.toStatus) {
-    const label = BOOKING_STATUS_LABELS[entry.toStatus];
+    const label = tStatus(entry.toStatus);
     const who =
       entry.actorRole === "shop"
         ? "The shop"
@@ -49,6 +52,8 @@ export function ActivityFeed({
   entries: ActivityEntry[];
   now: Date;
 }) {
+  const tStatus = useTranslations("statuses");
+
   if (entries.length === 0) {
     return (
       <EmptyState
@@ -87,7 +92,7 @@ export function ActivityFeed({
             />
 
             <div className="min-w-0 flex-1">
-              <p className="text-sm leading-snug text-enamel">{describe(entry)}</p>
+              <p className="text-sm leading-snug text-enamel">{describe(entry, tStatus)}</p>
 
               <p className="flex flex-wrap items-center gap-x-2 pt-1 text-xs text-steel">
                 {entry.shopName ? <span className="truncate">{entry.shopName}</span> : null}

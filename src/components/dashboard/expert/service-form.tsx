@@ -3,6 +3,7 @@
 import * as React from "react";
 import { useActionState } from "react";
 import { useFormStatus } from "react-dom";
+import { useTranslations } from "next-intl";
 import { AlertTriangle, CheckCircle2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -25,7 +26,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { BOOKING_INITIAL_STATE } from "@/lib/bookings/state";
 import { upsertService } from "@/lib/dashboard/expert-actions";
 import {
-  DELIVERY_MODE_LABELS,
   type DeliveryMode,
   type PriceType,
 } from "@/lib/types/marketplace";
@@ -130,6 +130,7 @@ function ServiceFields({
   service: EditableService | null;
 }) {
   const [state, formAction] = useActionState(upsertService, BOOKING_INITIAL_STATE);
+  const tDelivery = useTranslations("deliveryModes");
 
   // The one piece of client state on this form, and the only one that earns it:
   // whether the price inputs exist at all depends on it.
@@ -358,7 +359,7 @@ function ServiceFields({
                       htmlFor={id(mode)}
                       className="text-sm leading-relaxed text-enamel"
                     >
-                      {DELIVERY_MODE_LABELS[mode]}
+                      {tDelivery(mode)}
                     </label>
                   </div>
                 ))}

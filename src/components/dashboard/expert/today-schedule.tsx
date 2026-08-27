@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { CalendarDays, MapPin } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { EmptyState } from "@/components/dashboard/empty-state";
 import { BookingActions } from "@/components/dashboard/expert/pending-requests-panel";
@@ -8,7 +9,6 @@ import { Button } from "@/components/ui/button";
 import { slotEnd, slotStart } from "@/lib/bookings/actions-map";
 import { formatDuration, formatTime } from "@/lib/format";
 import {
-  DELIVERY_MODE_LABELS,
   type BookingCustomerSummary,
   type BookingRow,
 } from "@/lib/types/marketplace";
@@ -50,6 +50,8 @@ export function TodaySchedule({
   timezone: string;
   now: Date;
 }) {
+  const tDelivery = useTranslations("deliveryModes");
+
   if (bookings.length === 0) {
     return (
       <EmptyState
@@ -111,7 +113,7 @@ export function TodaySchedule({
                 {booking.delivery_mode !== "in_shop" ? (
                   <p className="flex items-center gap-1.5 pt-1 text-xs text-steel-soft">
                     <MapPin aria-hidden className="size-3.5 shrink-0" />
-                    {DELIVERY_MODE_LABELS[booking.delivery_mode]}
+                    {tDelivery(booking.delivery_mode)}
                     {booking.address_city ? ` · ${booking.address_city}` : ""}
                   </p>
                 ) : null}

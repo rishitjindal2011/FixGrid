@@ -3,6 +3,7 @@
 import * as React from "react";
 import { useActionState } from "react";
 import { useFormStatus } from "react-dom";
+import { useTranslations } from "next-intl";
 import { AlertTriangle, Briefcase, CheckCircle2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -24,9 +25,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { BOOKING_INITIAL_STATE } from "@/lib/bookings/state";
 import { saveJobItem } from "@/lib/dashboard/expert-actions";
 import {
-  JOB_TYPE_LABELS,
-  WORK_LOCATION_LABELS,
-  SALARY_PERIOD_LABELS,
   type JobType,
   type WorkLocation,
   type SalaryType,
@@ -90,6 +88,10 @@ export function JobForm({
 }) {
   const [open, setOpen] = React.useState(false);
   const [state, formAction] = useActionState(saveJobItem, BOOKING_INITIAL_STATE);
+
+  const tJobType = useTranslations("jobTypes");
+  const tWorkLoc = useTranslations("workLocations");
+  const tSalaryPeriod = useTranslations("salaryPeriods");
 
   const [salaryType, setSalaryType] = React.useState<SalaryType>(
     item?.salary_type ?? "negotiable",
@@ -180,9 +182,9 @@ export function JobForm({
                     name="jobType"
                     defaultValue={item?.job_type ?? "full_time"}
                   >
-                    {JOB_TYPE_ORDER.map((t) => (
-                      <option key={t} value={t}>
-                        {JOB_TYPE_LABELS[t]}
+                    {JOB_TYPE_ORDER.map((jt) => (
+                      <option key={jt} value={jt}>
+                        {tJobType(jt)}
                       </option>
                     ))}
                   </Select>
@@ -199,7 +201,7 @@ export function JobForm({
                   >
                     {WORK_LOCATION_ORDER.map((loc) => (
                       <option key={loc} value={loc}>
-                        {WORK_LOCATION_LABELS[loc]}
+                        {tWorkLoc(loc)}
                       </option>
                     ))}
                   </Select>
@@ -254,7 +256,7 @@ export function JobForm({
                       >
                         {SALARY_PERIOD_ORDER.map((p) => (
                           <option key={p} value={p}>
-                            {SALARY_PERIOD_LABELS[p]}
+                            {tSalaryPeriod(p)}
                           </option>
                         ))}
                       </Select>

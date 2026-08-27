@@ -530,5 +530,41 @@
     "readArticle": "கட்டுரையைப் படியுங்கள்",
     "backToHome": "முகப்புக்குத் திரும்பு",
     "postNotFound": "இடுகை கிடைக்கவில்லை"
+  },
+  "statuses": {
+    "requested": "கோரப்பட்டது",
+    "accepted": "மதிப்பீடு தயார்",
+    "confirmed": "உறுதிப்படுத்தப்பட்டது",
+    "in_progress": "நடைபெறுகிறது",
+    "completed": "முடிந்தது",
+    "closed": "மூடப்பட்டது",
+    "declined": "நிராகரிக்கப்பட்டது",
+    "cancelled_customer": "நீங்கள் ரத்து செய்தீர்கள்",
+    "cancelled_shop": "கடை ரத்து செய்தது",
+    "no_show": "வரவில்லை",
+    "expired": "காலாவதியானது",
+    "disputed": "தகராறில் உள்ளது"
+  },
+  "deliveryModes": {
+    "in_shop": "கடைக்கு கொண்டு வாருங்கள்",
+    "home_visit": "வீட்டிற்கு வருகை",
+    "pickup_drop": "எடுத்துச் சென்று திரும்ப தருதல்"
+  },
+  "jobTypes": {
+    "full_time": "முழு நேரம்",
+    "part_time": "பகுதி நேரம்",
+    "contract": "ஒப்பந்தம்",
+    "apprenticeship": "பயிற்சி / பயிற்சியாளர்"
+  },
+  "workLocations": {
+    "in_shop": "கடையில்",
+    "on_field": "களத்தில் / வருகைகள்",
+    "hybrid": "கலப்பு"
+  },
+  "salaryPeriods": {
+    "month": "/ மாதம்",
+    "week": "/ வாரம்",
+    "day": "/ நாள்",
+    "per_job": "/ வேலை"
   }
 }

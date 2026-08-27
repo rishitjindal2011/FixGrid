@@ -3,6 +3,7 @@
 import * as React from "react";
 import { useActionState } from "react";
 import { useFormStatus } from "react-dom";
+import { useTranslations } from "next-intl";
 import {
   AlertTriangle,
   ChevronDown,
@@ -48,7 +49,6 @@ import {
   toggleServiceActive,
 } from "@/lib/dashboard/expert-actions";
 import { formatDuration, formatPriceRange } from "@/lib/format";
-import { DELIVERY_MODE_LABELS } from "@/lib/types/marketplace";
 import { cn } from "@/lib/utils";
 
 /**
@@ -160,6 +160,7 @@ function ServiceRow({
     BOOKING_INITIAL_STATE,
   );
   const [moveState, moveAction] = useActionState(reorderService, BOOKING_INITIAL_STATE);
+  const tDelivery = useTranslations("deliveryModes");
 
   // Both live in the same row, so they share one message line. They cannot
   // fail at the same moment — each is a separate submission — and showing the
@@ -225,7 +226,7 @@ function ServiceRow({
             ) : (
               service.delivery_modes.map((mode) => (
                 <Badge key={mode} variant="neutral">
-                  {DELIVERY_MODE_LABELS[mode]}
+                  {tDelivery(mode)}
                 </Badge>
               ))
             )}

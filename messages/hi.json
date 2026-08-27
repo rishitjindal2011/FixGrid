@@ -530,5 +530,41 @@
     "readArticle": "लेख पढ़ें",
     "backToHome": "होम पर वापस",
     "postNotFound": "पोस्ट नहीं मिली"
+  },
+  "statuses": {
+    "requested": "अनुरोधित",
+    "accepted": "कोटेशन तैयार",
+    "confirmed": "पुष्ट",
+    "in_progress": "चल रहा है",
+    "completed": "पूर्ण",
+    "closed": "बंद",
+    "declined": "अस्वीकृत",
+    "cancelled_customer": "आपके द्वारा रद्द",
+    "cancelled_shop": "दुकान द्वारा रद्द",
+    "no_show": "उपस्थित नहीं हुए",
+    "expired": "समय समाप्त",
+    "disputed": "विवादित"
+  },
+  "deliveryModes": {
+    "in_shop": "दुकान पर लाएँ",
+    "home_visit": "घर पर सेवा",
+    "pickup_drop": "पिकअप और वापसी"
+  },
+  "jobTypes": {
+    "full_time": "पूर्णकालिक",
+    "part_time": "अंशकालिक",
+    "contract": "अनुबंध",
+    "apprenticeship": "प्रशिक्षुता / प्रशिक्षणार्थी"
+  },
+  "workLocations": {
+    "in_shop": "दुकान में",
+    "on_field": "फील्ड पर / विज़िट",
+    "hybrid": "हाइब्रिड"
+  },
+  "salaryPeriods": {
+    "month": "/ माह",
+    "week": "/ सप्ताह",
+    "day": "/ दिन",
+    "per_job": "/ काम"
   }
 }

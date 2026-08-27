@@ -530,5 +530,41 @@
     "readArticle": "लेख वाचा",
     "backToHome": "मुख्यपृष्ठावर परत",
     "postNotFound": "पोस्ट सापडली नाही"
+  },
+  "statuses": {
+    "requested": "विनंती केली",
+    "accepted": "कोट तयार",
+    "confirmed": "पुष्टी केली",
+    "in_progress": "सुरू आहे",
+    "completed": "पूर्ण झाले",
+    "closed": "बंद",
+    "declined": "नाकारले",
+    "cancelled_customer": "तुम्ही रद्द केले",
+    "cancelled_shop": "दुकानाने रद्द केले",
+    "no_show": "हजर नाही",
+    "expired": "मुदत संपली",
+    "disputed": "वादग्रस्त"
+  },
+  "deliveryModes": {
+    "in_shop": "दुकानात आणा",
+    "home_visit": "घरी भेट",
+    "pickup_drop": "पिकअप आणि परत"
+  },
+  "jobTypes": {
+    "full_time": "पूर्णवेळ",
+    "part_time": "अर्धवेळ",
+    "contract": "करार",
+    "apprenticeship": "उमेदवारी / प्रशिक्षणार्थी"
+  },
+  "workLocations": {
+    "in_shop": "दुकानात",
+    "on_field": "फील्डवर / भेटी",
+    "hybrid": "हायब्रिड"
+  },
+  "salaryPeriods": {
+    "month": "/ महिना",
+    "week": "/ आठवडा",
+    "day": "/ दिवस",
+    "per_job": "/ काम"
   }
 }

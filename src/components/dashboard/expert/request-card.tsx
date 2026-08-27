@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import {
   ArrowRight,
   Building2,
@@ -27,7 +28,6 @@ import {
   formatSlot,
 } from "@/lib/format";
 import {
-  DELIVERY_MODE_LABELS,
   type BookingRow,
   type DeliveryMode,
 } from "@/lib/types/marketplace";
@@ -215,6 +215,7 @@ export function RequestCard({
 }) {
   const start = slotStart(request.slot);
   const end = slotEnd(request.slot);
+  const tDelivery = useTranslations("deliveryModes");
 
   const customerName = request.customer?.display_name ?? "A customer";
   const lines = addressLines(request);
@@ -314,7 +315,7 @@ export function RequestCard({
           <Fact label="How">
             <span className="flex items-center gap-2">
               <ModeIcon aria-hidden className="size-4 shrink-0 text-steel-soft" />
-              {DELIVERY_MODE_LABELS[request.delivery_mode]}
+              {tDelivery(request.delivery_mode)}
             </span>
           </Fact>
 

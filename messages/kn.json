@@ -530,5 +530,41 @@
     "readArticle": "ಲೇಖನ ಓದಿ",
     "backToHome": "ಮುಖಪುಟಕ್ಕೆ ಹಿಂತಿರುಗಿ",
     "postNotFound": "ಪೋಸ್ಟ್ ಸಿಗಲಿಲ್ಲ"
+  },
+  "statuses": {
+    "requested": "ವಿನಂತಿಸಲಾಗಿದೆ",
+    "accepted": "ಕೋಟ್ ಸಿದ್ಧ",
+    "confirmed": "ದೃಢೀಕರಿಸಲಾಗಿದೆ",
+    "in_progress": "ಪ್ರಗತಿಯಲ್ಲಿದೆ",
+    "completed": "ಪೂರ್ಣಗೊಂಡಿದೆ",
+    "closed": "ಮುಚ್ಚಲಾಗಿದೆ",
+    "declined": "ತಿರಸ್ಕರಿಸಲಾಗಿದೆ",
+    "cancelled_customer": "ನೀವು ರದ್ದುಗೊಳಿಸಿದ್ದೀರಿ",
+    "cancelled_shop": "ಅಂಗಡಿ ರದ್ದುಗೊಳಿಸಿದೆ",
+    "no_show": "ಹಾಜರಾಗಲಿಲ್ಲ",
+    "expired": "ಅವಧಿ ಮೀರಿದೆ",
+    "disputed": "ವಿವಾದದಲ್ಲಿದೆ"
+  },
+  "deliveryModes": {
+    "in_shop": "ಅಂಗಡಿಗೆ ತನ್ನಿ",
+    "home_visit": "ಮನೆ ಭೇಟಿ",
+    "pickup_drop": "ಸಂಗ್ರಹ ಮತ್ತು ಹಿಂತಿರುಗಿಸುವಿಕೆ"
+  },
+  "jobTypes": {
+    "full_time": "ಪೂರ್ಣಾವಧಿ",
+    "part_time": "ಅರೆಕಾಲಿಕ",
+    "contract": "ಗುತ್ತಿಗೆ",
+    "apprenticeship": "ಶಿಕ್ಷಣಾರ್ಥಿ / ತರಬೇತಿ"
+  },
+  "workLocations": {
+    "in_shop": "ಅಂಗಡಿಯಲ್ಲಿ",
+    "on_field": "ಕ್ಷೇತ್ರದಲ್ಲಿ / ಭೇಟಿಗಳು",
+    "hybrid": "ಹೈಬ್ರಿಡ್"
+  },
+  "salaryPeriods": {
+    "month": "/ ತಿಂಗಳು",
+    "week": "/ ವಾರ",
+    "day": "/ ದಿನ",
+    "per_job": "/ ಕೆಲಸ"
   }
 }

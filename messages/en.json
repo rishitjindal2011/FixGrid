@@ -530,5 +530,41 @@
     "readArticle": "Read Article",
     "backToHome": "Back to Home",
     "postNotFound": "Post not found"
+  },
+  "statuses": {
+    "requested": "Requested",
+    "accepted": "Quote ready",
+    "confirmed": "Confirmed",
+    "in_progress": "In progress",
+    "completed": "Completed",
+    "closed": "Closed",
+    "declined": "Declined",
+    "cancelled_customer": "Cancelled by you",
+    "cancelled_shop": "Cancelled by shop",
+    "no_show": "No show",
+    "expired": "Expired",
+    "disputed": "In dispute"
+  },
+  "deliveryModes": {
+    "in_shop": "Drop in to the shop",
+    "home_visit": "Home visit",
+    "pickup_drop": "Collection and return"
+  },
+  "jobTypes": {
+    "full_time": "Full-time",
+    "part_time": "Part-time",
+    "contract": "Contract",
+    "apprenticeship": "Apprenticeship / Trainee"
+  },
+  "workLocations": {
+    "in_shop": "In-shop",
+    "on_field": "On-field / Visits",
+    "hybrid": "Hybrid"
+  },
+  "salaryPeriods": {
+    "month": "/ month",
+    "week": "/ week",
+    "day": "/ day",
+    "per_job": "/ job"
   }
 }

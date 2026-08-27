@@ -1,3 +1,5 @@
+import { useTranslations } from "next-intl";
+
 import { BookingCard } from "@/components/dashboard/booking-card";
 import {
   Accordion,
@@ -6,7 +8,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import type { CustomerBooking } from "@/lib/dashboard/customer";
-import { BOOKING_STATUS_LABELS, type BookingStatus } from "@/lib/types/marketplace";
+import { type BookingStatus } from "@/lib/types/marketplace";
 
 /**
  * The four live stages, left to right, in the order a job passes through them.
@@ -39,9 +41,10 @@ const COLUMNS: readonly { status: BookingStatus; blurb: string }[] = [
  * would be cheaper and would strand content closed on a resize.
  */
 export function BookingBoard({ bookings }: { bookings: CustomerBooking[] }) {
+  const tStatus = useTranslations("statuses");
   const columns = COLUMNS.map((column) => ({
     ...column,
-    label: BOOKING_STATUS_LABELS[column.status],
+    label: tStatus(column.status),
     bookings: bookings.filter((booking) => booking.status === column.status),
   }));
 

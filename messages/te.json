@@ -530,5 +530,41 @@
     "readArticle": "వ్యాసం చదవండి",
     "backToHome": "హోమ్‌కు తిరిగి",
     "postNotFound": "పోస్ట్ కనబడలేదు"
+  },
+  "statuses": {
+    "requested": "అభ్యర్థించారు",
+    "accepted": "కోట్ సిద్ధం",
+    "confirmed": "నిర్ధారించబడింది",
+    "in_progress": "కొనసాగుతోంది",
+    "completed": "పూర్తయింది",
+    "closed": "మూసివేయబడింది",
+    "declined": "తిరస్కరించబడింది",
+    "cancelled_customer": "మీరు రద్దు చేసారు",
+    "cancelled_shop": "షాప్ రద్దు చేసింది",
+    "no_show": "హాజరు కాలేదు",
+    "expired": "గడువు ముగిసింది",
+    "disputed": "వివాదంలో ఉంది"
+  },
+  "deliveryModes": {
+    "in_shop": "షాప్‌కు తీసుకురండి",
+    "home_visit": "ఇంటికి వచ్చి సేవ",
+    "pickup_drop": "సేకరణ మరియు తిరిగి ఇవ్వడం"
+  },
+  "jobTypes": {
+    "full_time": "పూర్తి-సమయం",
+    "part_time": "పార్ట్-టైమ్",
+    "contract": "ఒప్పందం",
+    "apprenticeship": "అప్రెంటిస్‌షిప్ / శిక్షణ"
+  },
+  "workLocations": {
+    "in_shop": "షాప్‌లో",
+    "on_field": "క్షేత్రంలో / సందర్శనలు",
+    "hybrid": "హైబ్రిడ్"
+  },
+  "salaryPeriods": {
+    "month": "/ నెల",
+    "week": "/ వారం",
+    "day": "/ రోజు",
+    "per_job": "/ పని"
   }
 }

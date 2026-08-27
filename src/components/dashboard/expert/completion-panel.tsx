@@ -3,6 +3,7 @@
 import * as React from "react";
 import { useActionState } from "react";
 import { useFormStatus } from "react-dom";
+import { useTranslations } from "next-intl";
 import {
   AlertTriangle,
   Camera,
@@ -28,7 +29,6 @@ import { saveBookingNote } from "@/lib/dashboard/expert-actions";
 import { daysUntil, formatDateTime, formatMoney, formatSlot } from "@/lib/format";
 import { createClient } from "@/lib/supabase/client";
 import {
-  DELIVERY_MODE_LABELS,
   type BookingStatus,
   type DeliveryMode,
 } from "@/lib/types/marketplace";
@@ -140,6 +140,7 @@ export function CompletionPanel({
 }: CompletionPanelProps) {
   const start = slotStart(slot);
   const end = slotEnd(slot);
+  const tDelivery = useTranslations("deliveryModes");
 
   // Derived during render rather than stored: `actions` is the server's answer
   // and this only rewrites one sentence of it.
@@ -179,7 +180,7 @@ export function CompletionPanel({
           <Fact label="Service">
             <span className="block truncate">{serviceName ?? "Not specified"}</span>
             <span className="block pt-0.5 text-xs text-steel">
-              {DELIVERY_MODE_LABELS[deliveryMode]}
+              {tDelivery(deliveryMode)}
             </span>
           </Fact>
 

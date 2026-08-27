@@ -1,6 +1,8 @@
+import { useTranslations } from "next-intl";
+
 import { Badge } from "@/components/ui/badge";
 import { STATUS_TONE } from "@/lib/bookings/actions-map";
-import { BOOKING_STATUS_LABELS, type BookingStatus } from "@/lib/types/marketplace";
+import { type BookingStatus } from "@/lib/types/marketplace";
 import { cn } from "@/lib/utils";
 
 /**
@@ -19,13 +21,14 @@ export function StatusBadge({
   className?: string;
 }) {
   const live = status === "in_progress";
+  const tStatus = useTranslations("statuses");
 
   return (
     <Badge variant={STATUS_TONE[status]} className={cn(className)}>
       {live ? (
         <span aria-hidden className="status-dot status-dot--live size-1.5" />
       ) : null}
-      {BOOKING_STATUS_LABELS[status]}
+      {tStatus(status)}
     </Badge>
   );
 }

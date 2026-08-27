@@ -1,12 +1,13 @@
 import type { ComponentType } from "react";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { Building2, Car, ChevronRight, Home, MapPin } from "lucide-react";
 
 import { StatusBadge } from "@/components/dashboard/status-badge";
 import { slotEnd, slotStart } from "@/lib/bookings/actions-map";
 import type { CustomerBooking } from "@/lib/dashboard/customer";
 import { formatMoney, formatSlot } from "@/lib/format";
-import { DELIVERY_MODE_LABELS, type DeliveryMode } from "@/lib/types/marketplace";
+import { type DeliveryMode } from "@/lib/types/marketplace";
 import { cn } from "@/lib/utils";
 
 const MODE_ICON: Record<
@@ -39,6 +40,7 @@ export function BookingCard({
   const start = slotStart(booking.slot);
   const end = slotEnd(booking.slot);
   const ModeIcon = MODE_ICON[booking.delivery_mode];
+  const tDelivery = useTranslations("deliveryModes");
 
   // The quote once it exists, the final price once the job is done. Before
   // either, no number at all — "₹0" would read as free.
@@ -81,7 +83,7 @@ export function BookingCard({
             <dt className="sr-only">Service type</dt>
             <dd className="flex items-center gap-1.5">
               <ModeIcon aria-hidden className="size-3.5 text-steel-soft" />
-              {DELIVERY_MODE_LABELS[booking.delivery_mode]}
+              {tDelivery(booking.delivery_mode)}
             </dd>
           </div>
 

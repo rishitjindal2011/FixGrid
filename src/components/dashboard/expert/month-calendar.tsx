@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 
 import {
   addCalendarDays,
@@ -15,7 +16,6 @@ import {
   type StatusTone,
 } from "@/lib/bookings/actions-map";
 import { formatTime } from "@/lib/format";
-import { BOOKING_STATUS_LABELS } from "@/lib/types/marketplace";
 import { cn } from "@/lib/utils";
 
 /**
@@ -113,6 +113,7 @@ export function MonthCalendar({
   /** Where a day square drills through to — the week grid, on that day. */
   basePath: string;
 }) {
+  const tStatus = useTranslations("statuses");
   const anchor = splitDayKey(`${monthKey}-01`);
   if (!anchor) return null;
 
@@ -264,7 +265,7 @@ export function MonthCalendar({
                     <li key={`${booking.id}-${key}`}>
                       <Link
                         href={`/dashboard/expert/requests?booking=${encodeURIComponent(booking.reference)}`}
-                        aria-label={`${customerName}, ${formatTime(entry.start, timezone)}, ${BOOKING_STATUS_LABELS[booking.status]}`}
+                        aria-label={`${customerName}, ${formatTime(entry.start, timezone)}, ${tStatus(booking.status)}`}
                         className={cn(
                           "flex items-baseline gap-1 overflow-hidden rounded-machined border-l-2 px-1 py-0.5 transition-shadow hover:shadow-bench",
                           CHIP_TONE[STATUS_TONE[booking.status]],
