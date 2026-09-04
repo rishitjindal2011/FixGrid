@@ -1,12 +1,12 @@
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
-import { Search, UserRound, Wrench } from "lucide-react";
+import { Search, UserRound } from "lucide-react";
 
+import { BrandMark } from "@/components/brand-logo";
 import { LanguageSwitcher } from "@/components/language-switcher";
 import { SignOutButton } from "@/components/auth/sign-out-button";
 import { Button } from "@/components/ui/button";
 import { getCurrentUser } from "@/lib/auth/session";
-import { SITE_NAME } from "@/lib/site";
 
 /**
  * Async Server Component: session state is read per request, so the header
@@ -34,12 +34,13 @@ export async function SiteHeader() {
       <div className="mx-auto flex h-16 max-w-6xl items-center gap-4 px-4 sm:gap-6">
         <Link
           href="/"
-          className="flex items-center gap-2 font-display text-xl uppercase tracking-tight text-enamel"
+          className="group flex items-center gap-2.5 font-display text-xl uppercase tracking-tight text-enamel"
         >
-          <span className="grid size-7 place-items-center rounded-machined bg-enamel text-bench">
-            <Wrench aria-hidden className="size-4" />
+          <BrandMark size="md" className="group-hover:scale-105" />
+          <span className="flex items-baseline">
+            <span>FIX</span>
+            <span className="text-[#0284c7]">GRID</span>
           </span>
-          {SITE_NAME}
         </Link>
 
         <nav aria-label={t("mainNav")} className="ml-auto hidden items-center gap-6 sm:flex">

@@ -48,14 +48,27 @@ export function buildOrganization(): WithContext<Thing> {
     "@type": "Organization",
     "@id": `${SITE_ORIGIN}/#organization`,
     name: SITE_NAME,
-    // Vytron is the company behind FixGrid and the name on the domain
-    // (vytron.me). Declaring it here maps both brand terms to one entity, so a
-    // search for either "FixGrid" or "Vytron" resolves to this same site.
-    alternateName: ["Vytron", "Vytron FixGrid"],
+    alternateName: [
+      "FixGrid India",
+      "FixGrid",
+      "FixGrid App",
+      "FixGrid Repair Directory",
+      "Vytron FixGrid",
+      "Vytron",
+    ],
     description:
-      "FixGrid, by Vytron, is a directory of verified local repair shops and experts.",
+      "FixGrid is India's verified directory of local repair shops and electronics technicians.",
     url: SITE_ORIGIN,
     logo: absoluteUrl("/icon.svg"),
+    areaServed: {
+      "@type": "Country",
+      name: "India",
+      alternateName: "IN",
+    },
+    address: {
+      "@type": "PostalAddress",
+      addressCountry: "IN",
+    },
   });
 }
 
@@ -64,7 +77,9 @@ export function buildWebSite(): WithContext<Thing> {
     "@type": "WebSite",
     "@id": `${SITE_ORIGIN}/#website`,
     name: SITE_NAME,
+    alternateName: ["FixGrid India", "FixGrid"],
     url: SITE_ORIGIN,
+    inLanguage: ["en-IN", "hi-IN", "bn-IN", "mr-IN", "te-IN", "ta-IN", "kn-IN"],
     publisher: { "@id": `${SITE_ORIGIN}/#organization` },
     potentialAction: {
       "@type": "SearchAction",

@@ -65,43 +65,38 @@ export const SITE_NAME = "FixGrid";
  * personality line ("Find someone who can actually fix it.") reads well but
  * named none of them, which is what a title-tag keyword audit flags.
  */
-export const SITE_TAGLINE = "Find local repair shops and experts near you";
+export const SITE_TAGLINE = "India's Verified Local Repair Network & Directory";
 
 /**
  * Site-wide meta description and OpenGraph fallback. Written to distribute the
- * page's core keywords — repair, shop(s), verified, diagnostics — instead of
- * describing the login flow, and kept under ~160 characters so search engines
- * render it without truncation.
+ * page's core keywords — repair, shop(s), verified, diagnostics across India —
+ * kept under ~160 characters so search engines render it without truncation.
  */
 export const SITE_DESCRIPTION =
-  "FixGrid by Vytron is a directory of verified local repair shops and experts. Compare ratings, warranties and diagnostics, then book a repair shop near you.";
+  "FixGrid is India's premier directory of verified local repair shops and technicians. Compare ratings, warranties and diagnostics across Delhi NCR, Mumbai, Bengaluru, Hyderabad, Pune, and Chennai.";
 
 /**
  * Default `keywords` meta tag for the whole site.
- *
- * Google ignores this tag, but the SEO audits people actually run (and Bing)
- * still check that it exists and that it echoes the page's primary terms — an
- * empty keywords tag is a red mark in those reports. Set once here and applied
- * in the root layout so every route inherits it; pages with a narrower topic
- * (a shop, a category, a blog post) override with their own, more specific set.
+ * Focuses on exact brand terms ("FixGrid", "FixGrid India") and top Indian metro search queries.
  */
 export const SITE_KEYWORDS: string[] = [
-  "repair shops",
-  "local repair shops",
-  "repair shop near me",
-  "find a repair expert",
-  "repair experts",
-  "phone repair",
-  "laptop repair",
-  "appliance repair",
-  "bike repair",
-  "watch repair",
-  "repair diagnostics",
-  "verified repair shops",
-  "repair directory",
-  "local fixers",
-  "book a repair",
   "FixGrid",
+  "FixGrid India",
+  "fixgrid.in",
+  "fixgrid",
+  "FixGrid repair",
+  "repair shops in India",
+  "local repair shops India",
+  "mobile repair near me India",
+  "laptop repair India",
+  "phone repair Bengaluru",
+  "mobile repair Delhi",
+  "laptop repair Mumbai",
+  "appliance repair Hyderabad",
+  "repair shops Pune",
+  "find a repair expert India",
+  "verified repair shops India",
+  "repair directory India",
   "Vytron",
   "Vytron FixGrid",
 ];

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 
+import { BrandMark } from "@/components/brand-logo";
 import { LanguageSwitcher } from "@/components/language-switcher";
 import { SITE_NAME } from "@/lib/site";
 
@@ -68,11 +69,17 @@ export async function SiteFooter() {
       <div className="mx-auto max-w-6xl px-4 py-12">
         <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-4">
           <div>
-            <p className="font-display text-xl uppercase text-enamel">{SITE_NAME}</p>
+            <div className="flex items-center gap-2.5">
+              <BrandMark size="md" />
+              <p className="font-display text-xl uppercase tracking-tight text-enamel">
+                <span>FIX</span>
+                <span className="text-[#0284c7]">GRID</span>
+              </p>
+            </div>
             {/* "by Vytron" is a proper noun, identical in every locale, so it is
                 not routed through the message catalogue. It keeps the parent
                 brand visible on every page for a "Vytron" brand search. */}
-            <p className="mt-0.5 font-mono text-eyebrow uppercase tracking-[0.14em] text-steel-soft">
+            <p className="mt-1 font-mono text-eyebrow uppercase tracking-[0.14em] text-steel-soft">
               by Vytron
             </p>
             <p className="mt-2 max-w-xs text-sm leading-relaxed text-steel">

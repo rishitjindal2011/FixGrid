@@ -56,12 +56,12 @@
     }
   },
   "home": {
-    "eyebrow": "Local repair directory",
-    "heading": "Find a local repair shop that can actually fix it",
-    "intro": "Search verified local repair shops and experts, see who is open right now, and book with a warranty on the work.",
+    "eyebrow": "India's Verified Repair Network",
+    "heading": "Find a local repair shop in India that can actually fix it",
+    "intro": "Search verified local repair shops and technicians across Delhi, Mumbai, Bengaluru and top Indian cities. Compare diagnostics, see real-time opening hours, and book with warranty.",
     "searchLabel": "What needs fixing?",
-    "searchPlaceholder": "Cracked screen, leaking tap, torn seam…",
-    "trustLine": "Live opening hours · Verified shops · Warranty on every listing",
+    "searchPlaceholder": "Cracked screen, battery replacement, appliance service…",
+    "trustLine": "Verified Indian repair shops · Genuine parts warranty · Real opening hours",
     "stats": {
       "shops": "Repair shops",
       "shopsSuffix": "in the directory",

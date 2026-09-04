@@ -32,13 +32,27 @@ export const metadata: Metadata = {
     absolute: `FixGrid — ${SITE_TAGLINE}`,
   },
   description: SITE_DESCRIPTION,
-  alternates: { canonical: absoluteUrl("/") },
+  alternates: {
+    canonical: absoluteUrl("/"),
+    languages: {
+      "en-IN": absoluteUrl("/"),
+      "hi-IN": absoluteUrl("/hi"),
+      "bn-IN": absoluteUrl("/bn"),
+      "mr-IN": absoluteUrl("/mr"),
+      "te-IN": absoluteUrl("/te"),
+      "ta-IN": absoluteUrl("/ta"),
+      "kn-IN": absoluteUrl("/kn"),
+      "x-default": absoluteUrl("/"),
+    },
+  },
   openGraph: {
     title: `FixGrid — ${SITE_TAGLINE}`,
     description: SITE_DESCRIPTION,
     type: "website",
     url: absoluteUrl("/"),
     siteName: SITE_NAME,
+    locale: "en_IN",
+    alternateLocale: ["hi_IN", "bn_IN", "mr_IN", "te_IN", "ta_IN", "kn_IN"],
   },
   twitter: {
     card: "summary_large_image",

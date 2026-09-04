@@ -1,0 +1,16 @@
+{
+  "permission": {
+    "bash": {
+      "git -C \"c:/Users/Rishit Jindal/Downloads/FixGrid-main\" branch *": "allow",
+      "echo *": "allow",
+      "git -C \"c:/Users/Rishit Jindal/Downloads/FixGrid-main\" worktree *": "allow",
+      "git -C \"c:/Users/Rishit Jindal/Downloads/FixGrid-main\" status *": "allow",
+      "head *": "allow",
+      "git -C \"c:/Users/Rishit Jindal/Downloads/FixGrid-main\" rev-parse *": "allow"
+    },
+    "edit": {
+      "*.tsx": "allow",
+      "*.json": "allow"
+    }
+  }
+}

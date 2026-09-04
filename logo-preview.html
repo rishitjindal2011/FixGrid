@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FixGrid — Pure Clean Tech Logos (No Dots, No Gimmicks)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-primary: #080c14;
+      --bg-secondary: #0f172a;
+      --bg-card: #0f172abf;
+      --border-subtle: #ffffff14;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --text-dim: #64748b;
+      
+      --accent-cyan: #06b6d4;
+      --accent-orange: #e8590c;
+      --accent-enamel: #123b4a;
+      
+      --radius-sm: 8px;
+      --radius-md: 14px;
+      --radius-lg: 20px;
+      --radius-full: 9999px;
+      
+      --font-sans: "Plus Jakarta Sans", system-ui, -apple-system, sans-serif;
+      --font-mono: "JetBrains Mono", monospace;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    
+    body {
+      background-color: var(--bg-primary);
+      color: var(--text-main);
+      font-family: var(--font-sans);
+      -webkit-font-smoothing: antialiased;
+      background-image: 
+        radial-gradient(circle at 15% 15%, #06b6d412 0%, transparent 40%),
+        radial-gradient(circle at 85% 85%, #e8590c12 0%, transparent 40%);
+      background-attachment: fixed;
+      min-height: 100vh;
+      padding: 3rem 1.5rem 5rem;
+      line-height: 1.6;
+    }
+
+    .container {
+      max-width: 1160px;
+      margin: 0 auto;
+    }
+
+    .badge-pill {
+      border-radius: var(--radius-full);
+      letter-spacing: .04em;
+      text-transform: uppercase;
+      align-items: center;
+      gap: .5rem;
+      margin-bottom: 1.25rem;
+      padding: .35rem .9rem;
+      font-size: .78rem;
+      font-weight: 600;
+      display: inline-flex;
+      color: #38bdf8;
+      background: #06b6d41f;
+      border: 1px solid #06b6d440;
+    }
+
+    h1.hero-title {
+      letter-spacing: -.03em;
+      margin-bottom: .75rem;
+      font-size: 2.75rem;
+      font-weight: 800;
+      line-height: 1.15;
+    }
+
+    .text-gradient {
+      background: linear-gradient(135deg, #38bdf8 0%, #06b6d4 50%, #fb923c 100%);
+      -webkit-text-fill-color: transparent;
+      -webkit-background-clip: text;
+    }
+
+    p.hero-desc {
+      color: var(--text-muted);
+      max-width: 740px;
+      font-size: 1.05rem;
+      margin-bottom: 3rem;
+    }
+
+    /* GRID OF CONCEPTS */
+    .concepts-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(520px, 1fr));
+      gap: 2rem;
+    }
+
+    @media (max-width: 600px) {
+      .concepts-grid { grid-template-columns: 1fr; }
+    }
+
+    .concept-card {
+      background: var(--bg-card);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      padding: 2rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+      transition: all 0.25s ease;
+      box-shadow: 0 10px 30px -5px #00000080;
+    }
+
+    .concept-card:hover {
+      border-color: #ffffff2e;
+      transform: translateY(-2px);
+    }
+
+    .card-header-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .concept-tag {
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #94a3b8;
+    }
+
+    .tag-pill {
+      font-size: 0.72rem;
+      font-weight: 700;
+      padding: 0.25rem 0.65rem;
+      border-radius: var(--radius-full);
+      background: #ffffff0a;
+      border: 1px solid var(--border-subtle);
+      color: #cbd5e1;
+    }
+
+    .preview-box {
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 1.5rem 1.75rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #00000059;
+    }
+
+    .preview-box.light-theme {
+      background: #eef1f4;
+      border: 1px solid #cbd5e1;
+    }
+
+    /* THE REAL DUPLEX BRAND LAYOUT */
+    .brand {
+      align-items: center;
+      gap: 1rem;
+      display: flex;
+    }
+
+    .brand-title {
+      letter-spacing: -.025em;
+      font-size: 1.45rem;
+      font-weight: 800;
+      line-height: 1.15;
+    }
+
+    .brand-title-dark {
+      background: linear-gradient(90deg, #ffffff, #cbd5e1);
+      -webkit-text-fill-color: transparent;
+      -webkit-background-clip: text;
+    }
+
+    .brand-title-light {
+      color: #123b4a;
+    }
+
+    .brand-subtitle {
+      font-size: .82rem;
+      font-weight: 500;
+      margin-top: 0.15rem;
+    }
+
+    .brand-subtitle-dark {
+      color: var(--text-muted);
+    }
+
+    .brand-subtitle-light {
+      color: #5a6b75;
+    }
+
+    /* ========================================================
+       CLEAN BADGES (ZERO DOTS, ZERO GIMMICKS)
+       ======================================================== */
+
+    /* 1. CLEAN 3B: Pure Silk Sunset Gradient */
+    .badge-clean-1 {
+      width: 46px;
+      height: 46px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, #0284c7 0%, #0f3d4c 45%, #c2410c 85%, #ea580c 100%);
+      box-shadow: 0 0 25px rgba(234, 88, 12, 0.35), 0 0 15px rgba(2, 132, 199, 0.25);
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    /* 2. CLEAN 4B: Pure Deep Enamel with Ambient Cyan Glow */
+    .badge-clean-2 {
+      width: 46px;
+      height: 46px;
+      border-radius: 14px;
+      background: linear-gradient(145deg, #133a49 0%, #0c2630 100%);
+      border: 1px solid rgba(6, 182, 212, 0.3);
+      box-shadow: 0 0 22px rgba(6, 182, 212, 0.25), 0 4px 12px rgba(0, 0, 0, 0.4);
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    /* 3. PURE DUPLEX: Electric Cyan into Deep Teal */
+    .badge-clean-3 {
+      width: 46px;
+      height: 46px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, #06b6d4 0%, #0e3a47 100%);
+      box-shadow: 0 0 25px rgba(6, 182, 212, 0.35);
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    /* 4. SIGNAL EMBROIDERY: Deep Enamel with Warm Amber-Orange Glow */
+    .badge-clean-4 {
+      width: 46px;
+      height: 46px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, #163e4e 0%, #0d2833 100%);
+      border: 1px solid rgba(232, 89, 12, 0.35);
+      box-shadow: 0 0 22px rgba(232, 89, 12, 0.25), 0 4px 12px rgba(0, 0, 0, 0.4);
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .concept-details h3 {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 0.35rem;
+    }
+
+    .concept-details p {
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      line-height: 1.5;
+    }
+
+    .chips-row {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      margin-top: 0.75rem;
+    }
+
+    .spec-chip {
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      background: #ffffff08;
+      border: 1px solid var(--border-subtle);
+      padding: 0.2rem 0.55rem;
+      border-radius: var(--radius-sm);
+      color: var(--text-dim);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <div class="badge-pill">
+      100% Clean Vector • Zero Artificial Dots • Authentic Product Design
+    </div>
+    
+    <h1 class="hero-title">
+      Pure FixGrid <span class="text-gradient">Studio Logos</span>
+    </h1>
+    
+    <p class="hero-desc">
+      Stripped away all artificial dots, beacons, and spark gimmicks. 
+      Just like <strong>duplex-printer.vercel.app</strong>: a gorgeous gradient squircle with ambient glow, 
+      a razor-sharp white vector tool, and balanced modern typography.
+    </p>
+
+    <div class="concepts-grid">
+
+      <!-- ================= CONCEPT 1 (CLEAN 3B) ================= -->
+      <div class="concept-card">
+        <div class="card-header-row">
+          <span class="concept-tag">Option 1 (Clean 3B)</span>
+          <span class="tag-pill">Silk Sunset Gradient</span>
+        </div>
+
+        <!-- Dark Preview -->
+        <div class="preview-box">
+          <div class="brand">
+            <div class="badge-clean-1">
+              <!-- Pure, Crisp White Vector Wrench: NO DOTS -->
+              <svg width="25" height="25" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" />
+              </svg>
+            </div>
+            <div>
+              <h2 class="brand-title brand-title-dark">Fix<span style="color:#38bdf8;">Grid</span></h2>
+              <p class="brand-subtitle brand-subtitle-dark">Verified Repair Shops & Experts</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Light Preview -->
+        <div class="preview-box light-theme">
+          <div class="brand">
+            <div class="badge-clean-1">
+              <svg width="25" height="25" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" />
+              </svg>
+            </div>
+            <div>
+              <h2 class="brand-title brand-title-light">Fix<span style="color:#0284c7;">Grid</span></h2>
+              <p class="brand-subtitle brand-subtitle-light">Verified Repair Shops & Experts</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="concept-details">
+          <h3>The Silk Sunset Squircle (3B Evolution)</h3>
+          <p>
+            The multi-stop gradient from 3B with all dots completely removed. The pure white vector wrench sits cleanly against the smooth gradient.
+          </p>
+          <div class="chips-row">
+            <span class="spec-chip">Cyan to Orange Glow</span>
+            <span class="spec-chip">Zero Dots</span>
+            <span class="spec-chip">Pure Vector</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ================= CONCEPT 2 (CLEAN 4B) ================= -->
+      <div class="concept-card">
+        <div class="card-header-row">
+          <span class="concept-tag">Option 2 (Clean 4B)</span>
+          <span class="tag-pill">Deep Machine Enamel</span>
+        </div>
+
+        <!-- Dark Preview -->
+        <div class="preview-box">
+          <div class="brand">
+            <div class="badge-clean-2">
+              <svg width="25" height="25" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" />
+              </svg>
+            </div>
+            <div>
+              <h2 class="brand-title brand-title-dark">FixGrid</h2>
+              <p class="brand-subtitle brand-subtitle-dark">Directory of Verified Repair Shops</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Light Preview -->
+        <div class="preview-box light-theme">
+          <div class="brand">
+            <div class="badge-clean-2">
+              <svg width="25" height="25" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" />
+              </svg>
+            </div>
+            <div>
+              <h2 class="brand-title brand-title-light">FixGrid</h2>
+              <p class="brand-subtitle brand-subtitle-light">Directory of Verified Repair Shops</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="concept-details">
+          <h3>Machined Obsidian Enamel (4B Evolution)</h3>
+          <p>
+            Removed the corner beacon completely. Pure deep workshop enamel (#123B4A) with an ultra-fine cyan border halo. Timeless, confident, and professional.
+          </p>
+          <div class="chips-row">
+            <span class="spec-chip">Deep Workshop Enamel</span>
+            <span class="spec-chip">Subtle Cyan Rim</span>
+            <span class="spec-chip">No Distractions</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ================= CONCEPT 3 (PURE DUPLEX STYLE) ================= -->
+      <div class="concept-card">
+        <div class="card-header-row">
+          <span class="concept-tag">Option 3</span>
+          <span class="tag-pill">Electric Cyan Glow</span>
+        </div>
+
+        <!-- Dark Preview -->
+        <div class="preview-box">
+          <div class="brand">
+            <div class="badge-clean-3">
+              <svg width="25" height="25" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" />
+              </svg>
+            </div>
+            <div>
+              <h2 class="brand-title brand-title-dark">FixGrid Studio</h2>
+              <p class="brand-subtitle brand-subtitle-dark">Simplex to Duplex & Local Repair Suite</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Light Preview -->
+        <div class="preview-box light-theme">
+          <div class="brand">
+            <div class="badge-clean-3">
+              <svg width="25" height="25" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" />
+              </svg>
+            </div>
+            <div>
+              <h2 class="brand-title brand-title-light">FixGrid Studio</h2>
+              <p class="brand-subtitle brand-subtitle-light">Verified Repair Shops & Diagnostics</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="concept-details">
+          <h3>Electric Cyan into Machine Teal</h3>
+          <p>
+            The identical visual palette to duplex-printer.vercel.app: clean cyan-to-dark gradient, ambient cyan shadow bloom, and clean typography.
+          </p>
+          <div class="chips-row">
+            <span class="spec-chip">Duplex Twin Palette</span>
+            <span class="spec-chip">Electric Cyan Bloom</span>
+            <span class="spec-chip">Tech Suite Aesthetic</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ================= CONCEPT 4 (WARM AMBER ENAMEL) ================= -->
+      <div class="concept-card">
+        <div class="card-header-row">
+          <span class="concept-tag">Option 4</span>
+          <span class="tag-pill">Signal Orange Ambient Halo</span>
+        </div>
+
+        <!-- Dark Preview -->
+        <div class="preview-box">
+          <div class="brand">
+            <div class="badge-clean-4">
+              <svg width="25" height="25" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" />
+              </svg>
+            </div>
+            <div>
+              <h2 class="brand-title brand-title-dark">FixGrid</h2>
+              <p class="brand-subtitle brand-subtitle-dark">Find Verified Local Fixers Near You</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Light Preview -->
+        <div class="preview-box light-theme">
+          <div class="brand">
+            <div class="badge-clean-4">
+              <svg width="25" height="25" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" />
+              </svg>
+            </div>
+            <div>
+              <h2 class="brand-title brand-title-light">FixGrid</h2>
+              <p class="brand-subtitle brand-subtitle-light">Find Verified Local Fixers Near You</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="concept-details">
+          <h3>Machine Enamel + Signal Orange Halo</h3>
+          <p>
+            Dark workshop enamel base with a subtle, warm signal-orange perimeter glow. Sophisticated, warm, and authentic to FixGrid's brand tokens.
+          </p>
+          <div class="chips-row">
+            <span class="spec-chip">Warm Ambient Glow</span>
+            <span class="spec-chip">Enamel Slate</span>
+            <span class="spec-chip">Clean & Timeless</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- CALL TO ACTION -->
+    <div style="margin-top: 48px; padding: 28px; background: var(--bg-card); border-radius: var(--radius-lg); border: 1px solid var(--border-subtle); text-align: center;">
+      <p style="font-size: 1.25rem; color: #fff; font-weight: 800; margin-bottom: 0.5rem;">
+        Which clean version do you want on your website?
+      </p>
+      <p style="font-size: 0.95rem; color: #38bdf8; font-weight: 600;">
+        Option 1 (Clean Sunset 3B), Option 2 (Clean Enamel 4B), Option 3 (Electric Cyan), or Option 4 (Orange Halo)?
+      </p>
+      <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.5rem;">
+        Just reply with the number (1, 2, 3, or 4) and I'll immediately update the code in your site!
+      </p>
+    </div>
+  </div>
+
+</body>
+</html>

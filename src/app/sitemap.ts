@@ -28,6 +28,20 @@ import { absoluteUrl, CANONICAL_ORIGIN, joinCmsPath } from "@/lib/site";
 // the same day; cheap enough that crawler traffic can't hammer the database.
 export const revalidate = 3600;
 
+function buildLanguages(path: string): Record<string, string> {
+  const cleanPath = path === "/" ? "" : path.startsWith("/") ? path : `/${path}`;
+  return {
+    "en-IN": absoluteUrl(cleanPath || "/", CANONICAL_ORIGIN),
+    "hi-IN": absoluteUrl(`/hi${cleanPath}`, CANONICAL_ORIGIN),
+    "bn-IN": absoluteUrl(`/bn${cleanPath}`, CANONICAL_ORIGIN),
+    "mr-IN": absoluteUrl(`/mr${cleanPath}`, CANONICAL_ORIGIN),
+    "te-IN": absoluteUrl(`/te${cleanPath}`, CANONICAL_ORIGIN),
+    "ta-IN": absoluteUrl(`/ta${cleanPath}`, CANONICAL_ORIGIN),
+    "kn-IN": absoluteUrl(`/kn${cleanPath}`, CANONICAL_ORIGIN),
+    "x-default": absoluteUrl(cleanPath || "/", CANONICAL_ORIGIN),
+  };
+}
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const now = new Date();
 
@@ -37,18 +51,27 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       lastModified: now,
       changeFrequency: "daily",
       priority: 1,
+      alternates: {
+        languages: buildLanguages("/"),
+      },
     },
     {
       url: absoluteUrl("/search", CANONICAL_ORIGIN),
       lastModified: now,
       changeFrequency: "daily",
       priority: 0.9,
+      alternates: {
+        languages: buildLanguages("/search"),
+      },
     },
     {
       url: absoluteUrl("/blog", CANONICAL_ORIGIN),
       lastModified: now,
       changeFrequency: "daily",
       priority: 0.85,
+      alternates: {
+        languages: buildLanguages("/blog"),
+      },
     },
   ];
 
@@ -58,28 +81,46 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     getAllPublishedBlogPosts(),
   ]);
 
-  const expertEntries: MetadataRoute.Sitemap = experts.map((expert) => ({
-    url: absoluteUrl(`/expert/${expert.slug}`, CANONICAL_ORIGIN),
-    lastModified: new Date(expert.updated_at),
-    changeFrequency: "weekly",
-    priority: 0.8,
-  }));
+  const expertEntries: MetadataRoute.Sitemap = experts.map((expert) => {
+    const expertPath = `/expert/${expert.slug}`;
+    return {
+      url: absoluteUrl(expertPath, CANONICAL_ORIGIN),
+      lastModified: new Date(expert.updated_at),
+      changeFrequency: "weekly",
+      priority: 0.8,
+      alternates: {
+        languages: buildLanguages(expertPath),
+      },
+    };
+  });
 
-  const blogEntries: MetadataRoute.Sitemap = blogPosts.map((post) => ({
-    url: absoluteUrl(`/blog/${post.slug}`, CANONICAL_ORIGIN),
-    lastModified: new Date(post.updated_at || post.published_at || now),
-    changeFrequency: "weekly",
-    priority: 0.8,
-  }));
+  const blogEntries: MetadataRoute.Sitemap = blogPosts.map((post) => {
+    const blogPath = `/blog/${post.slug}`;
+    return {
+      url: absoluteUrl(blogPath, CANONICAL_ORIGIN),
+      lastModified: new Date(post.updated_at || post.published_at || now),
+      changeFrequency: "weekly",
+      priority: 0.8,
+      alternates: {
+        languages: buildLanguages(blogPath),
+      },
+    };
+  });
 
   const cmsEntries: MetadataRoute.Sitemap = cmsPages
     .filter((page) => page.is_indexed)
-    .map((page) => ({
-      url: absoluteUrl(joinCmsPath(page.path_prefix, page.slug), CANONICAL_ORIGIN),
-      lastModified: new Date(page.updated_at),
-      changeFrequency: "monthly",
-      priority: 0.7,
-    }));
+    .map((page) => {
+      const pagePath = joinCmsPath(page.path_prefix, page.slug);
+      return {
+        url: absoluteUrl(pagePath, CANONICAL_ORIGIN),
+        lastModified: new Date(page.updated_at),
+        changeFrequency: "monthly",
+        priority: 0.7,
+        alternates: {
+          languages: buildLanguages(pagePath),
+        },
+      };
+    });
 
   return [...staticEntries, ...expertEntries, ...blogEntries, ...cmsEntries];
 }

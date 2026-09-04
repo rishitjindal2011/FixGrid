@@ -2,14 +2,12 @@ import { ImageResponse } from "next/og";
 
 /**
  * Browser favicon — generated as a PNG at build time via ImageResponse so that
- * every browser (including Safari which does not support SVG favicons) gets a
- * proper raster icon.
+ * every browser gets a crisp raster icon.
  *
- * Design: same mark as the site header — dark enamel tile (#123b4a) with the
- * Lucide Wrench glyph in bench white (#eef1f4). The glyph is scaled up to ~65%
- * of the tile so it survives downsampling to 16 px.
+ * Design: Option 1 Clean 3B — silk sunset gradient (#0284c7 -> #0f3d4c -> #ea580c)
+ * with the pure white Lucide Wrench glyph (#ffffff).
  *
- * Corner radius 6 on a 32-tile reproduces `--radius-machined` at this scale.
+ * Corner radius 8 on a 32-tile provides a modern rounded squircle at this scale.
  */
 
 export const size = { width: 32, height: 32 };
@@ -25,17 +23,17 @@ export default function Icon() {
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          background: "#123b4a",
-          borderRadius: 6,
+          background: "linear-gradient(135deg, #0284c7 0%, #0f3d4c 45%, #c2410c 85%, #ea580c 100%)",
+          borderRadius: 8,
         }}
       >
-        {/* Lucide Wrench path, scaled to fill ~65 % of the 32×32 tile */}
+        {/* Lucide Wrench path in crisp white, scaled for 32x32 */}
         <svg
-          width="21"
-          height="21"
+          width="20"
+          height="20"
           viewBox="0 0 24 24"
           fill="none"
-          stroke="#eef1f4"
+          stroke="#ffffff"
           strokeWidth={2.4}
           strokeLinecap="round"
           strokeLinejoin="round"

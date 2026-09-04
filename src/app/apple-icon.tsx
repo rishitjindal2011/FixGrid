@@ -3,15 +3,9 @@ import { ImageResponse } from "next/og";
 /**
  * The iOS home-screen icon.
  *
- * A generated PNG rather than a second copy of `icon.svg`, because the
- * `apple-icon` convention accepts only `.jpg`, `.jpeg` and `.png` — Safari will
- * not take an SVG here. `ImageResponse` renders the same mark at build time, so
- * there is no binary asset in the repo to drift out of step with the header.
- *
- * The design differs from `icon.svg` in one respect on purpose: iOS masks the
- * icon to its own rounded rectangle and draws it against the wallpaper, so the
- * tile is drawn edge-to-edge with no radius of its own. Rounding it here would
- * show as a dark halo inside Apple's mask.
+ * Rendered at build time via ImageResponse for high-DPI iOS home screens.
+ * Design: Option 1 Clean 3B — silk sunset gradient (#0284c7 -> #0f3d4c -> #ea580c)
+ * with the pure white Lucide Wrench glyph.
  */
 
 export const size = { width: 180, height: 180 };
@@ -27,9 +21,7 @@ export default function AppleIcon() {
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          // --color-enamel. Hard-coded because this renders outside the
-          // document, where the @theme custom properties do not exist.
-          background: "#123b4a",
+          background: "linear-gradient(135deg, #0284c7 0%, #0f3d4c 45%, #c2410c 85%, #ea580c 100%)",
         }}
       >
         <svg
@@ -37,7 +29,7 @@ export default function AppleIcon() {
           height="112"
           viewBox="0 0 24 24"
           fill="none"
-          stroke="#eef1f4"
+          stroke="#ffffff"
           strokeWidth={2.2}
           strokeLinecap="round"
           strokeLinejoin="round"

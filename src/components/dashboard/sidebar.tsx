@@ -4,9 +4,10 @@ import * as React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { Menu, Store, Wrench } from "lucide-react";
+import { Menu, Store } from "lucide-react";
 
 import { type NavCounts, NavItemLink, navSections } from "@/components/dashboard/nav";
+import { BrandMark } from "@/components/brand-logo";
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
@@ -15,7 +16,6 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
-import { SITE_NAME } from "@/lib/site";
 import { cn } from "@/lib/utils";
 
 export interface SidebarProps {
@@ -140,12 +140,13 @@ function Brand({ onNavigate }: { onNavigate?: () => void }) {
     <Link
       href="/"
       onClick={onNavigate}
-      className="flex h-16 items-center gap-2 border-b border-hairline px-4 font-display text-xl uppercase tracking-tight text-enamel"
+      className="group flex h-16 items-center gap-2.5 border-b border-hairline px-4 font-display text-xl uppercase tracking-tight text-enamel"
     >
-      <span className="grid size-7 place-items-center rounded-machined bg-enamel text-bench">
-        <Wrench aria-hidden className="size-4" />
+      <BrandMark size="md" className="group-hover:scale-105" />
+      <span className="flex items-baseline">
+        <span>FIX</span>
+        <span className="text-[#0284c7]">GRID</span>
       </span>
-      {SITE_NAME}
     </Link>
   );
 }

@@ -115,22 +115,46 @@ const INDIC_FONT: Record<Exclude<Script, "latin">, { variable: string }> = {
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_ORIGIN),
   title: {
-    default: `${SITE_NAME} — find a repair expert near you`,
+    default: `${SITE_NAME} — India's Verified Local Repair Network`,
     template: `%s · ${SITE_NAME}`,
   },
   description: SITE_DESCRIPTION,
   keywords: SITE_KEYWORDS,
   applicationName: SITE_NAME,
-  alternates: { canonical: "/" },
+  alternates: {
+    canonical: "/",
+    languages: {
+      "en-IN": "/",
+      "hi-IN": "/hi",
+      "bn-IN": "/bn",
+      "mr-IN": "/mr",
+      "te-IN": "/te",
+      "ta-IN": "/ta",
+      "kn-IN": "/kn",
+      "x-default": "/",
+    },
+  },
   openGraph: {
     type: "website",
     siteName: SITE_NAME,
-    title: SITE_NAME,
+    title: `${SITE_NAME} — India's Verified Local Repair Network`,
     description: SITE_DESCRIPTION,
     url: SITE_ORIGIN,
+    locale: "en_IN",
+    alternateLocale: ["hi_IN", "bn_IN", "mr_IN", "te_IN", "ta_IN", "kn_IN"],
   },
-  twitter: { card: "summary_large_image" },
+  twitter: {
+    card: "summary_large_image",
+    title: `${SITE_NAME} — India's Verified Local Repair Network`,
+    description: SITE_DESCRIPTION,
+  },
   robots: { index: true, follow: true },
+  other: {
+    "geo.region": "IN",
+    "geo.placename": "India",
+    "geo.position": "20.5937;78.9629",
+    "ICBM": "20.5937, 78.9629",
+  },
 };
 
 export const viewport: Viewport = {
@@ -194,7 +218,7 @@ export default async function LocaleLayout({
       } as React.CSSProperties);
 
   return (
-    <html lang={locale} dir={meta.dir} className={fontClasses} style={fontVars}>
+    <html lang={meta.tag} dir={meta.dir} className={fontClasses} style={fontVars}>
       <body className="flex min-h-dvh flex-col antialiased">
         {/* Site-wide structured data. Page-level schemas add to this. */}
         <JsonLd data={[buildOrganization(), buildWebSite()]} />
