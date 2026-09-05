@@ -220,6 +220,72 @@ export default async function BlogPostPage({ params }: PageProps) {
                 style={{ textWrap: 'pretty' }}
                 dangerouslySetInnerHTML={{ __html: safeContent }}
               />
+
+              {/* High-Converting Local Repair Service CTA & Internal Link Hub */}
+              <div className="mt-14 pt-10 border-t border-steel/15 not-prose">
+                <div className="rounded-2xl bg-gradient-to-br from-enamel to-slate-900 p-8 md:p-10 text-white shadow-xl relative overflow-hidden">
+                  <div className="absolute top-0 right-0 -mt-8 -mr-8 w-64 h-64 bg-signal/20 rounded-full blur-3xl pointer-events-none"></div>
+                  
+                  <div className="relative z-10">
+                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-signal/20 border border-signal/30 text-xs font-semibold uppercase tracking-wider text-cyan-300 mb-4">
+                      <span>🛡️ FixGrid Verified Repair Network</span>
+                    </div>
+
+                    <h3 className="text-2xl md:text-3xl font-bold tracking-tight text-white mb-3">
+                      Need a Trusted Repair Expert Near You?
+                    </h3>
+
+                    <p className="text-steel max-w-2xl text-base md:text-lg mb-6 leading-relaxed">
+                      Don't risk temporary fixes or unverified shops. Book certified local technicians with upfront fixed pricing, 
+                      tamper-proof digital diagnostic audits, and guaranteed <strong>30–90 day platform warranty protection</strong>.
+                    </p>
+
+                    <div className="flex flex-wrap items-center gap-3 mb-8">
+                      <Link
+                        href="/search"
+                        className="inline-flex items-center justify-center rounded-xl bg-signal px-6 py-3.5 text-base font-semibold text-white shadow-lg shadow-signal/30 hover:bg-signal/90 hover:scale-[1.02] active:scale-[0.98] transition-all"
+                      >
+                        Find Verified Repair Shops Near You
+                      </Link>
+                      <Link
+                        href="/repair/desktops"
+                        className="inline-flex items-center justify-center rounded-xl bg-white/10 hover:bg-white/15 border border-white/15 px-5 py-3.5 text-base font-semibold text-white transition-all"
+                      >
+                        Desktop PC Repair
+                      </Link>
+                      <Link
+                        href="/repair/phones"
+                        className="inline-flex items-center justify-center rounded-xl bg-white/10 hover:bg-white/15 border border-white/15 px-5 py-3.5 text-base font-semibold text-white transition-all"
+                      >
+                        Phone Repair
+                      </Link>
+                      <Link
+                        href="/repair/laptops"
+                        className="inline-flex items-center justify-center rounded-xl bg-white/10 hover:bg-white/15 border border-white/15 px-5 py-3.5 text-base font-semibold text-white transition-all"
+                      >
+                        Laptop Repair
+                      </Link>
+                    </div>
+
+                    {/* Local SEO Hub Anchor Links (Mumbai, Delhi, Bengaluru) */}
+                    <div className="pt-6 border-t border-white/10 flex flex-col md:flex-row md:items-center justify-between gap-4 text-xs text-steel">
+                      <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+                        <span className="font-semibold text-white/80">Available in Local Hubs:</span>
+                        <Link href="/search?q=Mumbai" className="hover:text-cyan-300 underline underline-offset-2">Repair in Mumbai</Link>
+                        <span>•</span>
+                        <Link href="/search?q=Delhi" className="hover:text-cyan-300 underline underline-offset-2">Repair in Delhi NCR</Link>
+                        <span>•</span>
+                        <Link href="/search?q=Bengaluru" className="hover:text-cyan-300 underline underline-offset-2">Repair in Bengaluru</Link>
+                        <span>•</span>
+                        <Link href="/repair/audio-equipment" className="hover:text-cyan-300 underline underline-offset-2">Audio Equipment Repair</Link>
+                        <span>•</span>
+                        <Link href="/repair/appliances" className="hover:text-cyan-300 underline underline-offset-2">Appliance Repair</Link>
+                      </div>
+                      <span className="text-white/60">100% Escrow Payment Protection</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </article>

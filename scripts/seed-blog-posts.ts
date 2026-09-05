@@ -1,3 +1,6 @@
+import { loadEnvConfig } from "@next/env";
+loadEnvConfig(process.cwd());
+
 import { createClient } from "@supabase/supabase-js";
 import type { Database } from "../src/lib/types/database";
 
@@ -47,7 +50,7 @@ const BLOG_POSTS = [
       <p>If your phone jumps from 40% to 80% within five minutes of plugging it in, or conversely stays stuck at 99% for hours, the fuel gauge IC is struggling to calculate cell voltage due to non-linear discharge curves from degraded electrode materials.</p>
       
       <h3>Conclusion</h3>
-      <p>Replacing a smartphone battery is a quick, inexpensive procedure typically costing between $50 and $95 that can breathe two to three more years of life into a device you already own. If you are experiencing any of these symptoms, test your battery health and consult a certified local repair expert.</p>
+      <p>Replacing a smartphone battery is a quick, inexpensive procedure typically costing between $50 and $95 that can breathe two to three more years of life into a device you already own. If you are experiencing any of these symptoms, browse <a href="/repair/phones">certified phone repair technicians offering genuine battery replacements</a> or <a href="/search?category=phones">search local repair shops in Mumbai, Delhi, and nearby hubs</a> backed by FixGrid's 90-day warranty.</p>
     `,
     meta_title: "10 Signs Your Phone Battery Needs Replacing | FixGrid",
     meta_description: "Learn the top signs your smartphone battery is failing, from unexpected shutdowns to swelling. Discover typical replacement costs and diagnostic advice.",
@@ -133,7 +136,7 @@ const BLOG_POSTS = [
     slug: "desktop-pc-psu-failure-symptoms",
     status: "published" as const,
     content: `
-      <p>When a desktop computer randomly resets, fails to boot, or emits an electrical buzzing sound, the Power Supply Unit (PSU) is often the prime suspect. As the component responsible for converting high-voltage AC wall power into clean, regulated DC voltage rails (+12V, +5V, +3.3V), an unstable PSU can cause bewildering erratic faults across your motherboard, GPU, and drives.</p>
+      <p>When a desktop computer randomly resets, fails to boot, or emits an electrical buzzing sound, the Power Supply Unit (PSU) is often the prime suspect. As the component responsible for converting high-voltage AC wall power into clean, regulated DC voltage rails (+12V, +5V, +3.3V), an unstable PSU can cause bewildering erratic faults across your motherboard, GPU, and drives. Before writing off expensive components, booking a <a href="/repair/desktops">bench diagnostic with a certified desktop repair technician</a> is the most reliable way to prevent catastrophic hardware damage.</p>
 
       <h3>Common Symptoms of a Failing Power Supply</h3>
       <ul>
@@ -155,10 +158,19 @@ const BLOG_POSTS = [
         <li><strong>+5V Rail (Logic & USB):</strong> Must measure between 4.75V and 5.25V.</li>
         <li><strong>+3.3V Rail (Chipset & M.2 SSDs):</strong> Must measure between 3.14V and 3.47V.</li>
       </ul>
-      If the +12V rail drops to 11.1V under GPU load, the voltage regulator module is failing and will trigger system crash protection.</p>
+      If the +12V rail drops to 11.1V under GPU load, the voltage regulator module is failing and will trigger system crash protection. If you suspect voltage drops, you can <a href="/search?category=desktops">compare verified desktop repair specialists in Mumbai, Delhi, and local centers</a> who perform oscilloscopic load testing.</p>
 
       <h3>Safety Warning on Power Supplies</h3>
       <p><strong>Never attempt to open the metal enclosure of a power supply unit.</strong> High-voltage primary filtering capacitors can hold lethal charges (up to 400V) for hours or days after being unplugged. If a PSU is defective, it should always be safely replaced rather than serviced internally by non-specialists.</p>
+
+      <div class="my-8 rounded-2xl border-2 border-signal/20 bg-signal/5 p-6 md:p-8 not-prose">
+        <h4 class="text-xl font-bold text-enamel">Need Your Desktop or PSU Inspected?</h4>
+        <p class="mt-2 text-sm text-steel">Don't risk frying your motherboard, CPU, or graphics card. Book a verified local desktop technician on FixGrid with upfront diagnostic pricing, escrow payment protection, and a 90-day warranty.</p>
+        <div class="mt-4 flex flex-wrap gap-3">
+          <a href="/repair/desktops" class="inline-flex items-center justify-center rounded-xl bg-signal px-5 py-2.5 text-sm font-semibold text-white shadow-md hover:bg-signal/90">Find Desktop Specialists Near You</a>
+          <a href="/search" class="inline-flex items-center justify-center rounded-xl border border-steel/20 bg-white px-4 py-2.5 text-sm font-semibold text-enamel hover:bg-wash">Search All Local Repair Hubs</a>
+        </div>
+      </div>
     `,
     meta_title: "Desktop PC PSU Failure Symptoms & Diagnostic Guide | FixGrid",
     meta_description: "Is your PC randomly rebooting or refusing to turn on? Learn the key signs of a failing power supply unit (PSU) and how technicians test voltage rails.",

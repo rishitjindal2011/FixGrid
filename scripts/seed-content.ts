@@ -853,18 +853,22 @@ export const CATEGORY_SEEDS: CategorySeed[] = [
   },
 ];
 
-/* ── Block assembly ───────────────────────────────────────────────────────── */
-
-export function buildBlocks(seed: CategorySeed): Block[] {
+export function buildBlocks(seed: CategorySeed, city?: string): Block[] {
   const shortLabel = seed.label.replace(" Repair", "");
+  const headingText = city ? `${seed.label} in ${city}` : `${seed.label} Near You`;
+  const subtitleText = city
+    ? `Compare certified local repair shops fixing ${seed.noun} across ${city}. Upfront diagnostic pricing (${seed.priceRange}), authentic parts, and 90-day warranty protection.`
+    : `Compare local independent shops that fix ${seed.noun}, review common component failure costs, and find technicians open right now.`;
+  const ctaLabel = city ? `Find ${shortLabel.toLowerCase()} experts in ${city}` : `Find ${shortLabel.toLowerCase()} shops`;
+  const ctaHref = city ? `/search?category=${seed.slug}&q=${encodeURIComponent(city)}` : `/search?category=${seed.slug}`;
 
   return [
     {
       type: "compact_hero",
-      eyebrow: "Repair & Diagnostic Guide",
-      heading: `${seed.label} Near You`,
-      subtitle: `Compare local independent shops that fix ${seed.noun}, review common component failure costs, and find technicians open right now.`,
-      ctas: [{ label: `Find ${shortLabel.toLowerCase()} shops`, href: `/search?category=${seed.slug}` }],
+      eyebrow: city ? `Local ${city} Service Guide` : "Repair & Diagnostic Guide",
+      heading: headingText,
+      subtitle: subtitleText,
+      ctas: [{ label: ctaLabel, href: ctaHref }],
     },
     {
       type: "highlights_strip",

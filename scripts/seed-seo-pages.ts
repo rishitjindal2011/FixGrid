@@ -5,6 +5,9 @@
  * Safe to run repeatedly: upserts on unique constraints.
  */
 
+import { loadEnvConfig } from "@next/env";
+loadEnvConfig(process.cwd());
+
 import { createClient } from "@supabase/supabase-js";
 
 import { ContentSectionsSchema, type Block } from "../src/lib/cms/blocks";
@@ -29,13 +32,31 @@ const supabase = createClient<Database>(SUPABASE_URL, SERVICE_KEY, {
 
 const PATH_PREFIX = "repair";
 
-function metaFor(seed: CategorySeed) {
+function metaFor(seed: CategorySeed, city?: string) {
+  if (city) {
+    return {
+      meta_title: `${seed.label} Service in ${city} — Certified Local Shops & Costs | FixGrid`,
+      meta_description: `Looking for reliable ${seed.noun} repair in ${city}? Find certified local technicians, compare diagnostic costs (${seed.priceRange}), and book with 90-day warranty protection.`,
+      keywords: [
+        `${seed.slug} repair in ${city.toLowerCase()}`,
+        `${seed.slug} repair near me in ${city.toLowerCase()}`,
+        `${seed.slug} repair ${city.toLowerCase()}`,
+        `${seed.label.toLowerCase()} in ${city.toLowerCase()}`,
+        `best ${seed.slug} repair shop ${city.toLowerCase()}`,
+        `${seed.noun} repair ${city.toLowerCase()}`,
+        `${seed.slug} repair near me`,
+        `${seed.slug} repair cost`,
+      ],
+    };
+  }
+
   return {
-    meta_title: `${seed.label} Near You — Certified Local Shops & Costs`,
-    meta_description: `What ${seed.noun} repairs cost (${seed.priceRange}), typical turnaround times, and verified local repair technicians. Find experts open now.`,
+    meta_title: `${seed.label} Near You (Mumbai & Major Cities) — Certified Local Shops & Costs`,
+    meta_description: `What ${seed.noun} repairs cost (${seed.priceRange}), typical turnaround times, and verified local repair technicians across Mumbai, Delhi, Bengaluru & nearby hubs. Find experts open now.`,
     keywords: [
       `${seed.slug} repair`,
       `${seed.slug} repair near me`,
+      `${seed.slug} repair in mumbai`,
       `${seed.slug} repair cost`,
       `fix ${seed.noun}`,
       `${seed.noun} repair technician`,
@@ -124,19 +145,24 @@ async function seedPage(
   seed: CategorySeed,
   blocks: unknown,
   templateId: string,
+  customSlug?: string,
+  city?: string,
 ): Promise<Result> {
+  const pageSlug = customSlug || seed.slug;
+  const pageTitle = city ? `${seed.label} in ${city}` : `${seed.label} Near You`;
+
   const { data: existing, error: readError } = await supabase
     .from("seo_pages")
     .select("id, status")
     .eq("path_prefix", PATH_PREFIX)
-    .eq("slug", seed.slug)
+    .eq("slug", pageSlug)
     .maybeSingle();
 
-  if (readError) return { slug: seed.slug, action: "failed", detail: readError.message };
+  if (readError) return { slug: pageSlug, action: "failed", detail: readError.message };
 
   const regenerated = {
-    title: `${seed.label} Near You`,
-    ...metaFor(seed),
+    title: pageTitle,
+    ...metaFor(seed, city),
     content_sections: blocks as Json,
     status: "published" as const,
     published_at: new Date().toISOString(),
@@ -148,22 +174,22 @@ async function seedPage(
 
   if (existing) {
     const { error } = await supabase.from("seo_pages").update(regenerated).eq("id", existing.id);
-    if (error) return { slug: seed.slug, action: "failed", detail: error.message };
-    return { slug: seed.slug, action: "updated", words: countWords(blocks) };
+    if (error) return { slug: pageSlug, action: "failed", detail: error.message };
+    return { slug: pageSlug, action: "updated", words: countWords(blocks) };
   }
 
   const { error } = await supabase.from("seo_pages").insert({
     ...regenerated,
     path_prefix: PATH_PREFIX,
-    slug: seed.slug,
+    slug: pageSlug,
     template_id: templateId,
     canonical_url: null,
     og_title: null,
     og_image_url: null,
     schema_markup: null,
   });
-  if (error) return { slug: seed.slug, action: "failed", detail: error.message };
-  return { slug: seed.slug, action: "created", words: countWords(blocks) };
+  if (error) return { slug: pageSlug, action: "failed", detail: error.message };
+  return { slug: pageSlug, action: "created", words: countWords(blocks) };
 }
 
 /* ── Core Informational / Trust Pages ────────────────────────────────────── */
@@ -446,6 +472,37 @@ async function main(): Promise<void> {
     } catch (error) {
       results.push({
         slug: seed.slug,
+        action: "failed",
+        detail: error instanceof Error ? error.message : String(error),
+      });
+    }
+  }
+
+  console.log(`\n  Seeding High-Intent Local SEO City Pages (Mumbai & Key Metros)…\n`);
+
+  const LOCAL_CITY_SEEDS = [
+    { slug: "audio-equipment", city: "Mumbai" },
+    { slug: "desktops", city: "Mumbai" },
+    { slug: "phones", city: "Mumbai" },
+    { slug: "laptops", city: "Mumbai" },
+    { slug: "appliances", city: "Mumbai" },
+  ];
+
+  for (const item of LOCAL_CITY_SEEDS) {
+    const seed = CATEGORY_SEEDS.find((s) => s.slug === item.slug);
+    if (!seed) continue;
+
+    const citySlug = `${seed.slug}-${item.city.toLowerCase()}`;
+    const blocks = buildBlocks(seed, item.city);
+    const parsed = ContentSectionsSchema.safeParse(blocks);
+    if (!parsed.success) continue;
+
+    try {
+      const templateId = await seedTemplate(seed, parsed.data);
+      results.push(await seedPage(seed, parsed.data, templateId, citySlug, item.city));
+    } catch (error) {
+      results.push({
+        slug: citySlug,
         action: "failed",
         detail: error instanceof Error ? error.message : String(error),
       });
