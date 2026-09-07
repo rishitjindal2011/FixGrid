@@ -28,7 +28,9 @@ export function renderEmailTemplate(input: EmailTemplateInput): string {
   const badgeText = input.badge ?? "ACCOUNT SECURITY";
   const siteUrl = CANONICAL_ORIGIN;
   const recipient = input.recipientEmail ?? "your registered email address";
-  const logoUrl = input.logoUrl ?? "cid:fixgrid-logo";
+  const logoUrl =
+    input.logoUrl ??
+    "https://iusbwebxzrjwwfquscfp.supabase.co/storage/v1/object/public/avatars/brand/fixgrid-logo.png";
   const unsubscribeUrl =
     input.unsubscribeUrl ??
     (input.recipientEmail
@@ -173,15 +175,10 @@ export function renderEmailTemplate(input: EmailTemplateInput): string {
                     <table role="presentation" cellspacing="0" cellpadding="0" border="0">
                       <tr>
                         <!-- Icon Squircle -->
-                        <td width="40" height="40" align="center" valign="middle" style="width:40px;height:40px;background:linear-gradient(135deg, #0284c7 0%, #0f3d4c 45%, #c2410c 85%, #ea580c 100%);background-color:#ea580c;border-radius:10px;text-align:center;vertical-align:middle;overflow:hidden;">
-                          <!--[if mso]>
-                          <span style="font-size:22px;line-height:40px;color:#ffffff;">&#128295;</span>
-                          <![endif]-->
-                          <!--[if !mso]><!-->
+                        <td width="42" height="42" align="center" valign="middle" style="width:42px;height:42px;text-align:center;vertical-align:middle;">
                           <img src="${escapeHtml(
                             logoUrl,
-                          )}" width="40" height="40" alt="🔧" style="display:block;width:40px;height:40px;max-width:40px;max-height:40px;border:0;border-radius:10px;outline:none;text-align:center;line-height:40px;font-size:20px;color:#ffffff;" />
-                          <!--<![endif]-->
+                          )}" width="42" height="42" alt="FixGrid" style="display:block;width:42px;height:42px;max-width:42px;max-height:42px;border:0;border-radius:10px;outline:none;" />
                         </td>
                         <!-- Text -->
                         <td style="padding-left:12px;" valign="middle">

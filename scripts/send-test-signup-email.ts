@@ -67,16 +67,6 @@ async function main() {
   const text = renderPlainText(templateInput);
 
   console.log("Sending FixGrid branded test email to:", to);
-  const iconPath = "public/icon-48.png";
-  const attachments = fs.existsSync(iconPath)
-    ? [
-        {
-          filename: "icon-48.png",
-          content: fs.readFileSync(iconPath),
-          cid: "fixgrid-logo",
-        },
-      ]
-    : [];
 
   const { data, error } = await resend.emails.send({
     from,
@@ -88,7 +78,6 @@ async function main() {
     headers: {
       "List-Unsubscribe": `<${templateInput.unsubscribeUrl}>`,
     },
-    ...(attachments.length > 0 ? { attachments } : {}),
   });
 
   if (error) {
