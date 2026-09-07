@@ -2,7 +2,7 @@
 
 When anyone searches **"fixgrid"**, **"fix grid"**, or **"fixgrid repair"**, your website should appear at the **very top of Google search results (#1 position)**.
 
-Because your live website is hosted at **`https://www.vytron.me`** rather than a matching `.com` domain, Google previously saw a brand-domain discrepancy. This action plan details the exact technical code changes implemented across your platform and the **immediate 3-minute Google Search Console actions** you must complete to force Google to rank FixGrid #1.
+Because your live website is hosted at **`https://fixgrid.vytron.me`** rather than a matching `.com` domain, Google previously saw a brand-domain discrepancy. This action plan details the exact technical code changes implemented across your platform and the **immediate 3-minute Google Search Console actions** you must complete to force Google to rank FixGrid #1.
 
 ---
 
@@ -25,14 +25,14 @@ Because your live website is hosted at **`https://www.vytron.me`** rather than a
 
 ### C. Rich Schema.org Brand Entity Graph (`WebSite` & `Organization`)
 * **The Fix ([`src/lib/seo/jsonld.ts`](file:///c:/Users/Rishit%20Jindal/Downloads/FixGrid-main/src/lib/seo/jsonld.ts)):**
-  * **Brand Entity Added:** Explicitly declares `{ "@type": "Brand", "name": "FixGrid", "alternateName": "Fix Grid", "url": "https://www.vytron.me" }`.
-  * **Raster PNG Logo Provided:** Google Search Central requires a raster image (`.png`, `.jpg`, or `.webp`) for Organization logos and search snippets (SVGs are discarded). Configured `logo: "https://www.vytron.me/logo.png"`.
+  * **Brand Entity Added:** Explicitly declares `{ "@type": "Brand", "name": "FixGrid", "alternateName": "Fix Grid", "url": "https://fixgrid.vytron.me" }`.
+  * **Raster PNG Logo Provided:** Google Search Central requires a raster image (`.png`, `.jpg`, or `.webp`) for Organization logos and search snippets (SVGs are discarded). Configured `logo: "https://fixgrid.vytron.me/logo.png"`.
   * **Knowledge Graph `sameAs` Links:** Connected `https://github.com/rishitjindal2011/FixGrid` to prove domain ownership of the FixGrid codebase.
   * **`WebSite` Alternate Names:** Configured `alternateName: ["FixGrid", "Fix Grid", "FixGrid India", "fixgrid.in", "Vytron FixGrid"]`.
 
 ### D. Canonical Domain Normalization
 * **The Fix ([`src/lib/site.ts`](file:///c:/Users/Rishit%20Jindal/Downloads/FixGrid-main/src/lib/site.ts)):**
-  * Standardized `FALLBACK_ORIGIN` to `https://www.vytron.me` (was `https://vytron.me`).
+  * Standardized `FALLBACK_ORIGIN` to `https://fixgrid.vytron.me` (was `https://vytron.me`).
   * Prevents split PageRank and canonical dilution between apex and `www` subdomains.
 
 ### E. Advanced Googlebot Directives
@@ -50,10 +50,10 @@ Google does not re-crawl websites every second on its own. **To get your website
 
 ### Step 1: Force Priority Re-Index of the Homepage
 1. Open [Google Search Console](https://search.google.com/search-console).
-2. Ensure your property is selected (preferably Domain Property `vytron.me` or URL Prefix `https://www.vytron.me`).
+2. Ensure your property is selected (preferably Domain Property `vytron.me` or URL Prefix `https://fixgrid.vytron.me`).
 3. In the top search bar (**"Inspect any URL in '...' "**), paste:
    ```
-   https://www.vytron.me
+   https://fixgrid.vytron.me
    ```
 4. Press Enter. Click **"Test Live URL"** (takes ~30 seconds).
 5. Once the green checkmarks appear, click **"Request Indexing"**.
@@ -70,9 +70,9 @@ Google does not re-crawl websites every second on its own. **To get your website
 
 ### Step 3: Inspect Key Metro Service Pages
 Repeat the URL inspection and click **"Request Indexing"** for your top pages:
-* `https://www.vytron.me/search`
-* `https://www.vytron.me/blog`
-* `https://www.vytron.me/join`
+* `https://fixgrid.vytron.me/search`
+* `https://fixgrid.vytron.me/blog`
+* `https://fixgrid.vytron.me/join`
 
 ---
 
@@ -83,18 +83,18 @@ When your domain is `vytron.me` but your brand is `FixGrid`, Google looks at ext
 1. **GitHub Repository:**
    * In your GitHub repository `https://github.com/rishitjindal2011/FixGrid`, set the **Website URL** in the repository "About" section on the right sidebar to:
      ```
-     https://www.vytron.me
+     https://fixgrid.vytron.me
      ```
-   * *Impact: Google treats GitHub as an ultra-high authority entity and immediately associates the brand "FixGrid" with `https://www.vytron.me`.*
+   * *Impact: Google treats GitHub as an ultra-high authority entity and immediately associates the brand "FixGrid" with `https://fixgrid.vytron.me`.*
 
 2. **Social & Public Profiles:**
-   * If you have X (Twitter), LinkedIn, or YouTube for FixGrid or Vytron, link to `https://www.vytron.me` in the bio.
+   * If you have X (Twitter), LinkedIn, or YouTube for FixGrid or Vytron, link to `https://fixgrid.vytron.me` in the bio.
    * Add any new profiles into the `sameAs` array in [`src/lib/seo/jsonld.ts`](file:///c:/Users/Rishit%20Jindal/Downloads/FixGrid-main/src/lib/seo/jsonld.ts).
 
 3. **Google Business Profile (Optional but guaranteed #1 local card):**
    * Create a free [Google Business Profile](https://business.google.com) named **"FixGrid"**.
    * Category: *Electronics Repair Shop* or *Business Directory*.
-   * Website: `https://www.vytron.me`.
+   * Website: `https://fixgrid.vytron.me`.
    * *Impact: Triggers the large right-hand Knowledge Panel box on Google whenever "FixGrid" is searched.*
 
 ---

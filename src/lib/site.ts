@@ -9,7 +9,7 @@
  * five files, we enforce it once, at module load, and fail the build loudly.
  */
 
-const FALLBACK_ORIGIN = "https://www.vytron.me";
+const FALLBACK_ORIGIN = "https://fixgrid.vytron.me";
 
 function resolveOrigin(): string {
   const raw = process.env.NEXT_PUBLIC_SITE_URL?.trim();
@@ -18,10 +18,10 @@ function resolveOrigin(): string {
     if (process.env.NODE_ENV === "production") {
       throw new Error(
         "[site] NEXT_PUBLIC_SITE_URL is required in production. " +
-          "Set it to the canonical origin (e.g. https://www.vytron.me).",
+          "Set it to the canonical origin (e.g. https://fixgrid.vytron.me).",
       );
     }
-    return "https://www.vytron.me";
+    return "https://fixgrid.vytron.me";
   }
 
   let parsed: URL;
