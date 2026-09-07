@@ -376,6 +376,6 @@ export const config = {
    * ever be localized.
    */
   matcher: [
-    "/((?!_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml|(?:api|auth|icon|apple-icon)(?:/|$)|.*\\.(?:svg|png|jpg|jpeg|gif|webp|avif|ico|css|js|woff|woff2|ttf)$).*)",
+    "/((?!_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml|(?:api|auth|icon|apple-icon)(?:/|$)|.*\\.(?:svg|png|jpg|jpeg|gif|webp|avif|ico|css|js|woff|woff2|ttf|xsl|xml)$).*)",
   ],
 };
