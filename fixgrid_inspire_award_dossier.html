@@ -1,0 +1,813 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>FixGrid & SafeProbe™ — INSPIRE Award MANAK Innovation Dossier</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+  @page {
+    size: A4 portrait;
+    margin: 0;
+  }
+  
+  * {
+    box-sizing: border-box;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  body {
+    margin: 0;
+    padding: 0;
+    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    color: #2D3748;
+    background: #FFFFFF;
+    font-size: 12.8px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .page-container {
+    width: 210mm;
+    margin: 0 auto;
+    background: #FFFFFF;
+  }
+
+  .page {
+    width: 210mm;
+    height: 297mm;
+    min-height: 297mm;
+    max-height: 297mm;
+    padding: 18mm 22mm 16mm 22mm;
+    position: relative;
+    page-break-after: always;
+    page-break-inside: avoid;
+    background: #FFFFFF;
+    overflow: hidden;
+  }
+
+  /* Delicate Guilloche / Wireframe SVG curves */
+  .bg-wireframe-left {
+    position: absolute;
+    top: -50px;
+    left: -50px;
+    width: 280px;
+    height: 280px;
+    opacity: 0.16;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .bg-wireframe-right {
+    position: absolute;
+    top: -40px;
+    right: -50px;
+    width: 300px;
+    height: 300px;
+    opacity: 0.16;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .content-layer {
+    position: relative;
+    z-index: 1;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Header Branding */
+  .header-dots {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+
+  .header-dots span {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #8B5CF6;
+    opacity: 0.85;
+  }
+
+  .header-intro {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 20px;
+    font-weight: 500;
+    color: #4B5563;
+    text-align: center;
+    margin-bottom: 2px;
+  }
+
+  .header-title {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 54px;
+    font-weight: 800;
+    color: #111827;
+    text-align: center;
+    letter-spacing: -0.035em;
+    line-height: 1.05;
+    margin: 0 0 12px 0;
+  }
+
+  .header-badge-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+
+  .header-badge {
+    background: #111827;
+    color: #FFFFFF;
+    padding: 6px 16px;
+    border-radius: 9999px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+  }
+
+  .header-subtag {
+    font-size: 11.5px;
+    font-weight: 600;
+    color: #6B7280;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+  }
+
+  /* Signature Section Pill Banner */
+  .section-banner {
+    background: #F8F5EE;
+    border-radius: 8px;
+    padding: 9px 18px;
+    margin: 16px 0 12px 0;
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: 19px;
+    font-weight: 700;
+    color: #5D5643;
+    letter-spacing: -0.01em;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .section-banner-tag {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    background: #EAE4D5;
+    color: #5D5643;
+    padding: 3px 9px;
+    border-radius: 4px;
+  }
+
+  p {
+    margin: 0 0 11px 0;
+    color: #374151;
+    font-size: 12.8px;
+    line-height: 1.62;
+  }
+
+  p:last-child {
+    margin-bottom: 0;
+  }
+
+  strong {
+    font-weight: 700;
+    color: #111827;
+  }
+
+  /* 2-Column Grid for Problem Statement (Verbatim layout) */
+  .two-col-grid {
+    display: grid;
+    grid-template-columns: 1.35fr 1fr;
+    gap: 24px;
+    align-items: start;
+  }
+
+  .right-callout-block {
+    margin-bottom: 16px;
+  }
+
+  .right-callout-block:last-child {
+    margin-bottom: 0;
+  }
+
+  .callout-title {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 14.5px;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: #111827;
+    margin-bottom: 5px;
+  }
+
+  .callout-list {
+    margin: 0;
+    padding-left: 18px;
+    list-style-type: disc;
+  }
+
+  .callout-list li {
+    font-size: 12.4px;
+    color: #374151;
+    line-height: 1.55;
+    margin-bottom: 4px;
+  }
+
+  /* Key Highlights Row */
+  .highlights-bar {
+    display: flex;
+    gap: 10px;
+    margin: 16px 0 18px 0;
+  }
+
+  .highlight-chip {
+    flex: 1;
+    background: #FAF9F5;
+    border: 1px solid #EAE4D5;
+    border-radius: 8px;
+    padding: 9px 10px;
+    text-align: center;
+  }
+
+  .chip-value {
+    font-size: 14.5px;
+    font-weight: 800;
+    color: #111827;
+    margin-bottom: 2px;
+  }
+
+  .chip-label {
+    font-size: 10px;
+    color: #6B7280;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  /* Hardware Feature Bento Cards */
+  .hardware-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 12px;
+    margin: 10px 0 12px 0;
+  }
+
+  .hw-card {
+    background: #FAFAFA;
+    border: 1px solid #E5E7EB;
+    border-radius: 9px;
+    padding: 11px 12px;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .hw-card-badge {
+    align-self: flex-start;
+    font-size: 9px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 2.5px 7px;
+    border-radius: 4px;
+    margin-bottom: 6px;
+  }
+
+  .badge-blue {
+    background: #EFF6FF;
+    color: #1D4ED8;
+    border: 1px solid #DBEAFE;
+  }
+
+  .badge-purple {
+    background: #FAF5FF;
+    color: #7E22CE;
+    border: 1px solid #F3E8FF;
+  }
+
+  .badge-emerald {
+    background: #ECFDF5;
+    color: #047857;
+    border: 1px solid #D1FAE5;
+  }
+
+  .hw-card-title {
+    font-size: 13px;
+    font-weight: 800;
+    color: #111827;
+    margin-bottom: 4px;
+  }
+
+  .hw-card-desc {
+    font-size: 11.4px;
+    line-height: 1.5;
+    color: #4B5563;
+    margin: 0;
+  }
+
+  /* Tech Specs Box */
+  .tech-specs-box {
+    background: #F9FAFB;
+    border: 1px solid #E5E7EB;
+    border-radius: 8px;
+    padding: 10px 14px;
+    margin: 8px 0 12px 0;
+  }
+
+  .tech-item {
+    font-size: 11.8px;
+    line-height: 1.52;
+    color: #374151;
+    margin-bottom: 5px;
+  }
+
+  .tech-item:last-child {
+    margin-bottom: 0;
+  }
+
+  /* Triple Bottom Line 3 Columns */
+  .triple-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 16px;
+    margin-top: 8px;
+  }
+
+  .col-header {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 14.5px;
+    font-weight: 900;
+    color: #111827;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    line-height: 1.2;
+    margin-bottom: 8px;
+  }
+
+  .col-subheader {
+    display: block;
+    font-size: 13px;
+    font-weight: 800;
+    color: #4B5563;
+  }
+
+  .impact-list {
+    margin: 0;
+    padding-left: 16px;
+    list-style-type: disc;
+  }
+
+  .impact-list li {
+    font-size: 11.8px;
+    color: #374151;
+    line-height: 1.52;
+    margin-bottom: 7px;
+  }
+
+  .impact-list li strong {
+    color: #111827;
+  }
+
+  /* Market & Revenue Grid */
+  .market-grid {
+    display: grid;
+    grid-template-columns: 1.1fr 1fr;
+    gap: 24px;
+    margin-top: 8px;
+  }
+
+  .market-title {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 15.5px;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: #111827;
+    margin-bottom: 8px;
+  }
+
+  .revenue-list {
+    margin: 0;
+    padding-left: 18px;
+  }
+
+  .revenue-list li {
+    font-size: 12.2px;
+    color: #374151;
+    line-height: 1.55;
+    margin-bottom: 8px;
+  }
+
+  /* Page Footer */
+  .page-footer {
+    margin-top: auto;
+    padding-top: 12px;
+    border-top: 1px solid #F1F5F9;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 10px;
+    font-weight: 600;
+    color: #94A3B8;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+</style>
+</head>
+<body>
+
+<div class="page-container">
+
+  <!-- ================= PAGE 1: COVER & EXECUTIVE SUMMARY ================= -->
+  <div class="page">
+    <!-- Guilloche background curves -->
+    <svg class="bg-wireframe-left" viewBox="0 0 200 200" fill="none" stroke="#6366F1">
+      <circle cx="100" cy="100" r="30" stroke-width="0.7" />
+      <circle cx="90" cy="100" r="45" stroke-width="0.7" />
+      <circle cx="80" cy="100" r="60" stroke-width="0.7" />
+      <circle cx="70" cy="100" r="75" stroke-width="0.7" />
+      <circle cx="60" cy="100" r="90" stroke-width="0.7" />
+      <ellipse cx="100" cy="90" rx="80" ry="40" stroke-width="0.7" transform="rotate(25 100 90)" />
+      <ellipse cx="100" cy="90" rx="95" ry="50" stroke-width="0.7" transform="rotate(45 100 90)" />
+    </svg>
+    <svg class="bg-wireframe-right" viewBox="0 0 200 200" fill="none" stroke="#6366F1">
+      <circle cx="100" cy="100" r="35" stroke-width="0.7" />
+      <circle cx="110" cy="95" r="50" stroke-width="0.7" />
+      <circle cx="120" cy="90" r="65" stroke-width="0.7" />
+      <circle cx="130" cy="85" r="80" stroke-width="0.7" />
+      <ellipse cx="100" cy="100" rx="75" ry="40" stroke-width="0.7" transform="rotate(-30 100 100)" />
+      <ellipse cx="100" cy="100" rx="90" ry="55" stroke-width="0.7" transform="rotate(-55 100 100)" />
+    </svg>
+
+    <div class="content-layer">
+      <!-- Header -->
+      <div class="header-dots">
+        <span></span>
+        <span></span>
+        <span></span>
+      </div>
+      <div class="header-intro">Introducing</div>
+      <h1 class="header-title">FixGrid</h1>
+      <div class="header-badge-row">
+        <div class="header-badge">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="2" y1="12" x2="22" y2="12"></line>
+            <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+          </svg>
+          <span>www.vytron.me</span>
+        </div>
+        <span class="header-subtag">• INSPIRE Award – MANAK Innovation Dossier</span>
+      </div>
+
+      <!-- Executive Summary -->
+      <div class="section-banner">
+        <span>Executive Summary</span>
+        <span class="section-banner-tag">Overview</span>
+      </div>
+      <p>
+        FixGrid is a revolutionary digital platform designed to bridge the gap between everyday consumers and skilled neighborhood repair professionals. Our core mission is to champion the Right-to-Repair movement and foster a circular economy by making the act of repairing items as secure, transparent, and trustworthy as purchasing new ones. We aim to transform the perception and practice of repair, creating value for consumers, empowering local artisans, and significantly reducing environmental impact.
+      </p>
+      <p>
+        To make repairs truly trustworthy in the real world, FixGrid pairs this web platform with a physical invention: the <strong>FixGrid SafeProbe™</strong>. This handheld smart diagnostic tool helps neighborhood mechanics instantly detect faulty micro-components without expensive lab equipment, captures photo proof of repairs, and issues verified digital warranty seals—ensuring customers are never overcharged and broken electronics are saved from landfills.
+      </p>
+
+      <!-- Innovation Snapshot Bar -->
+      <div class="highlights-bar">
+        <div class="highlight-chip">
+          <div class="chip-value">₹1,200</div>
+          <div class="chip-label">Frugal Tool BOM</div>
+        </div>
+        <div class="highlight-chip">
+          <div class="chip-value">5MP Macro</div>
+          <div class="chip-label">Photo Proof Lens</div>
+        </div>
+        <div class="highlight-chip">
+          <div class="chip-value">Dual-Loop QR</div>
+          <div class="chip-label">Tamper Warranty</div>
+        </div>
+        <div class="highlight-chip">
+          <div class="chip-value">Zero E-Waste</div>
+          <div class="chip-label">Circular Planet</div>
+        </div>
+      </div>
+
+      <!-- Problem Statement Teaser Banner matching original flow -->
+      <div class="section-banner" style="margin-top: 14px;">
+        <span>The Problem Statement — The Throwaway Culture & Climate Paradox</span>
+        <span class="section-banner-tag">National Challenge</span>
+      </div>
+      <p style="color: #6B7280; font-style: italic; font-size: 12.5px;">
+        In the following section, we dissect the systemic forces driving modern e-waste accumulation, the breakdown of community artisan economies, and the urgent psychological shift required from consumers.
+      </p>
+
+      <!-- Footer -->
+      <div class="page-footer">
+        <span>FixGrid Ecosystem & SafeProbe™ • INSPIRE Award – MANAK</span>
+        <span>Page 1 of 4</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= PAGE 2: PROBLEM STATEMENT (UNTOUCHED) & PROPOSED SOLUTION ================= -->
+  <div class="page">
+    <div class="content-layer">
+      <!-- Problem Statement Header -->
+      <div style="margin-bottom: 12px;">
+        <span style="font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #8B5CF6;">
+          Section 01 • Empirical Background
+        </span>
+        <h2 style="font-family: 'Playfair Display', Georgia, serif; font-size: 21px; font-weight: 700; color: #111827; margin: 4px 0 14px 0;">
+          The Problem Statement — The Throwaway Culture & Climate Paradox
+        </h2>
+      </div>
+
+      <!-- Problem Statement 2-Column Grid (VERBATIM UNTOUCHED TEXT) -->
+      <div class="two-col-grid">
+        <!-- Left Column: The 4 exact paragraphs from original PDF -->
+        <div>
+          <p>
+            The daily reality for most consumers is stark: when everyday items like a wristwatch, shoe sole, phone screen, or appliance break, the immediate impulse is to discard them and order expensive new replacements online. This ingrained habit perpetuates a cycle of constant consumption and waste.
+          </p>
+          <p>
+            Consumers are often unaware that a skilled local craftsman, potentially just 500 meters away, could repair the item efficiently for a fraction of the cost of a new one. This represents a significant loss of value for individuals and a missed opportunity for local economies.
+          </p>
+          <p>
+            The fundamental issue lies in a <strong>trust and visibility void</strong>. Local repair workers, the backbone of countless communities, lack a digital presence. Simultaneously, consumers face apprehension due to arbitrary pricing, inconsistent quality, and the absence of any guarantee on repair work.
+          </p>
+          <p>
+            This pervasive throwaway culture contributes directly to an <strong>environmental catastrophe</strong>. Millions of repairable items are discarded daily, piling up as toxic e-waste. In parallel, 24/7 manufacturing plants churn out new goods, burning fossil fuels and exacerbating climate change. The most impactful environmental solution is not just technological advancement, but a fundamental shift in our <strong>throwaway habits</strong>.
+          </p>
+        </div>
+
+        <!-- Right Column: The 3 exact callout blocks from original PDF -->
+        <div>
+          <div class="right-callout-block">
+            <div class="callout-title">THE LOST VALUE</div>
+            <ul class="callout-list">
+              <li>Thousands of rupees spent on replacements.</li>
+              <li>Skilled local artisans overlooked.</li>
+              <li>Repairable items become waste.</li>
+            </ul>
+          </div>
+
+          <div class="right-callout-block">
+            <div class="callout-title">THE TRUST & VISIBILITY VOID</div>
+            <ul class="callout-list">
+              <li>Local repair workers lack digital presence.</li>
+              <li>Consumers fear arbitrary pricing & no warranty.</li>
+            </ul>
+          </div>
+
+          <div class="right-callout-block">
+            <div class="callout-title">THE ENVIRONMENTAL CATASTROPHE</div>
+            <ul class="callout-list">
+              <li>Mountains of e-waste generated daily.</li>
+              <li>High carbon footprint from manufacturing.</li>
+              <li>The biggest fix: <strong>Changing our habits</strong>.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- Proposed Solution Banner -->
+      <div class="section-banner" style="margin-top: 18px;">
+        <span>The Proposed Solution (FixGrid)</span>
+        <span class="section-banner-tag">Ecosystem</span>
+      </div>
+      <p>
+        FixGrid addresses these critical issues by building a <strong>robust trust infrastructure</strong> for local repairs. FixGrid provides a 5-day platform-backed warranty on select categories, and additionally, we prominently display and record the shopkeeper's own extended warranties, fostering builder trust and accountability. Our smart escrow system ensures funds are held securely during the repair process and released only after verified customer satisfaction, eliminating the risk of non-completion or poor workmanship.
+      </p>
+      <p>
+        For local technicians, FixGrid acts as a powerful empowerment tool. We provide instant digital storefronts, enabling them to showcase their skills and receive verified ratings from satisfied customers. Access to pro tools and resources further enhances their capabilities. To further incentivize participation, we offer a <strong>5% completed-bill cashback rebate</strong> for shopkeepers.
+      </p>
+
+      <!-- Footer -->
+      <div class="page-footer">
+        <span>FixGrid Ecosystem & SafeProbe™ • INSPIRE Award – MANAK</span>
+        <span>Page 2 of 4</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= PAGE 3: THE PHYSICAL HARDWARE INVENTIONS & TRIPLE BOTTOM LINE ================= -->
+  <div class="page">
+    <div class="content-layer">
+      <!-- Hardware Section Banner -->
+      <div class="section-banner" style="margin-top: 0;">
+        <span>The Physical Invention — SafeProbe™ Smart Diagnostic Wand</span>
+        <span class="section-banner-tag">Hardware Innovation</span>
+      </div>
+      <p style="margin-bottom: 8px;">
+        Local neighborhood mechanics rarely possess costly oscilloscopes or inspection microscopes (which exceed ₹1,50,000). The <strong>SafeProbe™</strong> condenses lab-grade diagnostic intelligence into an intuitive pen-sized wand manufactured for under <strong>₹1,200 ($14)</strong>:
+      </p>
+
+      <!-- 3 Bento Hardware Cards -->
+      <div class="hardware-grid">
+        <div class="hw-card">
+          <span class="hw-card-badge badge-blue">Micro-Touch Sensing</span>
+          <div class="hw-card-title">Instant Fault Chirp</div>
+          <p class="hw-card-desc">
+            Mechanic touches probe to circuit traces. Wand tests impedance in milliseconds, beeping and glowing Green (Normal) or Red (Short/Damaged) on an OLED screen.
+          </p>
+        </div>
+
+        <div class="hw-card">
+          <span class="hw-card-badge badge-purple">Magnified Visuals</span>
+          <div class="hw-card-title">5MP Macro Photo Proof</div>
+          <p class="hw-card-desc">
+            Mini 5MP macro camera with ring LEDs snaps high-res magnified photos of burned ICs or cracked joints, beaming the proof straight to customer's phone before repair.
+          </p>
+        </div>
+
+        <div class="hw-card">
+          <span class="hw-card-badge badge-emerald">Digital Passport</span>
+          <div class="hw-card-title">Dual-Loop QR Warranty</div>
+          <p class="hw-card-desc">
+            Prints a physical tamper-evident QR void seal on the chassis. Scanning reveals test readings, before/after photos, and activates a valid 30-day warranty.
+          </p>
+        </div>
+      </div>
+
+      <!-- Scientific Architecture Box -->
+      <div class="tech-specs-box">
+        <div class="tech-item">
+          <strong>• Scientific Sensing Principle:</strong> Uses safe low-voltage in-circuit impedance & diode profiling (&lt;3.3V at &lt;5mA). This eliminates electrostatic discharge (ESD) risks while spotting shorted MLCC capacitors and open traces in smartphones and home appliances.
+        </div>
+        <div class="tech-item">
+          <strong>• Frugal Bill of Materials (Under ₹1,200):</strong> Engineered with an ESP32 dual-core IoT chip, high-gain AD8237 instrumentation amplifier, OV2640 macro sensor, and 0.96" OLED display—making high-tech diagnosis affordable for any roadside technician.
+        </div>
+        <div class="tech-item">
+          <strong>• Digital Cloud Backbone:</strong> Built with Next.js 16 (App Router), TypeScript, Tailwind CSS, Leaflet Map Engine for neighborhood discovery, and Supabase PostgreSQL with automated escrow releases and tamper-detection triggers.
+        </div>
+      </div>
+
+      <!-- Triple Bottom Line (Verbatim 3-Column Content) -->
+      <div class="section-banner" style="margin-top: 10px;">
+        <span>The Triple Bottom Line (Impact Analysis)</span>
+        <span class="section-banner-tag">Societal Impact</span>
+      </div>
+      <div class="triple-grid">
+        <!-- Column 1: Economic -->
+        <div>
+          <div class="col-header">
+            ECONOMIC<br>
+            <span class="col-subheader">(CONSUMER)</span>
+          </div>
+          <ul class="impact-list">
+            <li>
+              <strong>Significant Savings:</strong> Consumers achieve substantial cost reductions (60–80%) by choosing repair over purchasing new items.
+            </li>
+            <li>
+              <strong>Value Recovery:</strong> Unlocks the inherent value in existing products and prevents wasted family savings.
+            </li>
+            <li>
+              <strong>Zero Fraud Risk:</strong> Micro-camera visual proof and smart escrow eliminate false charges and overpricing.
+            </li>
+          </ul>
+        </div>
+
+        <!-- Column 2: Social -->
+        <div>
+          <div class="col-header">
+            SOCIAL<br>
+            <span class="col-subheader">(COMMUNITY)</span>
+          </div>
+          <ul class="impact-list">
+            <li>
+              <strong>Formal Identity:</strong> Provides unorganized local repair heroes with a formal, respected digital presence.
+            </li>
+            <li>
+              <strong>Reliable Livelihoods:</strong> Creates sustainable income streams and dignified work opportunities.
+            </li>
+            <li>
+              <strong>Community Empowerment:</strong> Strengthens local economies, bridges the trust void, and fosters skilled craftsmanship.
+            </li>
+          </ul>
+        </div>
+
+        <!-- Column 3: Ecological -->
+        <div>
+          <div class="col-header">
+            ECOLOGICAL<br>
+            <span class="col-subheader">(PLANET)</span>
+          </div>
+          <ul class="impact-list">
+            <li>
+              <strong>E-Waste Reduction:</strong> Combats the growing problem of toxic electronic and appliance dumping in landfills.
+            </li>
+            <li>
+              <strong>Carbon Footprint Mitigation:</strong> Reduces industrial demand for new manufacturing, lowering global greenhouse emissions.
+            </li>
+            <li>
+              <strong>Sustainable Habits:</strong> Promotes a culture of repair and reuse, the most effective environmental fix at the source.
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <div class="page-footer">
+        <span>FixGrid Ecosystem & SafeProbe™ • INSPIRE Award – MANAK</span>
+        <span>Page 3 of 4</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= PAGE 4: MARKET OPPORTUNITY, REVENUE & CONCLUSION ================= -->
+  <div class="page">
+    <!-- Subtle Guilloche curve in background -->
+    <svg class="bg-wireframe-right" viewBox="0 0 200 200" fill="none" stroke="#6366F1" style="top: auto; bottom: -50px; right: -50px;">
+      <circle cx="100" cy="100" r="40" stroke-width="0.7" />
+      <circle cx="110" cy="95" r="60" stroke-width="0.7" />
+      <circle cx="120" cy="90" r="80" stroke-width="0.7" />
+      <ellipse cx="100" cy="100" rx="90" ry="50" stroke-width="0.7" transform="rotate(-30 100 100)" />
+    </svg>
+
+    <div class="content-layer">
+      <!-- Market Opportunity & Revenue Streams (Verbatim Content) -->
+      <div class="market-grid" style="margin-top: 4px;">
+        <div>
+          <div class="market-title">MARKET OPPORTUNITY</div>
+          <p>
+            FixGrid taps into a massive, underserved market: the <strong>$15.2 Billion Indian unorganized repair economy</strong>. High demand, fragmented supply, and low customer trust have left this space ripe for innovation—FixGrid can bring reliability, transparency, and scalable operations to transform everyday local repairs into a dependable service experience.
+          </p>
+          <p>
+            By coupling software discovery with the SafeProbe™ diagnostic wand, FixGrid standardizes repair diagnostic quality across tier-1, tier-2, and rural Indian clusters.
+          </p>
+        </div>
+
+        <div>
+          <div class="market-title">REVENUE STREAMS</div>
+          <p style="margin-bottom: 8px;">
+            Our monetization strategy is designed for sustainability and value sharing:
+          </p>
+          <ol class="revenue-list">
+            <li>
+              <strong>Platform Take-Rate:</strong> A competitive 5–8% fee on every verified booking from the customer.
+            </li>
+            <li>
+              <strong>Shop Pro SaaS & Hardware Tier:</strong> An optional subscription service for advanced repair professionals at <strong>₹999/month</strong>, offering SafeProbe firmware updates, warranty management, and storefront analytics.
+            </li>
+            <li>
+              <strong>Certified Spare Parts Logistics:</strong> Future revenue from a curated marketplace for verified, genuine spare parts.
+            </li>
+          </ol>
+        </div>
+      </div>
+
+      <!-- Conclusion & Roadmap Banner -->
+      <div class="section-banner" style="margin-top: 24px;">
+        <span>Conclusion & Roadmap</span>
+        <span class="section-banner-tag">Future Vision</span>
+      </div>
+      <p>
+        FixGrid is more than just a platform; it is a movement towards a <strong>sustainable repair economy</strong>. We envision a future where society transitions from a mindless consumption loop to a conscious and responsible approach to product lifecycle management.
+      </p>
+      <p>
+        By empowering local repair heroes with the SafeProbe™ handheld diagnostic wand and instilling ironclad trust through digital warranties, we are building a cleaner, more equitable, and more resourceful planet for generations to come. Our roadmap prioritizes pilot testing across 50 neighborhood repair clusters, student community repair drives, and strategic partnerships with municipal e-waste recycling boards to accelerate this vital transformation.
+      </p>
+
+      <!-- Official INSPIRE Award - MANAK Submission Card -->
+      <div style="margin-top: 24px; background: #FAF9F5; border: 1.5px solid #E6DEC9; border-radius: 10px; padding: 14px 18px; display: flex; align-items: center; justify-content: space-between;">
+        <div>
+          <div style="font-size: 13px; font-weight: 800; color: #5D5643; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 3px;">
+            INSPIRE Award – MANAK National Innovation Submission
+          </div>
+          <div style="font-size: 11.5px; color: #78716C;">
+            Field: Frugal Science, Circular Economy, Right-to-Repair & Digital Trust Infrastructure
+          </div>
+        </div>
+        <div style="text-align: right;">
+          <div style="font-size: 12.5px; font-weight: 800; color: #111827;">Project FixGrid</div>
+          <div style="font-size: 11.5px; color: #8B5CF6; font-weight: 700;">www.vytron.me</div>
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <div class="page-footer">
+        <span>FixGrid Ecosystem & SafeProbe™ • INSPIRE Award – MANAK</span>
+        <span>Page 4 of 4</span>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+</body>
+</html>

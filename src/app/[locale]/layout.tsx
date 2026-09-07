@@ -115,7 +115,7 @@ const INDIC_FONT: Record<Exclude<Script, "latin">, { variable: string }> = {
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_ORIGIN),
   title: {
-    default: `${SITE_NAME} — India's Verified Local Repair Network`,
+    default: `${SITE_NAME} — Official Website | India's Verified Local Repair Network`,
     template: `%s · ${SITE_NAME}`,
   },
   description: SITE_DESCRIPTION,
@@ -137,7 +137,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     siteName: SITE_NAME,
-    title: `${SITE_NAME} — India's Verified Local Repair Network`,
+    title: `${SITE_NAME} — Official Website | India's Verified Local Repair Network`,
     description: SITE_DESCRIPTION,
     url: SITE_ORIGIN,
     locale: "en_IN",
@@ -145,10 +145,20 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: `${SITE_NAME} — India's Verified Local Repair Network`,
+    title: `${SITE_NAME} — Official Website | India's Verified Local Repair Network`,
     description: SITE_DESCRIPTION,
   },
-  robots: { index: true, follow: true },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-video-preview": -1,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
+  },
   other: {
     "geo.region": "IN",
     "geo.placename": "India",

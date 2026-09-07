@@ -9,7 +9,7 @@
  * five files, we enforce it once, at module load, and fail the build loudly.
  */
 
-const FALLBACK_ORIGIN = "https://vytron.me";
+const FALLBACK_ORIGIN = "https://www.vytron.me";
 
 function resolveOrigin(): string {
   const raw = process.env.NEXT_PUBLIC_SITE_URL?.trim();
@@ -21,7 +21,7 @@ function resolveOrigin(): string {
           "Set it to the canonical origin (e.g. https://www.vytron.me).",
       );
     }
-    return "https://vytron.me";
+    return "https://www.vytron.me";
   }
 
   let parsed: URL;
@@ -60,31 +60,35 @@ export const SITE_NAME = "FixGrid";
 
 /**
  * The home page renders this straight into the `<title>` as
- * `FixGrid — <tagline>`, so it carries the primary keywords a search engine
- * looks for in the title tag: "repair", "shops" and "experts". The old
- * personality line ("Find someone who can actually fix it.") reads well but
- * named none of them, which is what a title-tag keyword audit flags.
+ * `FixGrid — <tagline>`, prioritizing exact brand entity recognition ("Official Website")
+ * followed by primary topical authority keywords for Google Search.
  */
-export const SITE_TAGLINE = "India's Verified Local Repair Network & Directory";
+export const SITE_TAGLINE = "Official Website | India's Verified Local Repair Network";
 
 /**
- * Site-wide meta description and OpenGraph fallback. Written to distribute the
- * page's core keywords — repair, shop(s), verified, diagnostics across India —
- * kept under ~160 characters so search engines render it without truncation.
+ * Site-wide meta description and OpenGraph fallback. Written to establish FixGrid as
+ * the authoritative brand entity and directory across top Indian metros.
  */
 export const SITE_DESCRIPTION =
-  "FixGrid is India's premier directory of verified local repair shops and technicians. Compare ratings, warranties and diagnostics across Delhi NCR, Mumbai, Bengaluru, Hyderabad, Pune, and Chennai.";
+  "FixGrid (by Vytron) is India's premier verified directory of local repair shops, technicians and electronics experts. Compare ratings, warranties and diagnostics across Delhi NCR, Mumbai, Bengaluru, Hyderabad, Pune, and Chennai.";
 
 /**
  * Default `keywords` meta tag for the whole site.
- * Focuses on exact brand terms ("FixGrid", "FixGrid India") and top Indian metro search queries.
+ * Focuses on exact brand terms ("FixGrid", "FixGrid official website", "FixGrid India")
+ * to guarantee #1 ranking for brand queries.
  */
 export const SITE_KEYWORDS: string[] = [
   "FixGrid",
-  "FixGrid India",
-  "fixgrid.in",
+  "FixGrid official website",
+  "FixGrid official site",
+  "Fix Grid",
   "fixgrid",
+  "fixgrid.in",
+  "FixGrid India",
   "FixGrid repair",
+  "FixGrid repair network",
+  "FixGrid directory",
+  "Vytron FixGrid",
   "repair shops in India",
   "local repair shops India",
   "mobile repair near me India",
@@ -98,7 +102,6 @@ export const SITE_KEYWORDS: string[] = [
   "verified repair shops India",
   "repair directory India",
   "Vytron",
-  "Vytron FixGrid",
 ];
 
 /**

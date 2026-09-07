@@ -48,18 +48,32 @@ export function buildOrganization(): WithContext<Thing> {
     "@type": "Organization",
     "@id": `${SITE_ORIGIN}/#organization`,
     name: SITE_NAME,
+    legalName: "FixGrid (Vytron)",
     alternateName: [
-      "FixGrid India",
       "FixGrid",
+      "Fix Grid",
+      "FixGrid India",
+      "fixgrid.in",
       "FixGrid App",
       "FixGrid Repair Directory",
       "Vytron FixGrid",
       "Vytron",
     ],
     description:
-      "FixGrid is India's verified directory of local repair shops and electronics technicians.",
+      "FixGrid is India's verified directory of local repair shops, electronics technicians, and hardware diagnostics.",
     url: SITE_ORIGIN,
-    logo: absoluteUrl("/icon.svg"),
+    logo: absoluteUrl("/logo.png"),
+    image: absoluteUrl("/logo.png"),
+    brand: {
+      "@type": "Brand",
+      name: "FixGrid",
+      alternateName: "Fix Grid",
+      url: SITE_ORIGIN,
+      logo: absoluteUrl("/logo.png"),
+    },
+    sameAs: [
+      "https://github.com/rishitjindal2011/FixGrid",
+    ],
     areaServed: {
       "@type": "Country",
       name: "India",
@@ -69,6 +83,13 @@ export function buildOrganization(): WithContext<Thing> {
       "@type": "PostalAddress",
       addressCountry: "IN",
     },
+    knowsAbout: [
+      "Electronics Repair",
+      "Smartphone Diagnostics",
+      "Laptop Servicing",
+      "Hardware Repair Directory",
+      "SafeProbe Circuit Diagnostics",
+    ],
   });
 }
 
@@ -77,7 +98,14 @@ export function buildWebSite(): WithContext<Thing> {
     "@type": "WebSite",
     "@id": `${SITE_ORIGIN}/#website`,
     name: SITE_NAME,
-    alternateName: ["FixGrid India", "FixGrid"],
+    alternateName: [
+      "FixGrid",
+      "Fix Grid",
+      "FixGrid India",
+      "fixgrid.in",
+      "Vytron FixGrid",
+      "FixGrid App",
+    ],
     url: SITE_ORIGIN,
     inLanguage: ["en-IN", "hi-IN", "bn-IN", "mr-IN", "te-IN", "ta-IN", "kn-IN"],
     publisher: { "@id": `${SITE_ORIGIN}/#organization` },
