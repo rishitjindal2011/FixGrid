@@ -4,11 +4,20 @@ import { Resend } from "resend";
 
 import { getEmailConfig } from "@/lib/email/config";
 
+import fs from "node:fs";
+import path from "node:path";
+
 export interface SendEmailInput {
   to: string;
   subject: string;
   html: string;
   text?: string;
+  attachments?: Array<{
+    content?: string | Buffer;
+    filename?: string;
+    path?: string;
+    cid?: string;
+  }>;
 }
 
 export interface SendEmailResult {
@@ -18,6 +27,21 @@ export interface SendEmailResult {
 }
 
 let resendClient: Resend | null = null;
+let cachedLogoBuffer: Buffer | null = null;
+
+function getLogoBuffer(): Buffer | null {
+  if (cachedLogoBuffer) return cachedLogoBuffer;
+  try {
+    const iconPath = path.join(process.cwd(), "public", "icon-48.png");
+    if (fs.existsSync(iconPath)) {
+      cachedLogoBuffer = fs.readFileSync(iconPath);
+      return cachedLogoBuffer;
+    }
+  } catch (err) {
+    console.warn("[email] failed to load logo attachment", err);
+  }
+  return null;
+}
 
 function getClient(): Resend | null {
   const config = getEmailConfig();
@@ -36,6 +60,18 @@ export async function sendEmail(input: SendEmailInput): Promise<SendEmailResult>
     return { ok: false, error: "Email not configured" };
   }
 
+  const attachments = [...(input.attachments ?? [])];
+  if (input.html.includes("cid:fixgrid-logo") && !attachments.some((a) => a.cid === "fixgrid-logo")) {
+    const logoBuf = getLogoBuffer();
+    if (logoBuf) {
+      attachments.push({
+        filename: "icon-48.png",
+        content: logoBuf,
+        cid: "fixgrid-logo",
+      });
+    }
+  }
+
   const { data, error } = await client.emails.send({
     from: config.from,
     to: input.to,
@@ -43,6 +79,7 @@ export async function sendEmail(input: SendEmailInput): Promise<SendEmailResult>
     html: input.html,
     text: input.text,
     replyTo: config.replyTo,
+    ...(attachments.length > 0 ? { attachments } : {}),
   });
 
   if (error) {
