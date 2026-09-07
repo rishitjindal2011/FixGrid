@@ -55,8 +55,12 @@ export async function notifyUser(input: NotifyUserInput): Promise<void> {
     input.prefGate === undefined ? true : Boolean(recipient.prefs[input.prefGate]);
   if (!allowed) return;
 
-  const html = renderEmailTemplate(input.email);
-  const text = renderPlainText(input.email);
+  const emailPayload: EmailTemplateInput = {
+    ...input.email,
+    recipientEmail: input.email.recipientEmail ?? recipient.email,
+  };
+  const html = renderEmailTemplate(emailPayload);
+  const text = renderPlainText(emailPayload);
   const result = await sendEmail({
     to: recipient.email,
     subject: input.email.title,

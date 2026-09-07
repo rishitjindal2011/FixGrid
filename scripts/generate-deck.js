@@ -144,7 +144,7 @@ function createBaseSlide(categoryBadge, mainTitle, subtitle) {
 // -------------------------------------------------------------
 {
   const slide = createBaseSlide(
-    'THE PROBLEM',
+    'PROBLEM STATEMENT',
     'The $15B Repair Market is Fundamentally Broken',
     'Why 78% of consumers delay essential device and appliance repairs'
   );
@@ -223,7 +223,7 @@ function createBaseSlide(categoryBadge, mainTitle, subtitle) {
 // -------------------------------------------------------------
 {
   const slide = createBaseSlide(
-    'THE SOLUTION',
+    'PROPOSED SOLUTION',
     'FixGrid: Trust as a Service',
     'Turning independent neighbourhood repair shops into a trusted, guaranteed network'
   );

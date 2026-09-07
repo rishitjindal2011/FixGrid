@@ -46,7 +46,7 @@ const C = {
 };
 
 // Helper: Add consistent Keynote header
-function addSlideHeader(slide, kicker, title, slideNum) {
+function addSlideHeader(slide, kicker, title, slideNum, titleFontSize = 22) {
   // Category Kicker
   slide.addText(`// ${kicker}`, {
     x: 0.6, y: 0.45, w: 7.0, h: 0.22,
@@ -67,7 +67,7 @@ function addSlideHeader(slide, kicker, title, slideNum) {
   // Slide Main Title
   slide.addText(title, {
     x: 0.6, y: 0.7, w: 8.8, h: 0.48,
-    fontSize: 23, bold: true, color: C.textWhite, fontFace: 'Cambria'
+    fontSize: titleFontSize, bold: true, color: C.textWhite, fontFace: 'Cambria'
   });
 }
 
@@ -82,7 +82,7 @@ function addSlideFooter(slide) {
   // Left: Brand
   slide.addText([
     { text: 'FixGrid Ecosystem  •  ', options: { bold: true, color: C.textMuted } },
-    { text: 'www.vytron.me', options: { bold: true, color: C.cyan } }
+    { text: 'fixgrid.vytron.me', options: { bold: true, color: C.cyan } }
   ], {
     x: 0.6, y: 5.08, w: 4.0, h: 0.25,
     fontSize: 9, fontFace: 'Calibri'
@@ -126,7 +126,7 @@ function addSlideFooter(slide) {
     fontFace: 'Cambria', valign: 'middle'
   });
 
-  s1.addText('The Complete Ecosystem: A Live Web Platform (www.vytron.me) & A Frugal Handheld Diagnostic Wand Championing Sustainable Electronics Repair', {
+  s1.addText('The Complete Ecosystem: A Live Web Platform (fixgrid.vytron.me) & A Frugal Handheld Diagnostic Wand Championing Sustainable Repair Across All 21+ Categories', {
     x: 0.6, y: 2.18, w: 4.8, h: 0.85,
     fontSize: 12, color: C.textMuted,
     fontFace: 'Calibri', lineSpacingMultiple: 1.2
@@ -134,8 +134,8 @@ function addSlideFooter(slide) {
 
   // 3 Value Proposition Chips
   const heroBadges = [
-    { text: '✓  Live Digital Platform: Neighborhood search, escrow & warranties', color: C.cyan },
-    { text: '✓  Physical Innovation: Under ₹1,200 SafeProbe™ diagnostic wand', color: C.emerald },
+    { text: '✓  Live Digital Platform: Search & escrow across 21+ categories (Appliances, Tech, EVs)', color: C.cyan },
+    { text: '✓  Physical Innovation: Under ₹1,800 SafeProbe™ sub-junction diagnostic wand', color: C.emerald },
     { text: '✓  Dual-Loop QR Warranty: Tamper-evident seals with photo proof', color: C.purple }
   ];
   heroBadges.forEach((b, i) => {
@@ -171,7 +171,7 @@ function addSlideFooter(slide) {
     line: { color: C.cyanBorder, width: 1 },
     rectRadius: 0.11
   });
-  s1.addText('Live Platform: www.vytron.me', {
+  s1.addText('Live Platform: fixgrid.vytron.me', {
     x: 5.75, y: 2.45, w: 2.3, h: 0.22,
     fontSize: 8, bold: true, color: C.cyan,
     align: 'center', valign: 'middle', fontFace: 'Calibri'
@@ -206,181 +206,181 @@ function addSlideFooter(slide) {
 }
 
 // ==========================================
-// SLIDE 2: EXECUTIVE SUMMARY (Dual-Pillar Architecture)
+// SLIDE 2: PROBLEM STATEMENT (From Official Synopsis)
 // ==========================================
 {
   const s2 = pres.addSlide();
   s2.background = { color: C.bg };
-  addSlideHeader(s2, '02 • EXECUTIVE SUMMARY', 'The Two-Pillar Repair Ecosystem', '02');
-
-  // Pillar 1: Web Platform Container
-  s2.addShape(pres.shapes.ROUNDED_RECTANGLE, {
-    x: 0.6, y: 1.35, w: 4.25, h: 2.65,
-    fill: { color: C.card },
-    line: { color: C.border, width: 1 },
-    rectRadius: 0.08
-  });
-  s2.addShape(pres.shapes.ROUNDED_RECTANGLE, {
-    x: 0.8, y: 1.5, w: 1.7, h: 0.24,
-    fill: { color: C.cyanBg },
-    line: { color: C.cyanBorder, width: 1 },
-    rectRadius: 0.04
-  });
-  s2.addText('PILLAR 1: WEB PLATFORM', {
-    x: 0.8, y: 1.5, w: 1.7, h: 0.24,
-    fontSize: 8, bold: true, color: C.cyan, align: 'center', valign: 'middle', fontFace: 'Calibri'
-  });
-  s2.addText('FixGrid Digital Trust Web Network', {
-    x: 0.8, y: 1.82, w: 3.85, h: 0.28,
-    fontSize: 13, bold: true, color: C.textWhite, fontFace: 'Calibri'
-  });
-  s2.addText([
-    { text: 'Live Web Platform: Hyper-local directory with real-time shop hours and 21 repair categories.', options: { bullet: true } },
-    { text: 'Smart Escrow: Funds held securely and released only after verified customer satisfaction.', options: { bullet: true } },
-    { text: 'Platform-Backed Warranty: 5-day standard warranty + digital shopkeeper warranty records.', options: { bullet: true } },
-    { text: 'Artisan Cashback: 5% completed-bill rebate rewarding honest local craftsmanship.', options: { bullet: true } }
-  ], {
-    x: 0.8, y: 2.15, w: 3.85, h: 1.7,
-    fontSize: 9.2, color: C.textBody, fontFace: 'Calibri', lineSpacingMultiple: 1.15, paraSpaceAfter: 4
-  });
-
-  // Pillar 2: Hardware Container
-  s2.addShape(pres.shapes.ROUNDED_RECTANGLE, {
-    x: 5.15, y: 1.35, w: 4.25, h: 2.65,
-    fill: { color: C.card },
-    line: { color: C.border, width: 1 },
-    rectRadius: 0.08
-  });
-  s2.addShape(pres.shapes.ROUNDED_RECTANGLE, {
-    x: 5.35, y: 1.5, w: 1.7, h: 0.24,
-    fill: { color: C.emeraldBg },
-    line: { color: C.emeraldBorder, width: 1 },
-    rectRadius: 0.04
-  });
-  s2.addText('PILLAR 2: HARDWARE', {
-    x: 5.35, y: 1.5, w: 1.7, h: 0.24,
-    fontSize: 8, bold: true, color: C.emerald, align: 'center', valign: 'middle', fontFace: 'Calibri'
-  });
-  s2.addText('SafeProbe™ Smart Diagnostic Wand', {
-    x: 5.35, y: 1.82, w: 3.85, h: 0.28,
-    fontSize: 13, bold: true, color: C.textWhite, fontFace: 'Calibri'
-  });
-  s2.addText([
-    { text: 'Frugal Tool BOM: Built for under ₹1,200 ($14), replacing ₹1.5L lab oscilloscopes.', options: { bullet: true } },
-    { text: 'Instant Micro-Touch Sensing: Precision needle probe tests trace impedance with audio chirp & OLED color.', options: { bullet: true } },
-    { text: '5MP Macro Camera Microscope: Snaps magnified photo proof sent straight to customer’s phone.', options: { bullet: true } },
-    { text: 'Dual-Loop QR Passport: Issues physical tamper-evident QR void seals linked to cloud warranty.', options: { bullet: true } }
-  ], {
-    x: 5.35, y: 2.15, w: 3.85, h: 1.7,
-    fontSize: 9.2, color: C.textBody, fontFace: 'Calibri', lineSpacingMultiple: 1.15, paraSpaceAfter: 4
-  });
-
-  // Bottom 4 Stat Chips
-  const stats = [
-    { val: 'www.vytron.me', label: 'Live Web Platform', bg: C.cyanBg, border: C.cyanBorder, color: C.cyan, x: 0.6, w: 2.1 },
-    { val: '₹1,200 BOM', label: 'SafeProbe Hardware', bg: C.emeraldBg, border: C.emeraldBorder, color: C.emerald, x: 2.9, w: 2.1 },
-    { val: '5MP Macro', label: 'Customer Photo Proof', bg: C.purpleBg, border: C.purpleBorder, color: C.purple, x: 5.2, w: 2.0 },
-    { val: 'Zero E-Waste', label: 'Circular Economy Goal', bg: C.roseBg, border: C.roseBorder, color: C.rose, x: 7.4, w: 2.0 }
-  ];
-
-  stats.forEach(st => {
-    s2.addShape(pres.shapes.ROUNDED_RECTANGLE, {
-      x: st.x, y: 4.15, w: st.w, h: 0.72,
-      fill: { color: st.bg },
-      line: { color: st.border, width: 1 },
-      rectRadius: 0.08
-    });
-    s2.addText(st.val, {
-      x: st.x, y: 4.2, w: st.w, h: 0.32,
-      fontSize: 13, bold: true, color: st.color, align: 'center', fontFace: 'Calibri'
-    });
-    s2.addText(st.label, {
-      x: st.x, y: 4.54, w: st.w, h: 0.25,
-      fontSize: 8, bold: true, color: C.textMuted, align: 'center', fontFace: 'Calibri'
-    });
-  });
-
-  addSlideFooter(s2);
-  s2.addNotes('FixGrid operates as a dual-pillar innovation: a live web platform providing escrow, directory discovery, and warranties, coupled with the SafeProbe handheld hardware wand for roadside mechanics.');
-}
-
-// ==========================================
-// SLIDE 3: PROBLEM STATEMENT (The Dual Barrier)
-// ==========================================
-{
-  const s3 = pres.addSlide();
-  s3.background = { color: C.bg };
-  addSlideHeader(s3, '03 • THE CHALLENGE', 'The Throwaway Culture & The Diagnostic Void', '03');
+  addSlideHeader(s2, '02 • PROBLEM STATEMENT', 'Problem Statement: The Throwaway Culture & Climate Paradox', '02', 20.5);
 
   // Top Two Contrast Cards
-  s3.addShape(pres.shapes.ROUNDED_RECTANGLE, {
+  s2.addShape(pres.shapes.ROUNDED_RECTANGLE, {
     x: 0.6, y: 1.35, w: 4.25, h: 2.05,
     fill: { color: C.roseBg },
     line: { color: C.roseBorder, width: 1 },
     rectRadius: 0.08
   });
-  s3.addText('1. The Trust & Visibility Void', {
+  s2.addText('1. The Trust Void Across All 21+ Categories', {
     x: 0.8, y: 1.48, w: 3.85, h: 0.28,
-    fontSize: 12.5, bold: true, color: C.rose, fontFace: 'Calibri'
+    fontSize: 12, bold: true, color: C.rose, fontFace: 'Calibri'
   });
-  s3.addText([
-    { text: 'Consumers discard repairable electronics assuming replacement is the only safe option.', options: { bullet: true } },
-    { text: 'Roadside repair artisans lack digital storefronts, standardized pricing, and formal warranty tracking.', options: { bullet: true } },
-    { text: 'Consumers fear arbitrary overcharging, counterfeit parts, and shoddy workmanship.', options: { bullet: true } }
+  s2.addText([
+    { text: '78% of consumers discard repairable goods (appliances, consumer tech, tools) fearing arbitrary pricing & zero warranty.', options: { bullet: true } },
+    { text: 'Spans ALL 21+ categories: Major home appliances (ACs, fridges, washing machines), laptops, phones, TVs & EVs.', options: { bullet: true } },
+    { text: 'Local repair artisans across every trade remain digitally invisible, informal, and overlooked.', options: { bullet: true } }
   ], {
     x: 0.8, y: 1.8, w: 3.85, h: 1.45,
-    fontSize: 9.2, color: C.textBody, fontFace: 'Calibri', lineSpacingMultiple: 1.15, paraSpaceAfter: 4
+    fontSize: 8.8, color: C.textBody, fontFace: 'Calibri', lineSpacingMultiple: 1.15, paraSpaceAfter: 4
   });
 
-  s3.addShape(pres.shapes.ROUNDED_RECTANGLE, {
+  s2.addShape(pres.shapes.ROUNDED_RECTANGLE, {
     x: 5.15, y: 1.35, w: 4.25, h: 2.05,
     fill: { color: C.roseBg },
     line: { color: C.roseBorder, width: 1 },
     rectRadius: 0.08
   });
-  s3.addText('2. The Hardware Diagnostic Void (Root Cause)', {
+  s2.addText('2. The Universal Hardware Diagnostic Void', {
     x: 5.35, y: 1.48, w: 3.85, h: 0.28,
-    fontSize: 12.5, bold: true, color: C.rose, fontFace: 'Calibri'
+    fontSize: 12, bold: true, color: C.rose, fontFace: 'Calibri'
   });
-  s3.addText([
-    { text: 'Lab oscilloscopes & inspection microscopes cost ₹1,00,000 to ₹1,50,000—unaffordable for local mechanics.', options: { bullet: true } },
-    { text: 'Crude multimeters cause accidental voltage spikes, frying delicate microprocessors.', options: { bullet: true } },
-    { text: 'Micro-faults are invisible to naked eyes; without photo proof, consumers distrust technicians.', options: { bullet: true } }
+  s2.addText([
+    { text: 'Lab diagnostic equipment costs ₹50,000–₹1.5L—unaffordable for neighborhood appliance & tech workshops.', options: { bullet: true } },
+    { text: 'Standard multimeters inject 2.5V–3.0V, risking delicate micro-controllers in modern smart appliances & boards.', options: { bullet: true } },
+    { text: 'Without visual proof, mechanics guess—declaring entire appliance control boards or devices "unfixable."', options: { bullet: true } }
   ], {
     x: 5.35, y: 1.8, w: 3.85, h: 1.45,
-    fontSize: 9.2, color: C.textBody, fontFace: 'Calibri', lineSpacingMultiple: 1.15, paraSpaceAfter: 4
+    fontSize: 8.8, color: C.textBody, fontFace: 'Calibri', lineSpacingMultiple: 1.15, paraSpaceAfter: 4
   });
 
-  // Bottom 3 Impact Callouts with bold metrics
+  // Bottom 3 Impact Callouts from Synopsis Section 1
   const impacts = [
-    { stat: '₹1.2L Cr', title: 'THE LOST VALUE', desc: 'Billions wasted buying new replacements when only a ₹50 micro-component had failed.', color: C.rose, x: 0.6 },
-    { stat: '85%+', title: 'SKILLED HEROES OVERLOOKED', desc: 'Vast majority of neighborhood repairers remain informal, uncertified, and underpaid.', color: C.amber, x: 3.6 },
-    { stat: 'Millions', title: 'E-WASTE CATASTROPHE', desc: 'Repairable electronics flood municipal landfills, generating toxic heavy metal contamination.', color: C.purple, x: 6.6 }
+    { stat: '₹1.2L Cr', title: 'THE LOST VALUE', desc: 'Consumers waste billions replacing appliances & devices when an artisan 500m away could repair it.', color: C.rose, x: 0.6 },
+    { stat: '85%+', title: 'SKILLED HEROES OVERLOOKED', desc: 'Informal repair mechanics across 21+ categories lack digital tools and are trapped in unverified guesswork.', color: C.amber, x: 3.6 },
+    { stat: 'Millions', title: 'E-WASTE CATASTROPHE', desc: 'Heavy appliances & electronics flood landfills, leaching toxic metals while factories burn carbon for replacements.', color: C.purple, x: 6.6 }
   ];
 
   impacts.forEach(im => {
-    s3.addShape(pres.shapes.ROUNDED_RECTANGLE, {
+    s2.addShape(pres.shapes.ROUNDED_RECTANGLE, {
       x: im.x, y: 3.55, w: 2.8, h: 1.35,
       fill: { color: C.card },
       line: { color: C.border, width: 1 },
       rectRadius: 0.08
     });
-    s3.addText(im.stat, {
+    s2.addText(im.stat, {
       x: im.x + 0.15, y: 3.65, w: 2.5, h: 0.32,
       fontSize: 16, bold: true, color: im.color, fontFace: 'Calibri'
     });
-    s3.addText(im.title, {
+    s2.addText(im.title, {
       x: im.x + 0.15, y: 3.98, w: 2.5, h: 0.22,
       fontSize: 9, bold: true, color: C.textWhite, fontFace: 'Calibri'
     });
-    s3.addText(im.desc, {
+    s2.addText(im.desc, {
       x: im.x + 0.15, y: 4.22, w: 2.5, h: 0.6,
       fontSize: 8.5, color: C.textMuted, fontFace: 'Calibri', lineSpacingMultiple: 1.15
     });
   });
 
+  addSlideFooter(s2);
+  s2.addNotes('From the synopsis: India’s $15.2B unorganized repair economy suffers a dual crisis: a trust void where 78% of consumers discard repairable electronics, and a diagnostic void where mechanics lack affordable tools, misdiagnosing a ₹10 capacitor as a dead motherboard.');
+}
+
+// ==========================================
+// SLIDE 3: PROPOSED SOLUTION (From Official Synopsis)
+// ==========================================
+{
+  const s3 = pres.addSlide();
+  s3.background = { color: C.bg };
+  addSlideHeader(s3, '03 • PROPOSED SOLUTION', 'Proposed Solution: The FixGrid Hardware-Software Innovation', '03', 20.5);
+
+  // Pillar 1: Digital Cloud Platform Container
+  s3.addShape(pres.shapes.ROUNDED_RECTANGLE, {
+    x: 0.6, y: 1.35, w: 4.25, h: 2.65,
+    fill: { color: C.card },
+    line: { color: C.border, width: 1 },
+    rectRadius: 0.08
+  });
+  s3.addShape(pres.shapes.ROUNDED_RECTANGLE, {
+    x: 0.8, y: 1.5, w: 2.0, h: 0.24,
+    fill: { color: C.cyanBg },
+    line: { color: C.cyanBorder, width: 1 },
+    rectRadius: 0.04
+  });
+  s3.addText('PILLAR 1: DIGITAL PLATFORM', {
+    x: 0.8, y: 1.5, w: 2.0, h: 0.24,
+    fontSize: 8, bold: true, color: C.cyan, align: 'center', valign: 'middle', fontFace: 'Calibri'
+  });
+  s3.addText('FixGrid Trust & Warranty Cloud Engine', {
+    x: 0.8, y: 1.82, w: 3.85, h: 0.28,
+    fontSize: 12.5, bold: true, color: C.textWhite, fontFace: 'Calibri'
+  });
+  s3.addText([
+    { text: 'All 21+ Categories: Covers Home Appliances, Consumer Tech, Power Tools, EVs & Wearables.', options: { bullet: true } },
+    { text: 'Upfront Smart Escrow: Customer payments locked safely at booking; released on verified sign-off.', options: { bullet: true } },
+    { text: '90-Day Digital Warranty: Platform-guaranteed warranty passport verifiable on any smartphone.', options: { bullet: true } },
+    { text: 'Artisan Empowerment: Digital storefronts, verified reviews & 5% completed-job rebate.', options: { bullet: true } }
+  ], {
+    x: 0.8, y: 2.15, w: 3.85, h: 1.7,
+    fontSize: 9.0, color: C.textBody, fontFace: 'Calibri', lineSpacingMultiple: 1.15, paraSpaceAfter: 4
+  });
+
+  // Pillar 2: Physical Hardware Wand Container
+  s3.addShape(pres.shapes.ROUNDED_RECTANGLE, {
+    x: 5.15, y: 1.35, w: 4.25, h: 2.65,
+    fill: { color: C.card },
+    line: { color: C.border, width: 1 },
+    rectRadius: 0.08
+  });
+  s3.addShape(pres.shapes.ROUNDED_RECTANGLE, {
+    x: 5.35, y: 1.5, w: 2.0, h: 0.24,
+    fill: { color: C.emeraldBg },
+    line: { color: C.emeraldBorder, width: 1 },
+    rectRadius: 0.04
+  });
+  s3.addText('PILLAR 2: HARDWARE WAND', {
+    x: 5.35, y: 1.5, w: 2.0, h: 0.24,
+    fontSize: 8, bold: true, color: C.emerald, align: 'center', valign: 'middle', fontFace: 'Calibri'
+  });
+  s3.addText('SafeProbe™ Multimodal Diagnostic Tool', {
+    x: 5.35, y: 1.82, w: 3.85, h: 0.28,
+    fontSize: 12.5, bold: true, color: C.textWhite, fontFace: 'Calibri'
+  });
+  s3.addText([
+    { text: '0.40V Sub-Junction Divider: Clamps below 0.6V P-N junction—tests in-circuit without desoldering.', options: { bullet: true } },
+    { text: '16-Bit ADS1115 + Tone: Pitch-shift audio buzzer (1.2kHz → 2.4kHz) guides to shorted 0402 SMDs.', options: { bullet: true } },
+    { text: 'ESP32-CAM Microscope: 2.5cm macro lens & shadowless ring LEDs captures HD fault photo proof.', options: { bullet: true } },
+    { text: 'Hardware Trust-Gate: Transmits cryptographic VERIFIED_PASS token to release escrow funds.', options: { bullet: true } }
+  ], {
+    x: 5.35, y: 2.15, w: 3.85, h: 1.7,
+    fontSize: 9.0, color: C.textBody, fontFace: 'Calibri', lineSpacingMultiple: 1.15, paraSpaceAfter: 4
+  });
+
+  // Bottom 4 Stat Chips from Synopsis
+  const stats = [
+    { val: '₹1,795 BOM', label: 'Frugal Prototype Cost', bg: C.emeraldBg, border: C.emeraldBorder, color: C.emerald, x: 0.6, w: 2.1 },
+    { val: '0.40V Clamp', label: 'Sub-Junction In-Circuit', bg: C.cyanBg, border: C.cyanBorder, color: C.cyan, x: 2.9, w: 2.1 },
+    { val: 'Dual-Loop QR', label: 'Digital Product Passport', bg: C.purpleBg, border: C.purpleBorder, color: C.purple, x: 5.2, w: 2.0 },
+    { val: 'Mission LiFE', label: 'E-Waste Mitigation Goal', bg: C.roseBg, border: C.roseBorder, color: C.rose, x: 7.4, w: 2.0 }
+  ];
+
+  stats.forEach(st => {
+    s3.addShape(pres.shapes.ROUNDED_RECTANGLE, {
+      x: st.x, y: 4.15, w: st.w, h: 0.72,
+      fill: { color: st.bg },
+      line: { color: st.border, width: 1 },
+      rectRadius: 0.08
+    });
+    s3.addText(st.val, {
+      x: st.x, y: 4.2, w: st.w, h: 0.32,
+      fontSize: 13, bold: true, color: st.color, align: 'center', fontFace: 'Calibri'
+    });
+    s3.addText(st.label, {
+      x: st.x, y: 4.54, w: st.w, h: 0.25,
+      fontSize: 8, bold: true, color: C.textMuted, align: 'center', fontFace: 'Calibri'
+    });
+  });
+
   addSlideFooter(s3);
-  s3.addNotes('The problem requires solving both ends: fixing the trust void with our web platform and fixing the diagnostic barrier with our handheld probe.');
+  s3.addNotes('From the synopsis: SafeProbe merges physics and digital governance. It tests in-circuit at 0.40V without desoldering, snaps macro photos of 0402 SMDs, links to a Dual-Loop QR warranty seal, and acts as a hardware trust-gate releasing escrow.');
 }
 
 // ==========================================
@@ -409,7 +409,7 @@ function addSlideFooter(slide) {
     line: { color: C.border, width: 1 },
     rectRadius: 0.14
   });
-  s4.addText('SafeProbe™ Working Prototype (₹1,200 / $14 BOM)', {
+  s4.addText('SafeProbe™ Working Prototype (₹1,795 / ~$21 BOM)', {
     x: 0.8, y: 4.45, w: 3.7, h: 0.28,
     fontSize: 8.5, bold: true, color: C.cyan,
     align: 'center', valign: 'middle', fontFace: 'Calibri'
@@ -441,7 +441,7 @@ function addSlideFooter(slide) {
       pillBg: C.emeraldBg,
       pillBorder: C.emeraldBorder,
       pillColor: C.emerald,
-      desc: 'Tool writes a physical tamper-evident QR void seal placed over gadget seam. Customer scans to review diagnostic readings, before/after photos, and activates a guaranteed 30-day digital warranty.',
+      desc: 'Tool writes a physical tamper-evident QR void seal placed over device or appliance seam. Customer scans to review diagnostic readings, before/after photos, and activates a guaranteed 90-day digital warranty.',
       y: 3.75
     }
   ];
@@ -483,13 +483,13 @@ function addSlideFooter(slide) {
 {
   const s5 = pres.addSlide();
   s5.background = { color: C.bg };
-  addSlideHeader(s5, '05 • DIGITAL PLATFORM', 'FixGrid Web Platform (www.vytron.me)', '05');
+  addSlideHeader(s5, '05 • DIGITAL PLATFORM', 'FixGrid Web Platform (fixgrid.vytron.me)', '05');
 
   // Left Side: 3 Software Capabilities Cards (w: 4.5")
   const webFeatures = [
     {
       title: 'Hyper-Local Search & Map Engine',
-      desc: 'Allows consumers to discover verified repair shops within walking distance across 21 repair categories (Phones, Laptops, Appliances, Watches) with live opening-hour status.',
+      desc: 'Allows consumers to discover verified repair shops within walking distance across 21+ categories (Major Home Appliances, ACs, Microwaves, Phones, Laptops, Power Tools, EVs) with live status.',
       tag: 'Next.js 16 + Leaflet Map Engine',
       y: 1.35
     },
@@ -547,14 +547,14 @@ function addSlideFooter(slide) {
     line: { color: C.border, width: 1 },
     rectRadius: 0.14
   });
-  s5.addText('Live Production Platform at www.vytron.me', {
+  s5.addText('Live Production Platform at fixgrid.vytron.me', {
     x: 5.4, y: 4.4, w: 3.8, h: 0.28,
     fontSize: 8.5, bold: true, color: C.cyan,
     align: 'center', valign: 'middle', fontFace: 'Calibri'
   });
 
   addSlideFooter(s5);
-  s5.addNotes('Here is our live website at www.vytron.me: featuring 21 repair categories, real-time shop hours, smart escrow, and verified local shop listings.');
+  s5.addNotes('Here is our live website at fixgrid.vytron.me: featuring 21 repair categories, real-time shop hours, smart escrow, and verified local shop listings.');
 }
 
 // ==========================================
@@ -594,19 +594,19 @@ function addSlideFooter(slide) {
     {
       num: 'STEP 01',
       title: 'SafeProbe Diagnostics Upload',
-      desc: 'When the technician repairs the gadget, the SafeProbe wand syncs the passing impedance test and high-res macro photos directly to the FixGrid cloud database via ESP32 Wi-Fi/BLE.',
+      desc: 'When the technician completes the repair across any category, the SafeProbe wand syncs the passing impedance test and high-res macro photos directly to the FixGrid cloud database via ESP32 Wi-Fi/BLE.',
       y: 1.35
     },
     {
       num: 'STEP 02',
       title: 'Physical Holographic Void Seal',
-      desc: 'A serialized, tamper-evident holographic QR void sticker is printed and affixed over the device seam. If anyone attempts to tamper with or open the device, the physical pattern breaks.',
+      desc: 'A serialized, tamper-evident holographic QR void sticker is printed and affixed over the device or appliance seam. If anyone attempts to tamper with or reopen the unit, the physical pattern breaks.',
       y: 2.55
     },
     {
       num: 'STEP 03',
       title: 'Customer Scan & Warranty Activation',
-      desc: 'The customer scans the QR code with any standard smartphone camera. It displays component before/after photos, diagnostic health logs, and activates an ironclad 30-day digital warranty certificate.',
+      desc: 'The customer scans the QR code with any standard smartphone camera. It displays component before/after photos, diagnostic health logs, and activates an ironclad 90-day digital warranty certificate.',
       y: 3.75
     }
   ];
@@ -808,7 +808,7 @@ function addSlideFooter(slide) {
     x: 6.5, y: 3.98, w: 2.7, h: 0.3,
     fontSize: 13, bold: true, color: C.cyan, align: 'right', fontFace: 'Calibri'
   });
-  s8.addText('www.vytron.me', {
+  s8.addText('fixgrid.vytron.me', {
     x: 6.5, y: 4.3, w: 2.7, h: 0.3,
     fontSize: 10.5, bold: true, color: C.purple, align: 'right', fontFace: 'Calibri'
   });
