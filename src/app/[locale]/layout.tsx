@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { notFound } from "next/navigation";
 import { NextIntlClientProvider } from "next-intl";
 import { setRequestLocale } from "next-intl/server";
+import { ClerkProvider } from "@clerk/nextjs";
 import {
   Barlow_Condensed,
   Hind,
@@ -229,19 +230,21 @@ export default async function LocaleLayout({
   return (
     <html lang={meta.tag} dir={meta.dir} className={fontClasses} style={fontVars}>
       <body className="flex min-h-dvh flex-col antialiased">
-        {/* Site-wide structured data. Page-level schemas add to this. */}
-        <JsonLd data={[buildOrganization(), buildWebSite()]} />
+        <ClerkProvider>
+          {/* Site-wide structured data. Page-level schemas add to this. */}
+          <JsonLd data={[buildOrganization(), buildWebSite()]} />
 
-        {/*
-         * Messages reach Client Components through this provider. Server
-         * Components read them directly via `getTranslations` and do not need it.
-         *
-         * Chrome lives one level down, in the route-group layouts: `(site)`
-         * carries the marketing header/footer, `(dashboard)` carries the
-         * sidebar shell. A dashboard should not inherit the marketing nav,
-         * and the two do not share a skip-link target.
-         */}
-        <NextIntlClientProvider>{children}</NextIntlClientProvider>
+          {/*
+           * Messages reach Client Components through this provider. Server
+           * Components read them directly via `getTranslations` and do not need it.
+           *
+           * Chrome lives one level down, in the route-group layouts: `(site)`
+           * carries the marketing header/footer, `(dashboard)` carries the
+           * sidebar shell. A dashboard should not inherit the marketing nav,
+           * and the two do not share a skip-link target.
+           */}
+          <NextIntlClientProvider>{children}</NextIntlClientProvider>
+        </ClerkProvider>
       </body>
     </html>
   );

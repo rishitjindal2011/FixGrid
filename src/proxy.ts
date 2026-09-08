@@ -1,3 +1,4 @@
+import { clerkMiddleware } from "@clerk/nextjs/server";
 import { createServerClient } from "@supabase/ssr";
 import createIntlMiddleware from "next-intl/middleware";
 import { NextResponse, type NextRequest } from "next/server";
@@ -133,7 +134,7 @@ function createSupabaseClient(request: NextRequest, response: NextResponse) {
  */
 export const PATHNAME_HEADER = "x-pathname";
 
-export async function proxy(request: NextRequest) {
+async function customProxy(request: NextRequest) {
   const { pathname, search, searchParams } = request.nextUrl;
 
   /* ── 0. OAuth PKCE recovery ───────────────────────────────────────────── */
@@ -346,6 +347,10 @@ async function sessionResponse(
   return response;
 }
 
+export const proxy = clerkMiddleware(async (auth, request) => {
+  return customProxy(request);
+});
+
 export const config = {
   /**
    * Skip everything that can never be redirected and never carries a session:
@@ -377,5 +382,7 @@ export const config = {
    */
   matcher: [
     "/((?!_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml|(?:api|auth|icon|apple-icon)(?:/|$)|.*\\.(?:svg|png|jpg|jpeg|gif|webp|avif|ico|css|js|woff|woff2|ttf|xsl|xml)$).*)",
+    "/(api|trpc)(.*)",
+    "/__clerk/:path*",
   ],
 };

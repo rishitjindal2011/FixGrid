@@ -1,12 +1,11 @@
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import { Search, UserRound } from "lucide-react";
+import { SignInButton, SignUpButton, Show, UserButton } from "@clerk/nextjs";
 
 import { BrandMark } from "@/components/brand-logo";
 import { LanguageSwitcher } from "@/components/language-switcher";
-import { SignOutButton } from "@/components/auth/sign-out-button";
 import { Button } from "@/components/ui/button";
-import { getCurrentUser } from "@/lib/auth/session";
 
 /**
  * Async Server Component: session state is read per request, so the header
@@ -23,8 +22,7 @@ import { getCurrentUser } from "@/lib/auth/session";
  * prefix would strand English on `/hi/...`.
  */
 export async function SiteHeader() {
-  const [user, t, tc] = await Promise.all([
-    getCurrentUser(),
+  const [t, tc] = await Promise.all([
     getTranslations("header"),
     getTranslations("common"),
   ]);
@@ -69,29 +67,17 @@ export async function SiteHeader() {
             </Link>
           </Button>
 
-          {user ? (
-            <>
-              {/* The name is the affordance on wide screens; below that it would
-                  crowd out the primary action, so it collapses to the icon. */}
-              <Link
-                href="/dashboard"
-                className="flex items-center gap-2 text-sm font-medium tracking-wide text-steel transition-colors hover:text-signal"
-              >
-                <UserRound aria-hidden className="size-4 shrink-0" />
-                <span className="hidden max-w-[12ch] truncate md:inline">
-                  {user.displayName}
-                </span>
-                <span className="sr-only md:hidden">{tc("yourAccount")}</span>
-              </Link>
-              <div className="hidden sm:block">
-                <SignOutButton />
-              </div>
-            </>
-          ) : (
-            <Button asChild variant="outline" size="sm">
-              <Link href="/login">{tc("signIn")}</Link>
-            </Button>
-          )}
+          <Show when="signed-out">
+            <SignInButton>
+              <Button variant="outline" size="sm">{tc("signIn")}</Button>
+            </SignInButton>
+            <SignUpButton>
+              <Button size="sm">Sign up</Button>
+            </SignUpButton>
+          </Show>
+          <Show when="signed-in">
+            <UserButton />
+          </Show>
         </div>
       </div>
     </header>

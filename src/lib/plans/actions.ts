@@ -1,13 +1,10 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { z } from "zod";
 
-import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
-import { chargeToPlatform } from "@/lib/wallet/server";
-import { formatMoney } from "@/lib/format";
 import type { PlanActionState } from "@/lib/plans/state";
+import { SubscribeSchema, purchasePlanCore } from "@/lib/plans/core";
 
 /**
  * Subscribing to a plan.
@@ -31,10 +28,6 @@ import type { PlanActionState } from "@/lib/plans/state";
  */
 
 const FAILED = (error: string): PlanActionState => ({ error, success: false });
-
-const SubscribeSchema = z.object({
-  planCode: z.string().trim().min(2).max(40),
-});
 
 export async function subscribeToPlan(
   _prev: PlanActionState,
@@ -61,101 +54,9 @@ export async function purchasePlan(formData: FormData): Promise<PlanActionState>
   } = await supabase.auth.getUser();
   if (!user) return FAILED("Sign in to change your plan.");
 
-  const { data: plan, error: planError } = await supabase
-    .from("subscription_plans")
-    .select("code, name, price_minor, period_days, is_active")
-    .eq("code", parsed.data.planCode)
-    .maybeSingle<{
-      code: string;
-      name: string;
-      price_minor: number;
-      period_days: number;
-      is_active: boolean;
-    }>();
-
-  if (planError || !plan || !plan.is_active) {
-    return FAILED("That plan is not available.");
-  }
-
-  const admin = createAdminClient();
-
-  /*
-   * The free tier is a cancellation, not a purchase.
-   *
-   * Deleting the row rather than storing `plan_code = 'free'` keeps one meaning for
-   * "no row": `my_entitlement` already falls back to free, so an explicit free row
-   * would be a second way to say the same thing and a second thing to keep correct.
-   */
-  if (plan.price_minor === 0) {
-    const { error } = await admin
-      .from("user_subscriptions")
-      .delete()
-      .eq("user_id", user.id);
-
-    if (error) {
-      return FAILED("Your plan could not be changed. Try again in a moment.");
-    }
-
-    revalidatePath("/dashboard/plan");
-    revalidatePath("/dashboard/wallet");
-    return {
-      error: null,
-      success: true,
-      message: "You are on pay as you go. Booking fees apply per repair.",
-    };
-  }
-
-  const charge = await chargeToPlatform({
-    kind: "subscription",
-    amountMinor: plan.price_minor,
-    from: { kind: "user", ownerId: user.id },
-    memo: `${plan.name} plan — ${plan.period_days} days`,
-    fallbackError: "That plan could not be started — the payment could not be taken.",
-  });
-
-  if (!charge.ok) {
-    return FAILED(
-      `${plan.name} costs ${formatMoney(plan.price_minor)}. ${charge.error}`,
-    );
-  }
-
-  const now = new Date();
-  const end = new Date(now.getTime() + plan.period_days * 24 * 60 * 60 * 1000);
-
-  /*
-   * `upsert` on the primary key, resetting the counter.
-   *
-   * A customer moving from Plus to Pro mid-period starts a fresh allowance, which
-   * is the generous reading and the defensible one: they have just paid a second
-   * time, and carrying used bookings across a paid upgrade would mean charging for
-   * an allowance they cannot use.
-   */
-  const { error: grantError } = await admin.from("user_subscriptions").upsert(
-    {
-      user_id: user.id,
-      plan_code: plan.code,
-      period_start: now.toISOString(),
-      period_end: end.toISOString(),
-      bookings_used: 0,
-    },
-    { onConflict: "user_id" },
-  );
-
-  if (grantError) {
-    // The money moved. Logged rather than refunded automatically, because a
-    // refund plus a retry could take the payment twice; an operator can see both
-    // the ledger entry and this line and settle it once.
-    console.error("[plans] PAID BUT NOT GRANTED — needs manual correction", {
-      userId: user.id,
-      planCode: plan.code,
-      amountMinor: plan.price_minor,
-      message: grantError.message,
-    });
-
-    return FAILED(
-      "Your payment went through but the plan could not be activated. " +
-        "Contact us with your balance statement and we will sort it out.",
-    );
+  const result = await purchasePlanCore(user.id, parsed.data);
+  if (!result.ok) {
+    return FAILED(result.message);
   }
 
   revalidatePath("/dashboard/plan");
@@ -165,6 +66,6 @@ export async function purchasePlan(formData: FormData): Promise<PlanActionState>
   return {
     error: null,
     success: true,
-    message: `${plan.name} is active until ${end.toLocaleDateString("en-IN")}.`,
+    message: result.data.message,
   };
 }

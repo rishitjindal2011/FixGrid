@@ -60,6 +60,20 @@ export async function requireApiUser(): Promise<ApiContext> {
   return context;
 }
 
+import type { OwnedShop } from "@/lib/dashboard/owned-shop";
+
+export async function requireApiExpert(): Promise<ApiContext & { fixerId: string; shop: OwnedShop }> {
+  const context = await requireApiUser();
+  const { getOwnedShop } = await import("@/lib/dashboard/owned-shop");
+  const shop = await getOwnedShop(context.user.id);
+  
+  if (!shop) {
+    throw new ApiError(403, "forbidden", "You must own a shop to use this endpoint.");
+  }
+
+  return { ...context, fixerId: shop.id, shop };
+}
+
 /**
  * The RLS-bound client without a caller attached, for endpoints that are
  * genuinely public — search, categories, the blog.
