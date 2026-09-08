@@ -20,6 +20,8 @@ import { getTimeSeriesData } from "@/lib/dashboard/analytics";
 import { AnalyticsCharts } from "@/components/admin/analytics-charts";
 import { ACTIVE_BOOKING_STATUSES, BOOKING_STATUS_LABELS } from "@/lib/types/marketplace";
 import { cn } from "@/lib/utils";
+import { AuthToggle } from "@/components/admin/auth-toggle";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 export const metadata: Metadata = {
   title: "Overview",
@@ -51,6 +53,10 @@ export default async function OverviewPage() {
     getRecentActivity(8),
     getTimeSeriesData(30)
   ]);
+
+  const supabase = createAdminClient();
+  const { data: globalSettings } = await supabase.from("seo_global").select("auth_provider").eq("id", 1).maybeSingle();
+  const authProvider = globalSettings?.auth_provider || "supabase";
 
   const activeBookings = ACTIVE_BOOKING_STATUSES.reduce(
     (total, status) => total + stats.bookingsByStatus[status],
@@ -97,10 +103,20 @@ export default async function OverviewPage() {
         description="Every shop, customer and booking on the marketplace. Counts are live on each load."
       />
 
+      {/* ── Configuration ────────────────────────────────────────────────── */}
+      <section aria-labelledby="config-heading" className="mt-8">
+        <h2 id="config-heading" className="mb-3 text-lg">
+          Configuration
+        </h2>
+        <Card className="p-5">
+          <AuthToggle currentProvider={authProvider} />
+        </Card>
+      </section>
+
       {/* ── Needs attention ────────────────────────────────────────────────
           First, above the vanity metrics. Gross volume is interesting; a
           two-week-old unanswered claim is the reason this console exists. */}
-      <section aria-labelledby="attention-heading">
+      <section aria-labelledby="attention-heading" className="mt-8">
         <h2 id="attention-heading" className="mb-3 text-lg">
           Needs attention
         </h2>

@@ -1,7 +1,7 @@
 import { clerkMiddleware } from "@clerk/nextjs/server";
 import { createServerClient } from "@supabase/ssr";
 import createIntlMiddleware from "next-intl/middleware";
-import { NextResponse, type NextRequest } from "next/server";
+import { NextResponse, type NextRequest, type NextFetchEvent } from "next/server";
 
 import { DEFAULT_LOCALE, splitLocale, withLocale, type Locale } from "@/i18n/config";
 import { routing } from "@/i18n/routing";
@@ -101,6 +101,24 @@ async function loadRedirects(request: NextRequest): Promise<Map<string, Redirect
   }
 
   return rules;
+}
+
+let authProviderCache: { provider: "supabase" | "clerk"; expiresAt: number } | null = null;
+
+async function getProxyAuthProvider(request: NextRequest): Promise<"supabase" | "clerk"> {
+  const now = Date.now();
+  if (authProviderCache && authProviderCache.expiresAt > now) return authProviderCache.provider;
+
+  try {
+    const supabase = createSupabaseClient(request, NextResponse.next());
+    const { data } = await supabase.from("seo_global").select("auth_provider").eq("id", 1).maybeSingle();
+    const provider = data?.auth_provider || "supabase";
+    authProviderCache = { provider, expiresAt: now + REDIRECT_TTL_MS };
+    return provider;
+  } catch (cause) {
+    console.error("[proxy] auth provider load failed:", cause);
+    return "supabase";
+  }
 }
 
 function createSupabaseClient(request: NextRequest, response: NextResponse) {
@@ -347,9 +365,17 @@ async function sessionResponse(
   return response;
 }
 
-export const proxy = clerkMiddleware(async (auth, request) => {
+const clerkHandler = clerkMiddleware(async (auth, request) => {
   return customProxy(request);
 });
+
+export const proxy = async (request: NextRequest, event: NextFetchEvent) => {
+  const authProvider = await getProxyAuthProvider(request);
+  if (authProvider === "clerk") {
+    return clerkHandler(request, event);
+  }
+  return customProxy(request);
+};
 
 export const config = {
   /**

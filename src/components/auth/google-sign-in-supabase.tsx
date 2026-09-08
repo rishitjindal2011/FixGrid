@@ -1,16 +1,17 @@
 "use client";
 
-import { useState } from "react";
+import { useFormStatus } from "react-dom";
 import { useTranslations } from "next-intl";
-import { useSignIn } from "@clerk/nextjs";
 import { Button } from "@/components/ui/button";
+import { signInWithGoogle } from "@/lib/auth/actions";
 
-function GoogleButton({ pending }: { pending: boolean }) {
+function GoogleButton() {
+  const { pending } = useFormStatus();
   const t = useTranslations("auth");
 
   return (
     <Button
-      type="button"
+      type="submit"
       variant="outline"
       size="lg"
       className="w-full flex items-center justify-center gap-3 font-medium"
@@ -30,29 +31,11 @@ function GoogleButton({ pending }: { pending: boolean }) {
   );
 }
 
-export function GoogleSignIn({ next }: { next?: string }) {
-  const { signIn } = useSignIn();
-  const [pending, setPending] = useState(false);
-
-  const handleSignIn = async () => {
-    if (!signIn) return;
-    setPending(true);
-
-    try {
-      await signIn.sso({
-        strategy: "oauth_google",
-        redirectUrl: next || "/",
-        redirectCallbackUrl: "/sso-callback",
-      });
-    } catch (err) {
-      console.error(err);
-      setPending(false);
-    }
-  };
-
+export function GoogleSignInSupabase({ next }: { next?: string }) {
   return (
-    <div onClick={handleSignIn} className="w-full cursor-pointer">
-      <GoogleButton pending={pending} />
-    </div>
+    <form action={signInWithGoogle}>
+      <input type="hidden" name="next" value={next || ""} />
+      <GoogleButton />
+    </form>
   );
 }

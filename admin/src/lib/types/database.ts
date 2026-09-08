@@ -146,6 +146,7 @@ export interface Database {
           default_og_image_url: string | null;
           global_expert_schema: Json | null;
           global_organization_schema: Json | null;
+          auth_provider: "supabase" | "clerk";
           updated_at: string;
         };
         Insert: Partial<Database["public"]["Tables"]["seo_global"]["Row"]> & { id?: number };

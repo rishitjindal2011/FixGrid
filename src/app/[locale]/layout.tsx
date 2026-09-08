@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { NextIntlClientProvider } from "next-intl";
 import { setRequestLocale } from "next-intl/server";
 import { ClerkProvider } from "@clerk/nextjs";
+import { getAuthProvider } from "@/lib/auth/provider";
 import {
   Barlow_Condensed,
   Hind,
@@ -202,6 +203,8 @@ export default async function LocaleLayout({
    */
   const indic = meta.script === "latin" ? null : INDIC_FONT[meta.script];
 
+  const authProvider = await getAuthProvider();
+
   const fontClasses = indic
     // Plex Mono is still loaded for Indic locales — see the --font-mono override.
     ? `${indic.variable} ${plexMono.variable}`
@@ -230,21 +233,17 @@ export default async function LocaleLayout({
   return (
     <html lang={meta.tag} dir={meta.dir} className={fontClasses} style={fontVars}>
       <body className="flex min-h-dvh flex-col antialiased">
-        <ClerkProvider>
-          {/* Site-wide structured data. Page-level schemas add to this. */}
-          <JsonLd data={[buildOrganization(), buildWebSite()]} />
-
-          {/*
-           * Messages reach Client Components through this provider. Server
-           * Components read them directly via `getTranslations` and do not need it.
-           *
-           * Chrome lives one level down, in the route-group layouts: `(site)`
-           * carries the marketing header/footer, `(dashboard)` carries the
-           * sidebar shell. A dashboard should not inherit the marketing nav,
-           * and the two do not share a skip-link target.
-           */}
-          <NextIntlClientProvider>{children}</NextIntlClientProvider>
-        </ClerkProvider>
+        {authProvider === "clerk" ? (
+          <ClerkProvider>
+            <JsonLd data={[buildOrganization(), buildWebSite()]} />
+            <NextIntlClientProvider>{children}</NextIntlClientProvider>
+          </ClerkProvider>
+        ) : (
+          <>
+            <JsonLd data={[buildOrganization(), buildWebSite()]} />
+            <NextIntlClientProvider>{children}</NextIntlClientProvider>
+          </>
+        )}
       </body>
     </html>
   );
