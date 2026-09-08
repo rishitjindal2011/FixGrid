@@ -1,27 +1,116 @@
 "use client";
 
-import { useActionState } from "react";
+import { useState } from "react";
 import { useTranslations } from "next-intl";
+import { useSignUp } from "@clerk/nextjs";
+import { useRouter } from "next/navigation";
 
 import { AuthMessage, Field } from "@/components/auth/auth-shell";
 import { SubmitButton } from "@/components/auth/submit-button";
 import { GoogleSignIn } from "@/components/auth/google-sign-in";
 import { Input } from "@/components/ui/input";
-import { signUp } from "@/lib/auth/actions";
-import { AUTH_INITIAL_STATE } from "@/lib/auth/state";
+import { DEFAULT_SIGNED_IN_PATH } from "@/lib/auth/paths";
 
 export function SignUpForm({ next }: { next?: string }) {
   const t = useTranslations("auth");
-  const [state, formAction] = useActionState(signUp, AUTH_INITIAL_STATE);
+  const { isLoaded, signUp } = useSignUp();
+  const router = useRouter();
 
-  // On success the action returns a notice and the form stays mounted. Hiding
-  // the fields stops the user re-submitting and burning throttle attempts while
-  // they go looking for the confirmation email.
-  if (state.notice) {
+  const [state, setState] = useState<{ error: string | null; notice: string | null }>({
+    error: null,
+    notice: null,
+  });
+  
+  const [pendingVerification, setPendingVerification] = useState(false);
+
+  const handleSignUp = async (formData: FormData) => {
+    if (!isLoaded || !signUp) return;
+    setState({ error: null, notice: null });
+
+    const displayName = formData.get("displayName") as string;
+    const emailAddress = formData.get("email") as string;
+    const password = formData.get("password") as string;
+
+    const nameParts = displayName.trim().split(" ");
+    const firstName = nameParts[0];
+    const lastName = nameParts.length > 1 ? nameParts.slice(1).join(" ") : "";
+
+    try {
+      const { error: signUpError } = await signUp.password({
+        emailAddress,
+        password,
+        firstName,
+        lastName,
+      });
+
+      if (signUpError) {
+        setState({ error: signUpError.message || t("errors.unknown"), notice: null });
+        return;
+      }
+
+      const { error: sendError } = await signUp.verifications.sendEmailCode();
+      if (!sendError) {
+        setPendingVerification(true);
+      } else {
+        setState({ error: sendError.message || t("errors.unknown"), notice: null });
+      }
+    } catch (err: any) {
+      console.error(err);
+      setState({ error: err.errors?.[0]?.message || t("errors.unknown"), notice: null });
+    }
+  };
+
+  const handleVerify = async (formData: FormData) => {
+    if (!isLoaded || !signUp) return;
+    setState({ error: null, notice: null });
+
+    const code = formData.get("code") as string;
+
+    try {
+      const { error: verifyError } = await signUp.verifications.verifyEmailCode({ code });
+      
+      if (verifyError) {
+        setState({ error: verifyError.message || "Invalid verification code", notice: null });
+        return;
+      }
+
+      if (signUp.status === "complete") {
+        await signUp.finalize({
+          navigate: ({ session, decorateUrl }) => {
+            const dest = next || DEFAULT_SIGNED_IN_PATH;
+            const url = decorateUrl(dest);
+            if (url.startsWith("http")) {
+              window.location.href = url;
+            } else {
+              router.push(url);
+            }
+          },
+        });
+      }
+    } catch (err: any) {
+      console.error(err);
+      setState({ error: err.errors?.[0]?.message || "Invalid verification code", notice: null });
+    }
+  };
+
+  if (pendingVerification) {
     return (
       <div className="flex flex-col gap-4">
-        <AuthMessage state={state} />
-        <p className="text-sm leading-relaxed text-steel">{t("signup.checkSpam")}</p>
+        <form action={handleVerify} className="flex flex-col gap-4" noValidate>
+          <Field label="Verification Code" htmlFor="code" hint="Check your email for the code.">
+            <Input
+              id="code"
+              name="code"
+              type="text"
+              autoComplete="one-time-code"
+              required
+              autoFocus
+              placeholder="Enter 6-digit code"
+            />
+          </Field>
+          <AuthMessage state={state} />
+          <SubmitButton pendingLabel="Verifying...">Verify Email</SubmitButton>
+        </form>
       </div>
     );
   }
@@ -39,7 +128,7 @@ export function SignUpForm({ next }: { next?: string }) {
         </div>
       </div>
 
-      <form action={formAction} className="flex flex-col gap-4" noValidate>
+      <form action={handleSignUp} className="flex flex-col gap-4" noValidate>
         {next ? <input type="hidden" name="next" value={next} /> : null}
 
       <Field label={t("fields.yourName")} htmlFor="displayName" hint={t("hints.nameOnReviews")}>

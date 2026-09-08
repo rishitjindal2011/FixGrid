@@ -1,22 +1,65 @@
 "use client";
 
-import { useActionState } from "react";
+import { useState } from "react";
 import { useTranslations } from "next-intl";
+import { useSignIn } from "@clerk/nextjs";
+import { useRouter } from "next/navigation";
 
 import { AuthMessage, AuthLink, Field } from "@/components/auth/auth-shell";
 import { SubmitButton } from "@/components/auth/submit-button";
 import { GoogleSignIn } from "@/components/auth/google-sign-in";
 import { Input } from "@/components/ui/input";
-import { signIn } from "@/lib/auth/actions";
-import { AUTH_INITIAL_STATE } from "@/lib/auth/state";
+import { DEFAULT_SIGNED_IN_PATH } from "@/lib/auth/paths";
 
 export function SignInForm({ next, linkError }: { next?: string; linkError?: boolean }) {
   const t = useTranslations("auth");
-  const [state, formAction] = useActionState(signIn, AUTH_INITIAL_STATE);
+  const { isLoaded, signIn } = useSignIn();
+  const router = useRouter();
+  
+  const [state, setState] = useState<{ error: string | null; notice: string | null }>({
+    error: null,
+    notice: null,
+  });
 
-  // An expired link is a server-side fact carried in the query string, so it is
-  // merged into the same banner the action uses. The action's own error wins —
-  // it describes what just happened, the link error describes how they arrived.
+  const handleSubmit = async (formData: FormData) => {
+    if (!isLoaded || !signIn) return;
+    setState({ error: null, notice: null });
+
+    const emailAddress = formData.get("email") as string;
+    const password = formData.get("password") as string;
+
+    try {
+      const { error: signInError } = await signIn.password({
+        identifier: emailAddress,
+        password,
+      });
+
+      if (signInError) {
+        setState({ error: signInError.message || t("errors.unknown"), notice: null });
+        return;
+      }
+
+      if (signIn.status === "complete") {
+        await signIn.finalize({
+          navigate: ({ session, decorateUrl }) => {
+            const dest = next || DEFAULT_SIGNED_IN_PATH;
+            const url = decorateUrl(dest);
+            if (url.startsWith("http")) {
+              window.location.href = url;
+            } else {
+              router.push(url);
+            }
+          },
+        });
+      } else {
+        setState({ error: "Additional verification required. Please contact support.", notice: null });
+      }
+    } catch (err: any) {
+      console.error(err);
+      setState({ error: err.errors?.[0]?.message || t("errors.unknown"), notice: null });
+    }
+  };
+
   const shown = state.error
     ? state
     : linkError
@@ -39,7 +82,7 @@ export function SignInForm({ next, linkError }: { next?: string; linkError?: boo
         </div>
       </div>
 
-      <form action={formAction} className="flex flex-col gap-4" noValidate>
+      <form action={handleSubmit} className="flex flex-col gap-4" noValidate>
         {next ? <input type="hidden" name="next" value={next} /> : null}
 
       <Field label={t("fields.email")} htmlFor="email">

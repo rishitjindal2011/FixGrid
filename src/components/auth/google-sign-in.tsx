@@ -1,17 +1,16 @@
 "use client";
 
-import { useFormStatus } from "react-dom";
+import { useState } from "react";
 import { useTranslations } from "next-intl";
+import { useSignIn } from "@clerk/nextjs";
 import { Button } from "@/components/ui/button";
-import { signInWithGoogle } from "@/lib/auth/actions";
 
-function GoogleButton() {
+function GoogleButton({ pending }: { pending: boolean }) {
   const t = useTranslations("auth");
-  const { pending } = useFormStatus();
 
   return (
     <Button
-      type="submit"
+      type="button"
       variant="outline"
       size="lg"
       className="w-full flex items-center justify-center gap-3 font-medium"
@@ -32,10 +31,29 @@ function GoogleButton() {
 }
 
 export function GoogleSignIn({ next }: { next?: string }) {
+  const { signIn, isLoaded } = useSignIn();
+  const [pending, setPending] = useState(false);
+
+  const handleSignIn = async () => {
+    if (!isLoaded || !signIn) return;
+    setPending(true);
+
+    try {
+      // Using authenticateWithRedirect (standard Clerk API for OAuth)
+      await signIn.authenticateWithRedirect({
+        strategy: "oauth_google",
+        redirectUrl: "/sso-callback",
+        redirectUrlComplete: next || "/",
+      });
+    } catch (err) {
+      console.error(err);
+      setPending(false);
+    }
+  };
+
   return (
-    <form action={signInWithGoogle} className="w-full">
-      {next ? <input type="hidden" name="next" value={next} /> : null}
-      <GoogleButton />
-    </form>
+    <div onClick={handleSignIn} className="w-full cursor-pointer">
+      <GoogleButton pending={pending} />
+    </div>
   );
 }
