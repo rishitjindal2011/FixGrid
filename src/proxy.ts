@@ -372,6 +372,11 @@ const clerkHandler = clerkMiddleware(async (auth, request) => {
 export const proxy = async (request: NextRequest, event: NextFetchEvent) => {
   const authProvider = await getProxyAuthProvider(request);
   if (authProvider === "clerk") {
+    // Graceful fallback if keys are missing
+    if (!process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY || !process.env.CLERK_SECRET_KEY) {
+      console.warn("[proxy] Clerk keys are missing. Falling back to supabase middleware.");
+      return customProxy(request);
+    }
     return clerkHandler(request, event);
   }
   return customProxy(request);

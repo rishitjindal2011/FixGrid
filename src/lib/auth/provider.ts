@@ -11,6 +11,10 @@ export async function getAuthProvider(): Promise<"supabase" | "clerk"> {
   try {
     const globalSettings = await getSeoGlobal();
     if (globalSettings?.auth_provider === "clerk") {
+      if (!process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY || !process.env.CLERK_SECRET_KEY) {
+        console.warn("[auth] Clerk keys are missing. Falling back to supabase.");
+        return "supabase";
+      }
       return "clerk";
     }
     return "supabase";
