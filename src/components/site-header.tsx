@@ -76,7 +76,15 @@ export async function SiteHeader() {
             </SignUpButton>
           </Show>
           <Show when="signed-in">
-            <UserButton />
+            <UserButton>
+              <UserButton.MenuItems>
+                <UserButton.Link
+                  label="Dashboard"
+                  labelIcon={<UserRound className="size-4" />}
+                  href="/dashboard"
+                />
+              </UserButton.MenuItems>
+            </UserButton>
           </Show>
         </div>
       </div>
