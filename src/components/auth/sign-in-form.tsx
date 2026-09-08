@@ -13,7 +13,7 @@ import { DEFAULT_SIGNED_IN_PATH } from "@/lib/auth/paths";
 
 export function SignInForm({ next, linkError }: { next?: string; linkError?: boolean }) {
   const t = useTranslations("auth");
-  const { isLoaded, signIn } = useSignIn();
+  const { signIn } = useSignIn();
   const router = useRouter();
   
   const [state, setState] = useState<{ error: string | null; notice: string | null }>({
@@ -22,7 +22,7 @@ export function SignInForm({ next, linkError }: { next?: string; linkError?: boo
   });
 
   const handleSubmit = async (formData: FormData) => {
-    if (!isLoaded || !signIn) return;
+    if (!signIn) return;
     setState({ error: null, notice: null });
 
     const emailAddress = formData.get("email") as string;

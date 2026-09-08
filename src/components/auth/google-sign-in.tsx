@@ -31,19 +31,18 @@ function GoogleButton({ pending }: { pending: boolean }) {
 }
 
 export function GoogleSignIn({ next }: { next?: string }) {
-  const { signIn, isLoaded } = useSignIn();
+  const { signIn } = useSignIn();
   const [pending, setPending] = useState(false);
 
   const handleSignIn = async () => {
-    if (!isLoaded || !signIn) return;
+    if (!signIn) return;
     setPending(true);
 
     try {
-      // Using authenticateWithRedirect (standard Clerk API for OAuth)
-      await signIn.authenticateWithRedirect({
+      await signIn.sso({
         strategy: "oauth_google",
-        redirectUrl: "/sso-callback",
-        redirectUrlComplete: next || "/",
+        redirectUrl: next || "/",
+        redirectCallbackUrl: "/sso-callback",
       });
     } catch (err) {
       console.error(err);

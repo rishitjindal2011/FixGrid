@@ -13,7 +13,7 @@ import { DEFAULT_SIGNED_IN_PATH } from "@/lib/auth/paths";
 
 export function SignUpForm({ next }: { next?: string }) {
   const t = useTranslations("auth");
-  const { isLoaded, signUp } = useSignUp();
+  const { signUp } = useSignUp();
   const router = useRouter();
 
   const [state, setState] = useState<{ error: string | null; notice: string | null }>({
@@ -24,7 +24,7 @@ export function SignUpForm({ next }: { next?: string }) {
   const [pendingVerification, setPendingVerification] = useState(false);
 
   const handleSignUp = async (formData: FormData) => {
-    if (!isLoaded || !signUp) return;
+    if (!signUp) return;
     setState({ error: null, notice: null });
 
     const displayName = formData.get("displayName") as string;
@@ -61,7 +61,7 @@ export function SignUpForm({ next }: { next?: string }) {
   };
 
   const handleVerify = async (formData: FormData) => {
-    if (!isLoaded || !signUp) return;
+    if (!signUp) return;
     setState({ error: null, notice: null });
 
     const code = formData.get("code") as string;
