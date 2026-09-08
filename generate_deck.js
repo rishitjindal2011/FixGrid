@@ -88,7 +88,7 @@ function addSlideFooter(slide) {
     fontSize: 9, fontFace: 'Calibri'
   });
   // Center: Core Tech
-  slide.addText('Live Web Platform  +  SafeProbe™ Frugal Diagnostics', {
+  slide.addText('Live Web Platform  +  FixGrid Probe™ Diagnostics', {
     x: 3.5, y: 5.08, w: 3.5, h: 0.25,
     fontSize: 8.5, color: C.textDim, align: 'center', fontFace: 'Calibri'
   });
@@ -120,7 +120,7 @@ function addSlideFooter(slide) {
   });
 
   // Main Title & Subtitle on Left
-  s1.addText('FixGrid & SafeProbe™', {
+  s1.addText('FixGrid Probe™', {
     x: 0.6, y: 1.05, w: 4.8, h: 1.05,
     fontSize: 38, bold: true, color: C.textWhite,
     fontFace: 'Cambria', valign: 'middle'
@@ -135,7 +135,7 @@ function addSlideFooter(slide) {
   // 3 Value Proposition Chips
   const heroBadges = [
     { text: '✓  Live Digital Platform: Search & escrow across 21+ categories (Appliances, Tech, EVs)', color: C.cyan },
-    { text: '✓  Physical Innovation: Under ₹1,800 SafeProbe™ sub-junction diagnostic wand', color: C.emerald },
+    { text: '✓  Physical Innovation: Under ₹1,800 FixGrid Probe™ sub-junction diagnostic wand', color: C.emerald },
     { text: '✓  Dual-Loop QR Warranty: Tamper-evident seals with photo proof', color: C.purple }
   ];
   heroBadges.forEach((b, i) => {
@@ -190,19 +190,19 @@ function addSlideFooter(slide) {
     rectRadius: 0.08
   });
   s1.addShape(pres.shapes.ROUNDED_RECTANGLE, {
-    x: 5.75, y: 4.38, w: 2.5, h: 0.22,
+    x: 5.65, y: 4.38, w: 2.7, h: 0.22,
     fill: { color: C.bg },
     line: { color: C.emeraldBorder, width: 1 },
     rectRadius: 0.11
   });
-  s1.addText('SafeProbe™ Working Prototype', {
-    x: 5.75, y: 4.38, w: 2.5, h: 0.22,
+  s1.addText('FixGrid Probe™ Working Prototype', {
+    x: 5.65, y: 4.38, w: 2.7, h: 0.22,
     fontSize: 8, bold: true, color: C.emerald,
     align: 'center', valign: 'middle', fontFace: 'Calibri'
   });
 
   addSlideFooter(s1);
-  s1.addNotes('Welcome. FixGrid unites a live web marketplace with a low-cost physical diagnostic wand, solving both the digital trust void and the technical hardware diagnostic barrier.');
+  s1.addNotes('Welcome. FixGrid Probe unites a live web marketplace with a low-cost physical diagnostic wand, solving both the digital trust void and the technical hardware diagnostic barrier.');
 }
 
 // ==========================================
@@ -340,7 +340,7 @@ function addSlideFooter(slide) {
     x: 5.35, y: 1.5, w: 2.0, h: 0.24,
     fontSize: 8, bold: true, color: C.emerald, align: 'center', valign: 'middle', fontFace: 'Calibri'
   });
-  s3.addText('SafeProbe™ Multimodal Diagnostic Tool', {
+  s3.addText('FixGrid Probe™ Multimodal Diagnostic Tool', {
     x: 5.35, y: 1.82, w: 3.85, h: 0.28,
     fontSize: 12.5, bold: true, color: C.textWhite, fontFace: 'Calibri'
   });
@@ -380,7 +380,7 @@ function addSlideFooter(slide) {
   });
 
   addSlideFooter(s3);
-  s3.addNotes('From the synopsis: SafeProbe merges physics and digital governance. It tests in-circuit at 0.40V without desoldering, snaps macro photos of 0402 SMDs, links to a Dual-Loop QR warranty seal, and acts as a hardware trust-gate releasing escrow.');
+  s3.addNotes('From the synopsis: FixGrid Probe merges physics and digital governance. It tests in-circuit at 0.40V without desoldering, snaps macro photos of 0402 SMDs, links to a Dual-Loop QR warranty seal, and acts as a hardware trust-gate releasing escrow.');
 }
 
 // ==========================================
@@ -389,7 +389,7 @@ function addSlideFooter(slide) {
 {
   const s4 = pres.addSlide();
   s4.background = { color: C.bg };
-  addSlideHeader(s4, '04 • HARDWARE INNOVATION', 'SafeProbe™: Lab Diagnostics in a Handheld Wand', '04');
+  addSlideHeader(s4, '04 • HARDWARE INNOVATION', 'FixGrid Probe™: Lab Diagnostics in a Handheld Wand', '04');
 
   // Left Side: Product Photo
   s4.addImage({
@@ -409,7 +409,7 @@ function addSlideFooter(slide) {
     line: { color: C.border, width: 1 },
     rectRadius: 0.14
   });
-  s4.addText('SafeProbe™ Working Prototype (₹1,795 / ~$21 BOM)', {
+  s4.addText('FixGrid Probe™ Working Prototype (₹1,795 / ~$21 BOM)', {
     x: 0.8, y: 4.45, w: 3.7, h: 0.28,
     fontSize: 8.5, bold: true, color: C.cyan,
     align: 'center', valign: 'middle', fontFace: 'Calibri'
@@ -474,7 +474,7 @@ function addSlideFooter(slide) {
   });
 
   addSlideFooter(s4);
-  s4.addNotes('SafeProbe provides three capabilities in one wand: micro-touch fault sensing with instant beeps, macro photo proof sent to the phone, and a tamper-evident digital warranty seal.');
+  s4.addNotes('FixGrid Probe provides three capabilities in one wand: micro-touch fault sensing with instant beeps, macro photo proof sent to the phone, and a tamper-evident digital warranty seal.');
 }
 
 // ==========================================
@@ -593,8 +593,8 @@ function addSlideFooter(slide) {
   const synergySteps = [
     {
       num: 'STEP 01',
-      title: 'SafeProbe Diagnostics Upload',
-      desc: 'When the technician completes the repair across any category, the SafeProbe wand syncs the passing impedance test and high-res macro photos directly to the FixGrid cloud database via ESP32 Wi-Fi/BLE.',
+      title: 'FixGrid Probe Diagnostics Upload',
+      desc: 'When the technician completes the repair across any category, the FixGrid Probe wand syncs the passing impedance test and high-res macro photos directly to the FixGrid cloud database via ESP32 Wi-Fi/BLE.',
       y: 1.35
     },
     {
@@ -633,7 +633,7 @@ function addSlideFooter(slide) {
   });
 
   addSlideFooter(s6);
-  s6.addNotes('This is where the magic happens: the SafeProbe hardware records the repair, generates a tamper-evident holographic QR seal, and the customer scans it on their phone to see verified before-and-after photos and activate their warranty.');
+  s6.addNotes('This is where the magic happens: the FixGrid Probe hardware records the repair, generates a tamper-evident holographic QR seal, and the customer scans it on their phone to see verified before-and-after photos and activate their warranty.');
 }
 
 // ==========================================
@@ -690,8 +690,8 @@ function addSlideFooter(slide) {
   // Right Side: 4 Revenue Streams (w: 4.5")
   const streams = [
     { title: '1. Platform Take-Rate (5–8%)', desc: 'Competitive transaction fee on every escrow-verified repair booking.' },
-    { title: '2. Customer Care+ Subscription (₹199/mo | ₹1,499/yr)', desc: 'Household repair pass: free SafeProbe diagnostics, zero booking fees & 60-day warranty.' },
-    { title: '3. Shop Pro SaaS & Hardware Tier (₹999/mo)', desc: 'SafeProbe firmware updates, warranty management, digital store CRM & analytics.' },
+    { title: '2. Customer Care+ Subscription (₹199/mo | ₹1,499/yr)', desc: 'Household repair pass: free FixGrid Probe diagnostics, zero booking fees & 60-day warranty.' },
+    { title: '3. Shop Pro SaaS & Hardware Tier (₹999/mo)', desc: 'FixGrid Probe firmware updates, warranty management, digital store CRM & analytics.' },
     { title: '4. Certified Spare Parts Logistics', desc: 'Curated B2B marketplace revenue for verified authentic micro-components.' }
   ];
 
@@ -733,7 +733,7 @@ function addSlideFooter(slide) {
       tagColor: C.cyan,
       title: 'Pilot Repair Clusters',
       points: [
-        'Deploy 50 SafeProbe units across Mumbai electronics repair markets.',
+        'Deploy 50 FixGrid Probe units across Mumbai electronics repair markets.',
         'Validate web escrow & before/after macro photo flow with 1,000+ customer repairs.'
       ],
       x: 0.6
@@ -756,7 +756,7 @@ function addSlideFooter(slide) {
       title: 'Municipal Scaling',
       points: [
         'Integrate with municipal e-waste boards for certified gadget triage.',
-        'Scale frugal SafeProbe tool manufacturing to local repairers nationwide.'
+        'Scale frugal FixGrid Probe tool manufacturing to local repairers nationwide.'
       ],
       x: 6.6
     }
@@ -795,7 +795,7 @@ function addSlideFooter(slide) {
     line: { color: C.borderLight, width: 1 },
     rectRadius: 0.1
   });
-  s8.addText('FixGrid & SafeProbe™ Ecosystem', {
+  s8.addText('FixGrid Probe™ Unified Ecosystem', {
     x: 0.85, y: 3.98, w: 5.5, h: 0.3,
     fontSize: 13, bold: true, color: C.textWhite, fontFace: 'Calibri'
   });
@@ -814,7 +814,7 @@ function addSlideFooter(slide) {
   });
 
   addSlideFooter(s8);
-  s8.addNotes('Thank you. FixGrid and SafeProbe demonstrate that with frugal engineering and digital trust, we can empower local artisans, save consumers money, and protect our environment from toxic e-waste.');
+  s8.addNotes('Thank you. FixGrid and FixGrid Probe demonstrate that with frugal engineering and digital trust, we can empower local artisans, save consumers money, and protect our environment from toxic e-waste.');
 }
 
 // Write the presentation file

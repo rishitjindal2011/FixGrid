@@ -28,7 +28,7 @@ import {
 
 export const metadata: Metadata = {
   title: "Bookings",
-  robots: { index: false, follow: false },
+
 };
 
 /**

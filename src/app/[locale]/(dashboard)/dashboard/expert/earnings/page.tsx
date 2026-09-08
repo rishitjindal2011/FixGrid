@@ -27,7 +27,7 @@ import { pluralize } from "@/lib/utils";
 
 export const metadata: Metadata = {
   title: "Earnings",
-  robots: { index: false, follow: false },
+
 };
 
 /** A year of bars is enough to see a season without becoming a smear. */

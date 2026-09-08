@@ -89,7 +89,7 @@ export async function generateMetadata({ searchParams }: PageProps): Promise<Met
     description,
     keywords,
     alternates: { canonical: absoluteUrl(`/search${canonicalQuery}`) },
-    robots: indexable ? undefined : { index: false, follow: true },
+    robots: { index: true, follow: true },
     openGraph: {
       type: "website",
       title,

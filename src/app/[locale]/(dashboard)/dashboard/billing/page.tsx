@@ -23,7 +23,7 @@ import { pluralize } from "@/lib/utils";
 
 export const metadata: Metadata = {
   title: "Payments",
-  robots: { index: false, follow: false },
+
 };
 
 /**

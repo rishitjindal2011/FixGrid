@@ -13,7 +13,7 @@ import { formatDateTime, formatMoney } from "@/lib/format";
 
 export const metadata: Metadata = {
   title: "Claim",
-  robots: { index: false, follow: false },
+
 };
 
 /**

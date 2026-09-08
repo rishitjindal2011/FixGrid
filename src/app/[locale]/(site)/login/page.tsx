@@ -8,8 +8,9 @@ import { DEFAULT_SIGNED_IN_PATH, localizedTarget, safeNextPath } from "@/lib/aut
 import { getCurrentUser } from "@/lib/auth/session";
 import { DEFAULT_LOCALE, isLocale } from "@/i18n/config";
 
-// Auth screens must never be served from a cache, and there is nothing here for
-// a crawler — a login form in the index is a ranking liability, not a feature.
+import { localeAlternates } from "@/lib/seo/alternates";
+
+// Auth screens must never be served from a cache
 export const dynamic = "force-dynamic";
 
 type PageProps = {
@@ -24,7 +25,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   return {
     title: t("login.metaTitle"),
     description: t("login.metaDescription"),
-    robots: { index: false, follow: false },
+    alternates: localeAlternates("/login", locale),
+    robots: { index: true, follow: true },
   };
 }
 

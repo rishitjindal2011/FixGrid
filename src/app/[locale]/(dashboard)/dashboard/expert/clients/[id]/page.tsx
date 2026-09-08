@@ -17,7 +17,7 @@ import { formatDateTime, formatMoney, formatRelative } from "@/lib/format";
 
 export const metadata: Metadata = {
   title: "Client",
-  robots: { index: false, follow: false },
+
 };
 
 /**

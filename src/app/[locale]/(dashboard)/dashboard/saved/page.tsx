@@ -13,7 +13,7 @@ import { listSavedExperts } from "@/lib/dashboard/customer";
 
 export const metadata: Metadata = {
   title: "Saved shops",
-  robots: { index: false, follow: false },
+
 };
 
 /**

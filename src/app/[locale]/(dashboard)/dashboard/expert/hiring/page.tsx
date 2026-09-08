@@ -13,7 +13,7 @@ import { listShopJobs } from "@/lib/dashboard/expert";
 
 export const metadata: Metadata = {
   title: "Hiring & Job Openings",
-  robots: { index: false, follow: false },
+
 };
 
 export default async function ExpertHiringPage() {

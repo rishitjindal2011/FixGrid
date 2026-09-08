@@ -9,7 +9,7 @@ import { listClients } from "@/lib/dashboard/expert";
 
 export const metadata: Metadata = {
   title: "Clients",
-  robots: { index: false, follow: false },
+
 };
 
 const SORTS: ClientSort[] = ["recent", "jobs", "spend"];

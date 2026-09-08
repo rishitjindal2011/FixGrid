@@ -7,7 +7,7 @@ export async function generateMetadata(): Promise<Metadata> {
   return {
     title: "Email Preferences & Unsubscribe | FixGrid",
     description: "Manage your email and communication preferences with FixGrid.",
-    robots: { index: false, follow: false },
+    robots: { index: true, follow: true },
   };
 }
 

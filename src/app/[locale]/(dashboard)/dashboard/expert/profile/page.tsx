@@ -28,7 +28,7 @@ import { cn, truncate } from "@/lib/utils";
 
 export const metadata: Metadata = {
   title: "Shop profile",
-  robots: { index: false, follow: false },
+
 };
 
 /**

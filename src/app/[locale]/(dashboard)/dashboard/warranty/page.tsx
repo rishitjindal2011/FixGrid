@@ -22,7 +22,7 @@ import {
 
 export const metadata: Metadata = {
   title: "Warranty and claims",
-  robots: { index: false, follow: false },
+
 };
 
 /**

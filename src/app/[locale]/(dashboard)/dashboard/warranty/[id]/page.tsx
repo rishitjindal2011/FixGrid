@@ -21,7 +21,7 @@ import { BOOKING_STATUS_LABELS, type DisputeEvidenceRow } from "@/lib/types/mark
 
 export const metadata: Metadata = {
   title: "Warranty claim",
-  robots: { index: false, follow: false },
+
 };
 
 function EvidenceTile({

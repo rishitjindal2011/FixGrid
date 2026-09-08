@@ -13,7 +13,7 @@ export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations("account");
   return {
     title: t("metaTitle"),
-    robots: { index: false, follow: false },
+    robots: { index: true, follow: true },
   };
 }
 

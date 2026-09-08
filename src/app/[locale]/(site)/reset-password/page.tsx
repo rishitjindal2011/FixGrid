@@ -6,6 +6,8 @@ import { ResetPasswordForm } from "@/components/auth/reset-password-form";
 import { getCurrentUser } from "@/lib/auth/session";
 import { DEFAULT_LOCALE, isLocale } from "@/i18n/config";
 
+import { localeAlternates } from "@/lib/seo/alternates";
+
 export const dynamic = "force-dynamic";
 
 type PageProps = { params: Promise<{ locale: string }> };
@@ -16,7 +18,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const t = await getTranslations({ locale, namespace: "auth" });
   return {
     title: t("reset.metaTitle"),
-    robots: { index: false, follow: false },
+    alternates: localeAlternates("/reset-password", locale),
+    robots: { index: true, follow: true },
   };
 }
 

@@ -1,0 +1,650 @@
+# Build Word-compatible HTML with exact tables, typography, colors, and layout
+
+html_content = '''<!DOCTYPE html>
+<html xmlns:o="urn:schemas-microsoft-com:office:office"
+xmlns:w="urn:schemas-microsoft-com:office:word"
+xmlns="http://www.w3.org/TR/REC-html40">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>FixGrid Probe Innovation Dossier</title>
+<!--[if gte mso 9]>
+<xml>
+ <w:WordDocument>
+  <w:View>Print</w:View>
+  <w:Zoom>100</w:Zoom>
+  <w:DoNotOptimizeForBrowser/>
+ </w:WordDocument>
+</xml>
+<![endif]-->
+<style>
+@page {
+  size: 210mm 297mm; /* A4 */
+  margin: 15mm 18mm 14mm 18mm;
+  mso-header-margin: 10mm;
+  mso-footer-margin: 10mm;
+}
+
+body {
+  font-family: 'Plus Jakarta Sans', 'Segoe UI', Arial, sans-serif;
+  color: #2D3748;
+  font-size: 9.2pt;
+  line-height: 1.5;
+  margin: 0;
+  padding: 0;
+  background-color: #FFFFFF;
+}
+
+p {
+  margin: 0 0 8pt 0;
+  color: #374151;
+  font-size: 9.2pt;
+  line-height: 1.52;
+}
+
+strong {
+  font-weight: 700;
+  color: #111827;
+}
+
+.page-break {
+  page-break-before: always;
+  mso-break-type: section-break;
+  clear: both;
+}
+
+/* Banner Styling */
+.banner-table {
+  width: 100%;
+  background-color: #F8F5EE;
+  border-radius: 6px;
+  margin-top: 10pt;
+  margin-bottom: 8pt;
+  border-collapse: collapse;
+}
+
+.banner-title {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 13.5pt;
+  font-weight: bold;
+  color: #5D5643;
+  padding: 6pt 12pt;
+}
+
+.banner-tag {
+  font-family: 'Plus Jakarta Sans', Arial, sans-serif;
+  font-size: 7.5pt;
+  font-weight: bold;
+  text-transform: uppercase;
+  color: #5D5643;
+  background-color: #EAE4D5;
+  padding: 2.5pt 7pt;
+  border-radius: 3px;
+  text-align: right;
+  white-space: nowrap;
+}
+
+/* Footer Styling */
+.footer-table {
+  width: 100%;
+  border-top: 1px solid #E2E8F0;
+  margin-top: 12pt;
+  padding-top: 5pt;
+  border-collapse: collapse;
+}
+
+.footer-left {
+  font-size: 7.5pt;
+  font-weight: bold;
+  color: #94A3B8;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding-top: 4pt;
+}
+
+.footer-right {
+  font-size: 7.5pt;
+  font-weight: bold;
+  color: #94A3B8;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  text-align: right;
+  padding-top: 4pt;
+}
+
+/* 4 Highlight Chips */
+.chip-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 8pt 0;
+  margin: 10pt 0 12pt 0;
+}
+
+.chip-cell {
+  background-color: #FAF9F5;
+  border: 1px solid #EAE4D5;
+  border-radius: 6px;
+  padding: 7pt 4pt;
+  text-align: center;
+  width: 25%;
+}
+
+.chip-val {
+  font-size: 12pt;
+  font-weight: 800;
+  color: #111827;
+  margin-bottom: 2pt;
+}
+
+.chip-lbl {
+  font-size: 7.5pt;
+  font-weight: 700;
+  color: #6B7280;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+/* Page 3 Cards */
+.hw-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 8pt 0;
+  margin: 8pt 0 10pt 0;
+}
+
+.hw-cell {
+  background-color: #FAFAFA;
+  border: 1px solid #E5E7EB;
+  border-radius: 6px;
+  padding: 8pt 9pt;
+  vertical-align: top;
+  width: 33.33%;
+}
+
+/* Triple Bottom Line Columns */
+.triple-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 12pt 0;
+  margin-top: 6pt;
+}
+
+.triple-cell {
+  vertical-align: top;
+  width: 33.33%;
+  font-size: 8.6pt;
+  line-height: 1.45;
+}
+
+.triple-head {
+  font-size: 10.5pt;
+  font-weight: 900;
+  color: #111827;
+  text-transform: uppercase;
+  margin-bottom: 1pt;
+}
+
+.triple-sub {
+  font-size: 7.8pt;
+  font-weight: 700;
+  color: #6B7280;
+  text-transform: uppercase;
+  margin-bottom: 5pt;
+}
+
+/* Tech Specs Container */
+.specs-box {
+  background-color: #F9FAFB;
+  border: 1px solid #E5E7EB;
+  border-radius: 6px;
+  padding: 7pt 10pt;
+  margin: 6pt 0 8pt 0;
+  font-size: 8.6pt;
+  line-height: 1.45;
+  color: #374151;
+}
+
+ul {
+  margin: 0 0 6pt 0;
+  padding-left: 14pt;
+}
+
+li {
+  margin-bottom: 3.5pt;
+  font-size: 8.8pt;
+  line-height: 1.45;
+  color: #374151;
+}
+</style>
+</head>
+<body>
+
+<!-- ========================================================================= -->
+<!-- PAGE 1 -->
+<!-- ========================================================================= -->
+<div style="min-height: 940pt;">
+
+  <!-- Decorative Top Header -->
+  <div style="text-align: center; margin-top: 15pt; margin-bottom: 4pt;">
+    <span style="display: inline-block; width: 6px; height: 6px; background-color: #8B5CF6; border-radius: 50%; margin: 0 2px;"></span>
+    <span style="display: inline-block; width: 6px; height: 6px; background-color: #8B5CF6; border-radius: 50%; margin: 0 2px;"></span>
+    <span style="display: inline-block; width: 6px; height: 6px; background-color: #8B5CF6; border-radius: 50%; margin: 0 2px;"></span>
+  </div>
+
+  <div style="text-align: center; font-size: 13pt; color: #4B5563; font-weight: 500; margin-bottom: 2pt;">
+    Introducing
+  </div>
+
+  <div style="text-align: center; font-size: 34pt; font-weight: 900; color: #111827; letter-spacing: -0.02em; line-height: 1.1; margin-bottom: 8pt;">
+    FixGrid
+  </div>
+
+  <!-- Subtitle Badge Row -->
+  <table align="center" border="0" cellspacing="0" cellpadding="0" style="margin: 0 auto 16pt auto;">
+    <tr>
+      <td style="background-color: #111827; color: #FFFFFF; font-size: 8pt; font-weight: bold; padding: 3pt 10pt; border-radius: 12px; font-family: 'Plus Jakarta Sans', Arial, sans-serif;">
+        &#127760; www.vytron.me
+      </td>
+      <td style="width: 10pt;"></td>
+      <td style="font-size: 8.5pt; font-weight: 800; color: #5D5643; text-transform: uppercase; letter-spacing: 0.05em; font-family: 'Plus Jakarta Sans', Arial, sans-serif;">
+        FIXGRID ECOSYSTEM &amp; FIXGRID PROBE
+      </td>
+    </tr>
+  </table>
+
+  <!-- Executive Summary Banner -->
+  <table class="banner-table">
+    <tr>
+      <td class="banner-title">Executive Summary</td>
+      <td style="text-align: right; padding-right: 10pt;">
+        <span class="banner-tag">OVERVIEW</span>
+      </td>
+    </tr>
+  </table>
+
+  <p>
+    FixGrid is a revolutionary digital platform designed to bridge the gap between everyday consumers and skilled neighborhood repair professionals. Our core mission is to champion the Right-to-Repair movement and foster a circular economy by making the act of repairing items as secure, transparent, and trustworthy as purchasing new ones. We aim to transform the perception and practice of repair, creating value for consumers, empowering local artisans, and significantly reducing environmental impact.
+  </p>
+
+  <p>
+    To make repairs truly trustworthy in the real world, FixGrid pairs this web platform with a physical invention: the <strong>FixGrid Probe&trade;</strong>. This handheld smart diagnostic tool helps neighborhood mechanics instantly detect faulty micro-components without expensive lab equipment, captures photo proof of repairs, and issues verified digital warranty seals&mdash;ensuring customers are never overcharged and broken electronics are saved from landfills.
+  </p>
+
+  <!-- 4 Highlights Chips -->
+  <table class="chip-table" border="0" cellspacing="6" cellpadding="0">
+    <tr>
+      <td class="chip-cell">
+        <div class="chip-val">&#8377;1,800</div>
+        <div class="chip-lbl">FRUGAL TOOL BOM</div>
+      </td>
+      <td class="chip-cell">
+        <div class="chip-val">5MP Macro</div>
+        <div class="chip-lbl">PHOTO PROOF LENS</div>
+      </td>
+      <td class="chip-cell">
+        <div class="chip-val">Dual-Loop QR</div>
+        <div class="chip-lbl">TAMPER WARRANTY</div>
+      </td>
+      <td class="chip-cell">
+        <div class="chip-val">Zero E-Waste</div>
+        <div class="chip-lbl">CIRCULAR PLANET</div>
+      </td>
+    </tr>
+  </table>
+
+  <!-- Problem Statement Banner -->
+  <table class="banner-table" style="margin-top: 14pt;">
+    <tr>
+      <td class="banner-title">The Problem Statement &mdash; The Throwaway Culture &amp; Climate Paradox</td>
+      <td style="text-align: right; padding-right: 10pt;">
+        <span class="banner-tag">NATIONAL CHALLENGE</span>
+      </td>
+    </tr>
+  </table>
+
+  <p style="font-style: italic; color: #6B7280; font-size: 8.8pt; margin-top: 4pt;">
+    In the following section, we dissect the systemic forces driving modern e-waste accumulation, the breakdown of community artisan economies, and the urgent psychological shift required from consumers.
+  </p>
+
+  <!-- Page 1 Footer -->
+  <div style="margin-top: 90pt;">
+    <table class="footer-table">
+      <tr>
+        <td class="footer-left">FIXGRID ECOSYSTEM &amp; FIXGRID PROBE</td>
+        <td class="footer-right">PAGE 1 OF 4</td>
+      </tr>
+    </table>
+  </div>
+
+</div>
+
+<!-- ========================================================================= -->
+<!-- PAGE 2 -->
+<!-- ========================================================================= -->
+<div class="page-break"></div>
+<div style="min-height: 940pt;">
+
+  <div style="font-size: 8pt; font-weight: 800; color: #6366F1; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 2pt;">
+    SECTION 01 &bull; EMPIRICAL BACKGROUND
+  </div>
+
+  <div style="font-size: 16pt; font-weight: 800; color: #111827; line-height: 1.25; margin-bottom: 10pt;">
+    The Problem Statement &mdash; The Throwaway Culture &amp; Climate Paradox
+  </div>
+
+  <!-- 2-Column Problem Layout -->
+  <table style="width: 100%; border-collapse: collapse;" border="0" cellspacing="0" cellpadding="0">
+    <tr>
+      <!-- Left Column (57%) -->
+      <td style="width: 57%; vertical-align: top; padding-right: 16pt;">
+        <p>
+          The daily reality for most consumers is stark: when everyday electronics like a smartphone, wristwatch, laptop, or home appliance stop working, the immediate impulse is to discard them and order expensive new replacements online. This ingrained habit perpetuates a relentless cycle of consumption, financial waste, and mountains of toxic e-waste.
+        </p>
+        <p>
+          Consumers are often unaware that a skilled craftsman, potentially just 500 meters away, could repair the device for a fraction of the replacement cost. However, two deep-rooted barriers stop people from choosing repair:
+        </p>
+
+        <p style="margin-bottom: 6pt;">
+          <strong>1. The Trust &amp; Visibility Void:</strong> Local neighborhood repairers lack a digital presence, standardized pricing, and formal warranties. Without guarantees, consumers fear being overcharged or handed sub-standard repairs.
+        </p>
+
+        <p style="margin-bottom: 4pt;">
+          <strong>2. The Hardware Diagnostic Void (The Root Technical Barrier):</strong>
+        </p>
+        <ul style="padding-left: 12pt; margin-bottom: 0;">
+          <li><strong>Expensive Lab Equipment:</strong> Modern electronics feature microscopic surface-mount components. Professional diagnostic oscilloscopes and inspection microscopes cost upwards of &#8377;1,00,000 to &#8377;1,50,000, making them completely unaffordable for roadside repairers.</li>
+          <li><strong>Risky Guesswork:</strong> Without proper tools, local mechanics are forced to guess faults through trial-and-error. Using crude multimeters can send unintended voltage spikes through delicate chips, accidentally frying otherwise repairable circuit boards.</li>
+          <li><strong>Zero Visual Proof:</strong> Microscopic cracked solder joints or burned capacitors are invisible to the customer&rsquo;s naked eye. Because technicians cannot show clear evidence of what is broken, consumers remain suspicious that repairs are exaggerated or fabricated.</li>
+        </ul>
+      </td>
+
+      <!-- Right Column (43%) -->
+      <td style="width: 43%; vertical-align: top; padding-left: 4pt;">
+        
+        <div style="margin-bottom: 12pt;">
+          <div style="font-size: 8.8pt; font-weight: 900; color: #111827; text-transform: uppercase; letter-spacing: 0.03em; margin-bottom: 3pt;">
+            &bull; THE LOST VALUE:
+          </div>
+          <ul style="padding-left: 11pt; margin-bottom: 0;">
+            <li>Thousands of rupees spent buying new devices when only a &#8377;50 component was faulty.</li>
+            <li>Skilled local mechanics lose livelihood due to lack of diagnostic tools.</li>
+            <li>Usable electronics get scrapped prematurely.</li>
+          </ul>
+        </div>
+
+        <div style="margin-bottom: 12pt;">
+          <div style="font-size: 8.8pt; font-weight: 900; color: #111827; text-transform: uppercase; letter-spacing: 0.03em; margin-bottom: 3pt;">
+            &bull; THE DIAGNOSTIC &amp; TRUST VOID:
+          </div>
+          <ul style="padding-left: 11pt; margin-bottom: 0;">
+            <li>Lab-grade diagnostic tools cost over &#8377;1,00,000&mdash;out of reach for informal shops.</li>
+            <li>Trial-and-error testing risks frying sensitive micro-components.</li>
+            <li>Customers receive no visual proof of damage or genuine warranty.</li>
+          </ul>
+        </div>
+
+        <div style="margin-bottom: 0;">
+          <div style="font-size: 8.8pt; font-weight: 900; color: #111827; text-transform: uppercase; letter-spacing: 0.03em; margin-bottom: 3pt;">
+            &bull; THE ENVIRONMENTAL CATASTROPHE:
+          </div>
+          <ul style="padding-left: 11pt; margin-bottom: 0;">
+            <li>Mountains of toxic e-waste generated daily.</li>
+            <li>Huge carbon emissions from manufacturing unnecessary replacements.</li>
+            <li><strong>The biggest fix:</strong> Giving mechanics accessible diagnostic tools and giving customers transparent proof.</li>
+          </ul>
+        </div>
+
+      </td>
+    </tr>
+  </table>
+
+  <!-- Proposed Solution Banner -->
+  <table class="banner-table" style="margin-top: 14pt;">
+    <tr>
+      <td class="banner-title">The Proposed Solution (FixGrid)</td>
+      <td style="text-align: right; padding-right: 10pt;">
+        <span class="banner-tag">ECOSYSTEM</span>
+      </td>
+    </tr>
+  </table>
+
+  <p>
+    FixGrid addresses these critical issues by building a robust trust infrastructure for local repairs. FixGrid provides a 5-day platform-backed warranty on select categories, and additionally, we prominently display and record the shopkeeper's own extended warranties, fostering builder trust and accountability. Our smart escrow system ensures funds are held securely during the repair process and released only after verified customer satisfaction, eliminating the risk of non-completion or poor workmanship.
+  </p>
+
+  <p>
+    For local technicians, FixGrid acts as a powerful empowerment tool. We provide instant digital storefronts, enabling them to showcase their skills and receive verified ratings from satisfied customers. Access to pro tools and resources further enhances their capabilities. To further incentivize participation, we offer a 5% completed-bill cashback rebate for shopkeepers.
+  </p>
+
+  <!-- Page 2 Footer -->
+  <div style="margin-top: 25pt;">
+    <table class="footer-table">
+      <tr>
+        <td class="footer-left">FIXGRID ECOSYSTEM &amp; FIXGRID PROBE</td>
+        <td class="footer-right">PAGE 2 OF 4</td>
+      </tr>
+    </table>
+  </div>
+
+</div>
+
+<!-- ========================================================================= -->
+<!-- PAGE 3 -->
+<!-- ========================================================================= -->
+<div class="page-break"></div>
+<div style="min-height: 940pt;">
+
+  <!-- Hardware Banner -->
+  <table class="banner-table" style="margin-top: 0;">
+    <tr>
+      <td class="banner-title">The Physical Invention &mdash; FixGrid Probe&trade; Smart Diagnostic Wand</td>
+      <td style="text-align: right; padding-right: 10pt;">
+        <span class="banner-tag">HARDWARE INNOVATION</span>
+      </td>
+    </tr>
+  </table>
+
+  <p style="margin-bottom: 8pt;">
+    Local neighborhood mechanics rarely possess costly oscilloscopes or inspection microscopes (which exceed &#8377;1,50,000). The <strong>FixGrid Probe&trade;</strong> condenses lab-grade diagnostic intelligence into an intuitive pen-sized wand manufactured for under <strong>&#8377;1,800</strong>:
+  </p>
+
+  <!-- 3 Hardware Cards -->
+  <table class="hw-table" border="0" cellspacing="8" cellpadding="0">
+    <tr>
+      <td class="hw-cell">
+        <div style="margin-bottom: 4pt;">
+          <span style="background-color: #EFF6FF; border: 1px solid #DBEAFE; color: #1D4ED8; font-size: 6.8pt; font-weight: 800; padding: 2pt 5pt; border-radius: 3px; text-transform: uppercase;">MICRO-TOUCH SENSING</span>
+        </div>
+        <div style="font-size: 9.8pt; font-weight: 800; color: #111827; margin-bottom: 3pt;">Instant Fault Chirp</div>
+        <div style="font-size: 8.4pt; color: #4B5563; line-height: 1.45;">Mechanic touches probe to circuit traces. Wand tests impedance in milliseconds, beeping and glowing Green (Normal) or Red (Short/Damaged) on an OLED screen.</div>
+      </td>
+      <td class="hw-cell">
+        <div style="margin-bottom: 4pt;">
+          <span style="background-color: #FAF5FF; border: 1px solid #F3E8FF; color: #7E22CE; font-size: 6.8pt; font-weight: 800; padding: 2pt 5pt; border-radius: 3px; text-transform: uppercase;">MAGNIFIED VISUALS</span>
+        </div>
+        <div style="font-size: 9.8pt; font-weight: 800; color: #111827; margin-bottom: 3pt;">5MP Macro Photo Proof</div>
+        <div style="font-size: 8.4pt; color: #4B5563; line-height: 1.45;">Mini 5MP macro camera with ring LEDs snaps high-res magnified photos of burned ICs or cracked joints, beaming the proof straight to customer's phone before repair.</div>
+      </td>
+      <td class="hw-cell">
+        <div style="margin-bottom: 4pt;">
+          <span style="background-color: #ECFDF5; border: 1px solid #D1FAE5; color: #047857; font-size: 6.8pt; font-weight: 800; padding: 2pt 5pt; border-radius: 3px; text-transform: uppercase;">DIGITAL PASSPORT</span>
+        </div>
+        <div style="font-size: 9.8pt; font-weight: 800; color: #111827; margin-bottom: 3pt;">Dual-Loop QR Warranty</div>
+        <div style="font-size: 8.4pt; color: #4B5563; line-height: 1.45;">Prints a physical tamper-evident QR void seal on the chassis. Scanning reveals test readings, before/after photos, and activates a valid 30-day warranty.</div>
+      </td>
+    </tr>
+  </table>
+
+  <!-- Tech Specs Box -->
+  <div class="specs-box">
+    <div style="margin-bottom: 4pt;">
+      &bull; <strong>Scientific Sensing Principle:</strong> Uses safe low-voltage in-circuit impedance &amp; diode profiling (&lt;3.3V at &lt;5mA). This eliminates electrostatic discharge (ESD) risks while spotting shorted MLCC capacitors and open traces in smartphones and home appliances.
+    </div>
+    <div style="margin-bottom: 4pt;">
+      &bull; <strong>Frugal Bill of Materials (Under &#8377;1,800):</strong> Engineered with an ESP32 dual-core IoT chip, high-gain AD8237 instrumentation amplifier, OV2640 macro sensor, and 0.96&quot; OLED display&mdash;making high-tech diagnosis affordable for any roadside technician.
+    </div>
+    <div style="margin-bottom: 0;">
+      &bull; <strong>Digital Cloud Backbone:</strong> Built with Next.js 16 (App Router), TypeScript, Tailwind CSS, Leaflet Map Engine for neighborhood discovery, and Supabase PostgreSQL with automated escrow releases and tamper-detection triggers.
+    </div>
+  </div>
+
+  <!-- Triple Bottom Line Banner -->
+  <table class="banner-table" style="margin-top: 10pt;">
+    <tr>
+      <td class="banner-title">The Triple Bottom Line (Impact Analysis)</td>
+      <td style="text-align: right; padding-right: 10pt;">
+        <span class="banner-tag">SOCIETAL IMPACT</span>
+      </td>
+    </tr>
+  </table>
+
+  <!-- Triple Bottom Line Columns -->
+  <table class="triple-table" border="0" cellspacing="12" cellpadding="0">
+    <tr>
+      <!-- Column 1 -->
+      <td class="triple-cell">
+        <div class="triple-head">ECONOMIC</div>
+        <div class="triple-sub">(CONSUMER)</div>
+        <div style="margin-bottom: 5pt;">
+          <strong>&bull; Significant Savings:</strong> Consumers achieve substantial cost reductions (60&ndash;80%) by choosing repair over purchasing new items.
+        </div>
+        <div style="margin-bottom: 5pt;">
+          <strong>&bull; Value Recovery:</strong> Unlocks the inherent value in existing products and prevents wasted family savings.
+        </div>
+        <div>
+          <strong>&bull; Zero Fraud Risk:</strong> Micro-camera visual proof and smart escrow eliminate false charges and overpricing.
+        </div>
+      </td>
+
+      <!-- Column 2 -->
+      <td class="triple-cell">
+        <div class="triple-head">SOCIAL</div>
+        <div class="triple-sub">(COMMUNITY)</div>
+        <div style="margin-bottom: 5pt;">
+          <strong>&bull; Formal Identity:</strong> Provides unorganized local repair heroes with a formal, respected digital presence.
+        </div>
+        <div style="margin-bottom: 5pt;">
+          <strong>&bull; Reliable Livelihoods:</strong> Creates sustainable income streams and dignified work opportunities.
+        </div>
+        <div>
+          <strong>&bull; Community Empowerment:</strong> Strengthens local economies, bridges the trust void, and fosters skilled craftsmanship.
+        </div>
+      </td>
+
+      <!-- Column 3 -->
+      <td class="triple-cell">
+        <div class="triple-head">ECOLOGICAL</div>
+        <div class="triple-sub">(PLANET)</div>
+        <div style="margin-bottom: 5pt;">
+          <strong>&bull; E-Waste Reduction:</strong> Combats the growing problem of toxic electronic and appliance dumping in landfills.
+        </div>
+        <div style="margin-bottom: 5pt;">
+          <strong>&bull; Carbon Footprint Mitigation:</strong> Reduces industrial demand for new manufacturing, lowering global greenhouse emissions.
+        </div>
+        <div>
+          <strong>&bull; Sustainable Habits:</strong> Promotes a culture of repair and reuse, the most effective environmental fix at the source.
+        </div>
+      </td>
+    </tr>
+  </table>
+
+  <!-- Page 3 Footer -->
+  <div style="margin-top: 35pt;">
+    <table class="footer-table">
+      <tr>
+        <td class="footer-left">FIXGRID ECOSYSTEM &amp; FIXGRID PROBE</td>
+        <td class="footer-right">PAGE 3 OF 4</td>
+      </tr>
+    </table>
+  </div>
+
+</div>
+
+<!-- ========================================================================= -->
+<!-- PAGE 4 -->
+<!-- ========================================================================= -->
+<div class="page-break"></div>
+<div style="min-height: 940pt;">
+
+  <!-- 2-Column Market & Revenue -->
+  <table style="width: 100%; border-collapse: collapse;" border="0" cellspacing="0" cellpadding="0">
+    <tr>
+      <!-- Left Column: Market Opportunity -->
+      <td style="width: 50%; vertical-align: top; padding-right: 14pt;">
+        <div style="font-size: 10.5pt; font-weight: 900; color: #111827; text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 6pt;">
+          MARKET OPPORTUNITY
+        </div>
+        <p>
+          FixGrid taps into a massive, underserved market: <strong>the $15.2 Billion Indian unorganized repair economy</strong>. High demand, fragmented supply, and low customer trust have left this space ripe for innovation&mdash;FixGrid can bring reliability, transparency, and scalable operations to transform everyday local repairs into a dependable service experience.
+        </p>
+        <p>
+          By coupling software discovery with the FixGrid Probe&trade; diagnostic wand, FixGrid Probe standardizes repair diagnostic quality across tier-1, tier-2, and rural Indian clusters.
+        </p>
+      </td>
+
+      <!-- Right Column: Revenue Streams -->
+      <td style="width: 50%; vertical-align: top; padding-left: 14pt;">
+        <div style="font-size: 10.5pt; font-weight: 900; color: #111827; text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 4pt;">
+          REVENUE STREAMS
+        </div>
+        <div style="font-size: 8.8pt; color: #4B5563; margin-bottom: 6pt;">
+          Our monetization strategy is designed for sustainability and value sharing:
+        </div>
+        <ul style="padding-left: 11pt; margin-bottom: 0;">
+          <li><strong>1. Platform Take-Rate:</strong> A competitive 5&ndash;8% fee on every verified booking from the customer.</li>
+          <li><strong>2. Shop Pro SaaS &amp; Hardware Tier:</strong> An optional subscription service for advanced repair professionals at <strong>&#8377;999/month</strong>, offering FixGrid Probe firmware updates, warranty management, and storefront analytics.</li>
+          <li><strong>3. Customer Care+ Subscription:</strong> An optional household repair pass at <strong>&#8377;199/month</strong> offering consumers unlimited free FixGrid Probe&trade; diagnostics, zero platform booking fees, priority turnarounds, and extended 60-day warranty coverage across all home gadgets.</li>
+        </ul>
+      </td>
+    </tr>
+  </table>
+
+  <!-- Conclusion & Roadmap Banner -->
+  <table class="banner-table" style="margin-top: 18pt;">
+    <tr>
+      <td class="banner-title">Conclusion &amp; Roadmap</td>
+      <td style="text-align: right; padding-right: 10pt;">
+        <span class="banner-tag">FUTURE VISION</span>
+      </td>
+    </tr>
+  </table>
+
+  <p>
+    FixGrid is more than just a platform; it is a movement towards a <strong>sustainable repair economy</strong>. We envision a future where society transitions from a mindless consumption loop to a conscious and responsible approach to product lifecycle management.
+  </p>
+
+  <p>
+    By empowering local repair heroes with the FixGrid Probe&trade; handheld diagnostic wand and instilling ironclad trust through digital warranties, we are building a cleaner, more equitable, and more resourceful planet for generations to come. Our roadmap prioritizes pilot testing across 50 neighborhood repair clusters, student community repair drives, and strategic partnerships with municipal e-waste recycling boards to accelerate this vital transformation.
+  </p>
+
+  <!-- Centered Project Badge -->
+  <div style="text-align: center; margin-top: 30pt; margin-bottom: 20pt;">
+    <table align="center" border="0" cellspacing="0" cellpadding="0" style="margin: 0 auto; background-color: #F9FAFB; border: 1px solid #E5E7EB; border-radius: 6px;">
+      <tr>
+        <td style="padding: 9pt 24pt; text-align: center;">
+          <div style="font-size: 10.5pt; font-weight: 800; color: #111827; margin-bottom: 2pt;">Project FixGrid</div>
+          <div style="font-size: 9pt; font-weight: bold; color: #6366F1;">www.vytron.me</div>
+        </td>
+      </tr>
+    </table>
+  </div>
+
+  <!-- Page 4 Footer -->
+  <div style="margin-top: 140pt;">
+    <table class="footer-table">
+      <tr>
+        <td class="footer-left">FIXGRID ECOSYSTEM &amp; FIXGRID PROBE</td>
+        <td class="footer-right">PAGE 4 OF 4</td>
+      </tr>
+    </table>
+  </div>
+
+</div>
+
+</body>
+</html>
+'''
+
+with open('fixgrid_dossier_word.html', 'w', encoding='utf-8') as f:
+    f.write(html_content)
+
+print("Created fixgrid_dossier_word.html successfully!")

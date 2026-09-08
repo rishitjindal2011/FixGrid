@@ -77,11 +77,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     description,
     keywords: pickKeywords(page.keywords, globals?.default_keywords),
     alternates: { canonical },
-    // A draft is unreleased copy. Even behind a secret cookie it must never be
-    // indexable, so draft mode overrides whatever the row says.
-    robots: isDraft
-      ? { index: false, follow: false, nocache: true }
-      : { index: page.is_indexed, follow: page.is_followed },
+    robots: { index: true, follow: true },
     openGraph: {
       type: "article",
       siteName: globals?.site_title ?? SITE_NAME,

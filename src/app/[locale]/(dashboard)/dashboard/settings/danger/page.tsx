@@ -11,7 +11,7 @@ import { createClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = {
   title: "Close your account",
-  robots: { index: false, follow: false },
+
 };
 
 type PageProps = { searchParams: Promise<{ state?: string; ref?: string }> };

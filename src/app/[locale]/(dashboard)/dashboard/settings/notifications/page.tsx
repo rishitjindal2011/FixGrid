@@ -10,7 +10,7 @@ import { getNotificationPrefs, getProfile } from "@/lib/dashboard/settings";
 
 export const metadata: Metadata = {
   title: "Notifications",
-  robots: { index: false, follow: false },
+
 };
 
 export default async function NotificationSettingsPage() {

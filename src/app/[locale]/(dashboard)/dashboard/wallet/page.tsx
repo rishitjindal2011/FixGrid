@@ -10,7 +10,7 @@ import { getWallet, listLedger } from "@/lib/wallet/server";
 
 export const metadata: Metadata = {
   title: "Wallet",
-  robots: { index: false, follow: false },
+
 };
 
 /**

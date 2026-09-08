@@ -12,7 +12,7 @@ import { listThreads } from "@/lib/dashboard/messages";
 
 export const metadata: Metadata = {
   title: "Messages",
-  robots: { index: false, follow: false },
+
 };
 
 /**

@@ -33,7 +33,7 @@ import { ACTIVE_BOOKING_STATUSES } from "@/lib/types/marketplace";
 
 export const metadata: Metadata = {
   title: "Dashboard",
-  robots: { index: false, follow: false },
+
 };
 
 /**

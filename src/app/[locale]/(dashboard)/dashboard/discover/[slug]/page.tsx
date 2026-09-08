@@ -26,7 +26,7 @@ import { DELIVERY_MODE_LABELS, type DeliveryMode } from "@/lib/types/marketplace
 
 export const metadata: Metadata = {
   title: "Book a repair",
-  robots: { index: false, follow: false },
+
 };
 
 /** Mirrors the column defaults in `001_marketplace.sql`, for a pre-migration row. */

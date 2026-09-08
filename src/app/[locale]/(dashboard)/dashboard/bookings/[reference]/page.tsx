@@ -47,7 +47,7 @@ import {
 
 export const metadata: Metadata = {
   title: "Booking",
-  robots: { index: false, follow: false },
+
 };
 
 const MODE_ICON: Record<DeliveryMode, typeof Building2> = {

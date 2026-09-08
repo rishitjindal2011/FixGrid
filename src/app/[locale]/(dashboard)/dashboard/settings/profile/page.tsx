@@ -15,7 +15,7 @@ import type { UserAddressRow } from "@/lib/types/marketplace";
 
 export const metadata: Metadata = {
   title: "Profile",
-  robots: { index: false, follow: false },
+
 };
 
 export default async function ProfileSettingsPage() {

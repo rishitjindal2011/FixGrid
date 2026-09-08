@@ -40,7 +40,7 @@ import { cn } from "@/lib/utils";
 
 export const metadata: Metadata = {
   title: "Schedule",
-  robots: { index: false, follow: false },
+
 };
 
 const SCHEDULE_PATH = "/dashboard/expert/schedule";

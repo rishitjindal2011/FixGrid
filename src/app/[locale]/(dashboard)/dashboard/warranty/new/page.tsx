@@ -16,7 +16,7 @@ import { BOOKING_STATUS_LABELS } from "@/lib/types/marketplace";
 
 export const metadata: Metadata = {
   title: "Raise a warranty claim",
-  robots: { index: false, follow: false },
+
 };
 
 /**

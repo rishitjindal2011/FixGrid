@@ -9,6 +9,8 @@ import { DEFAULT_SIGNED_IN_PATH, localizedTarget, safeNextPath } from "@/lib/aut
 import { getCurrentUser } from "@/lib/auth/session";
 import { DEFAULT_LOCALE, isLocale } from "@/i18n/config";
 
+import { localeAlternates } from "@/lib/seo/alternates";
+
 export const dynamic = "force-dynamic";
 
 type PageProps = {
@@ -23,7 +25,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   return {
     title: t("signup.metaTitle"),
     description: t("signup.metaDescription"),
-    robots: { index: false, follow: false },
+    alternates: localeAlternates("/signup", locale),
+    robots: { index: true, follow: true },
   };
 }
 

@@ -14,7 +14,7 @@ import { getCategories } from "@/lib/queries/search";
 
 export const metadata: Metadata = {
   title: "Services",
-  robots: { index: false, follow: false },
+
 };
 
 /**

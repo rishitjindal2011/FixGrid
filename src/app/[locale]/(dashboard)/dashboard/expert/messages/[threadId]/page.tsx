@@ -16,7 +16,7 @@ import { getThread, listThreads } from "@/lib/dashboard/messages";
 
 export const metadata: Metadata = {
   title: "Conversation",
-  robots: { index: false, follow: false },
+
 };
 
 /** See the note on the same constant in the inbox page — one read, two jobs. */

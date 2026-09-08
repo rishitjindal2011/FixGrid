@@ -14,7 +14,7 @@ import { formatMoney, formatRelative } from "@/lib/format";
 
 export const metadata: Metadata = {
   title: "Warranty claims",
-  robots: { index: false, follow: false },
+
 };
 
 /**

@@ -16,7 +16,7 @@ import { pluralize } from "@/lib/utils";
 
 export const metadata: Metadata = {
   title: "Reviews",
-  robots: { index: false, follow: false },
+
 };
 
 /**

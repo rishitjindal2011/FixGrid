@@ -45,7 +45,7 @@ import { cn } from "@/lib/utils";
 
 export const metadata: Metadata = {
   title: "Shop dashboard",
-  robots: { index: false, follow: false },
+
 };
 
 /**

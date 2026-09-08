@@ -24,7 +24,7 @@ import { createClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = {
   title: "Find an expert",
-  robots: { index: false, follow: false },
+
 };
 
 const DISCOVER_PATH = "/dashboard/discover";

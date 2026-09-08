@@ -37,7 +37,7 @@ export async function generateMetadata({
 
   return {
     title: `Invoice ${reference}`,
-    robots: { index: false, follow: false },
+
   };
 }
 

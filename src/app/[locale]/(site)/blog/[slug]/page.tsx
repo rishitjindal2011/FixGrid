@@ -52,9 +52,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     description,
     keywords: post.keywords?.length ? post.keywords : globals?.default_keywords,
     alternates: { canonical },
-    robots: isDraft
-      ? { index: false, follow: false, nocache: true }
-      : { index: true, follow: true },
+    robots: { index: true, follow: true },
     openGraph: {
       type: "article",
       siteName: globals?.site_title ?? SITE_NAME,

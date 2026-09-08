@@ -14,7 +14,7 @@ import { listThreads } from "@/lib/dashboard/messages";
 
 export const metadata: Metadata = {
   title: "Client inbox",
-  robots: { index: false, follow: false },
+
 };
 
 /**

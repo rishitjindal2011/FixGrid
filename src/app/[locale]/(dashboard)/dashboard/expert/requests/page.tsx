@@ -23,7 +23,7 @@ import {
 
 export const metadata: Metadata = {
   title: "Requests",
-  robots: { index: false, follow: false },
+
 };
 
 /**

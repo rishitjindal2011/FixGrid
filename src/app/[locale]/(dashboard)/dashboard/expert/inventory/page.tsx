@@ -14,7 +14,7 @@ import { getCategories } from "@/lib/queries/search";
 
 export const metadata: Metadata = {
   title: "Inventory",
-  robots: { index: false, follow: false },
+
 };
 
 export default async function ExpertInventoryPage() {

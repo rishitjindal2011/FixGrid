@@ -1,3 +1,5 @@
+import { NextResponse } from "next/server";
+
 import { getPublishedPagePaths } from "@/lib/queries/cms";
 import { getAllExpertSlugs } from "@/lib/queries/expert";
 import { getAllPublishedBlogPosts } from "@/lib/queries/blog";
@@ -5,12 +7,11 @@ import { absoluteUrl, CANONICAL_ORIGIN, joinCmsPath } from "@/lib/site";
 
 export const revalidate = 3600;
 
-interface SitemapItem {
-  url: string;
-  lastModified?: Date | string;
-  changeFrequency?: string;
-  priority?: number;
-  languages?: Record<string, string>;
+function formatDate(date: Date | string | null | undefined): string {
+  if (!date) return new Date().toISOString().slice(0, 10);
+  const d = typeof date === "string" ? new Date(date) : date;
+  if (isNaN(d.getTime())) return new Date().toISOString().slice(0, 10);
+  return d.toISOString().slice(0, 10);
 }
 
 function escapeXml(unsafe: string): string {
@@ -22,46 +23,62 @@ function escapeXml(unsafe: string): string {
     .replace(/'/g, "&apos;");
 }
 
-function buildLanguages(path: string): Record<string, string> {
-  const cleanPath = path === "/" ? "" : path.startsWith("/") ? path : `/${path}`;
-  return {
-    "en-IN": absoluteUrl(cleanPath || "/", CANONICAL_ORIGIN),
-    "hi-IN": absoluteUrl(`/hi${cleanPath}`, CANONICAL_ORIGIN),
-    "bn-IN": absoluteUrl(`/bn${cleanPath}`, CANONICAL_ORIGIN),
-    "mr-IN": absoluteUrl(`/mr${cleanPath}`, CANONICAL_ORIGIN),
-    "te-IN": absoluteUrl(`/te${cleanPath}`, CANONICAL_ORIGIN),
-    "ta-IN": absoluteUrl(`/ta${cleanPath}`, CANONICAL_ORIGIN),
-    "kn-IN": absoluteUrl(`/kn${cleanPath}`, CANONICAL_ORIGIN),
-    "x-default": absoluteUrl(cleanPath || "/", CANONICAL_ORIGIN),
-  };
+interface SitemapUrl {
+  loc: string;
+  lastmod: string;
+  changefreq: "always" | "hourly" | "daily" | "weekly" | "monthly" | "yearly" | "never";
+  priority: string;
 }
 
-export async function GET(): Promise<Response> {
-  const now = new Date();
+export async function GET() {
+  const today = formatDate(new Date());
 
-  const staticEntries: SitemapItem[] = [
+  const staticUrls: SitemapUrl[] = [
     {
-      url: absoluteUrl("/", CANONICAL_ORIGIN),
-      lastModified: now,
-      changeFrequency: "daily",
-      priority: 1,
-      languages: buildLanguages("/"),
+      loc: absoluteUrl("/", CANONICAL_ORIGIN),
+      lastmod: today,
+      changefreq: "daily",
+      priority: "1.0",
     },
     {
-      url: absoluteUrl("/search", CANONICAL_ORIGIN),
-      lastModified: now,
-      changeFrequency: "daily",
-      priority: 0.9,
-      languages: buildLanguages("/search"),
+      loc: absoluteUrl("/search", CANONICAL_ORIGIN),
+      lastmod: today,
+      changefreq: "daily",
+      priority: "0.9",
     },
     {
-      url: absoluteUrl("/blog", CANONICAL_ORIGIN),
-      lastModified: now,
-      changeFrequency: "daily",
-      priority: 0.85,
-      languages: buildLanguages("/blog"),
+      loc: absoluteUrl("/blog", CANONICAL_ORIGIN),
+      lastmod: today,
+      changefreq: "daily",
+      priority: "0.9",
+    },
+    {
+      loc: absoluteUrl("/join", CANONICAL_ORIGIN),
+      lastmod: today,
+      changefreq: "monthly",
+      priority: "0.8",
+    },
+    {
+      loc: absoluteUrl("/login", CANONICAL_ORIGIN),
+      lastmod: today,
+      changefreq: "monthly",
+      priority: "0.6",
+    },
+    {
+      loc: absoluteUrl("/signup", CANONICAL_ORIGIN),
+      lastmod: today,
+      changefreq: "monthly",
+      priority: "0.6",
     },
   ];
+
+  // Localized homepages
+  const localeHomeUrls: SitemapUrl[] = ["hi", "bn", "mr", "te", "ta", "kn"].map((lang) => ({
+    loc: absoluteUrl(`/${lang}`, CANONICAL_ORIGIN),
+    lastmod: today,
+    changefreq: "daily",
+    priority: "0.9",
+  }));
 
   const [experts, cmsPages, blogPosts] = await Promise.all([
     getAllExpertSlugs(5000),
@@ -69,81 +86,59 @@ export async function GET(): Promise<Response> {
     getAllPublishedBlogPosts(),
   ]);
 
-  const expertEntries: SitemapItem[] = experts.map((expert) => {
-    const expertPath = `/expert/${expert.slug}`;
-    return {
-      url: absoluteUrl(expertPath, CANONICAL_ORIGIN),
-      lastModified: new Date(expert.updated_at),
-      changeFrequency: "weekly",
-      priority: 0.8,
-      languages: buildLanguages(expertPath),
-    };
-  });
+  const expertUrls: SitemapUrl[] = experts.map((expert) => ({
+    loc: absoluteUrl(`/expert/${expert.slug}`, CANONICAL_ORIGIN),
+    lastmod: formatDate(expert.updated_at),
+    changefreq: "weekly",
+    priority: "0.8",
+  }));
 
-  const blogEntries: SitemapItem[] = blogPosts.map((post) => {
-    const blogPath = `/blog/${post.slug}`;
-    return {
-      url: absoluteUrl(blogPath, CANONICAL_ORIGIN),
-      lastModified: new Date(post.updated_at || post.published_at || now),
-      changeFrequency: "weekly",
-      priority: 0.8,
-      languages: buildLanguages(blogPath),
-    };
-  });
+  const blogUrls: SitemapUrl[] = blogPosts.map((post) => ({
+    loc: absoluteUrl(`/blog/${post.slug}`, CANONICAL_ORIGIN),
+    lastmod: formatDate(post.updated_at || post.published_at),
+    changefreq: "weekly",
+    priority: "0.8",
+  }));
 
-  const cmsEntries: SitemapItem[] = cmsPages
+  const cmsUrls: SitemapUrl[] = cmsPages
     .filter((page) => page.is_indexed)
-    .map((page) => {
-      const pagePath = joinCmsPath(page.path_prefix, page.slug);
-      return {
-        url: absoluteUrl(pagePath, CANONICAL_ORIGIN),
-        lastModified: new Date(page.updated_at),
-        changeFrequency: "monthly",
-        priority: 0.7,
-        languages: buildLanguages(pagePath),
-      };
-    });
+    .map((page) => ({
+      loc: absoluteUrl(joinCmsPath(page.path_prefix, page.slug), CANONICAL_ORIGIN),
+      lastmod: formatDate(page.updated_at),
+      changefreq: "monthly",
+      priority: "0.7",
+    }));
 
-  const allEntries = [...staticEntries, ...expertEntries, ...blogEntries, ...cmsEntries];
+  const allUrls = [
+    ...staticUrls,
+    ...localeHomeUrls,
+    ...expertUrls,
+    ...blogUrls,
+    ...cmsUrls,
+  ];
 
-  const xmlUrls = allEntries
-    .map((entry) => {
-      const lastmod = entry.lastModified
-        ? `<lastmod>${new Date(entry.lastModified).toISOString()}</lastmod>`
-        : "";
-      const changefreq = entry.changeFrequency
-        ? `<changefreq>${escapeXml(entry.changeFrequency)}</changefreq>`
-        : "";
-      const priority =
-        typeof entry.priority === "number" ? `<priority>${entry.priority}</priority>` : "";
+  const xmlLines = [
+    '<?xml version="1.0" encoding="UTF-8"?>',
+    '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
+  ];
 
-      const alternates = entry.languages
-        ? Object.entries(entry.languages)
-            .map(
-              ([lang, href]) =>
-                `  <xhtml:link rel="alternate" hreflang="${escapeXml(lang)}" href="${escapeXml(href)}" />`,
-            )
-            .join("\n")
-        : "";
+  for (const item of allUrls) {
+    xmlLines.push("  <url>");
+    xmlLines.push(`    <loc>${escapeXml(item.loc)}</loc>`);
+    xmlLines.push(`    <lastmod>${item.lastmod}</lastmod>`);
+    xmlLines.push(`    <changefreq>${item.changefreq}</changefreq>`);
+    xmlLines.push(`    <priority>${item.priority}</priority>`);
+    xmlLines.push("  </url>");
+  }
 
-      return `  <url>
-    <loc>${escapeXml(entry.url)}</loc>
-${alternates ? alternates + "\n" : ""}${lastmod ? "    " + lastmod + "\n" : ""}${changefreq ? "    " + changefreq + "\n" : ""}${priority ? "    " + priority + "\n" : ""}  </url>`;
-    })
-    .join("\n");
+  xmlLines.push("</urlset>");
+  xmlLines.push("");
 
-  const sitemapXml = `<?xml version="1.0" encoding="UTF-8"?>
-<?xml-stylesheet type="text/xsl" href="/sitemap.xsl"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">
-${xmlUrls}
-</urlset>`;
-
-  return new Response(sitemapXml, {
+  return new NextResponse(xmlLines.join("\n"), {
     status: 200,
     headers: {
       "Content-Type": "application/xml; charset=utf-8",
       "Cache-Control": "public, max-age=3600, s-maxage=3600, stale-while-revalidate=86400",
-      "X-Content-Type-Options": "nosniff",
     },
   });
 }

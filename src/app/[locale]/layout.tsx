@@ -122,7 +122,6 @@ export const metadata: Metadata = {
   keywords: SITE_KEYWORDS,
   applicationName: SITE_NAME,
   alternates: {
-    canonical: "/",
     languages: {
       "en-IN": "/",
       "hi-IN": "/hi",

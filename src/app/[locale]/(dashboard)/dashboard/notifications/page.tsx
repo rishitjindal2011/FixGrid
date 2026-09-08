@@ -14,7 +14,7 @@ import { cn } from "@/lib/utils";
 
 export const metadata: Metadata = {
   title: "Notifications",
-  robots: { index: false, follow: false },
+
 };
 
 /**

@@ -14,7 +14,7 @@ import { createClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = {
   title: "Security",
-  robots: { index: false, follow: false },
+
 };
 
 type PageProps = { searchParams: Promise<{ reset?: string }> };
