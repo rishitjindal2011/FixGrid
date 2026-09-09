@@ -1,9 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Search, ArrowRight, Wrench, Sparkles, X } from "lucide-react";
+import { Search, Wrench, Sparkles, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface ProblemChip {
@@ -13,7 +12,7 @@ interface ProblemChip {
   badge?: string;
 }
 
-const POPULAR_PROBLEMS: ProblemChip[] = [
+const REAL_CATEGORIES: ProblemChip[] = [
   { label: "MacBook Screen", href: "/repair/macbook-screen-repair", badge: "Display" },
   { label: "iPhone Battery", href: "/repair/iphone-battery-replacement", badge: "Power" },
   { label: "PS5 HDMI Port", href: "/repair/playstation-hdmi-repair", badge: "WLOD" },
@@ -25,7 +24,7 @@ const POPULAR_PROBLEMS: ProblemChip[] = [
 ];
 
 export function DiagnosticFinder({
-  placeholder = "Search broken screen, battery drain, PCB short, water damage...",
+  placeholder = "What broke? (e.g. MacBook M1 screen, iPhone battery, Inverter PCB...)",
   searchLabel = "Search verified repairs",
   searchButtonText = "Find Technicians",
 }: {
@@ -56,7 +55,7 @@ export function DiagnosticFinder({
   }
 
   return (
-    <div className="w-full max-w-3xl mx-auto">
+    <div className="w-full">
       {/* Search Input Box with Machined Framing */}
       <form
         onSubmit={handleSubmit}
@@ -66,10 +65,11 @@ export function DiagnosticFinder({
         className="relative group rounded-machined border-2 border-enamel/30 bg-chalk p-1.5 shadow-lift transition-all focus-within:border-signal focus-within:shadow-[0_0_0_3px_rgba(232,89,12,0.15)]"
       >
         <div className="flex items-center gap-2">
+          {/* Query Input */}
           <div className="relative flex flex-1 items-center">
             <Search
               aria-hidden
-              className="pointer-events-none absolute left-3.5 size-5 text-steel transition-colors group-focus-within:text-signal"
+              className="pointer-events-none absolute left-3.5 size-4 text-steel transition-colors group-focus-within:text-signal"
             />
             <label htmlFor="home-diagnostic-q" className="sr-only">
               {searchLabel}
@@ -82,38 +82,44 @@ export function DiagnosticFinder({
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder={placeholder}
-              className="h-12 w-full rounded-none border-0 bg-transparent pl-11 pr-9 text-base font-sans text-enamel outline-none placeholder:text-steel-soft"
+              className="h-12 w-full rounded-none border-0 bg-transparent pl-10 pr-8 text-sm font-sans text-enamel outline-none placeholder:text-steel-soft"
             />
             {query.length > 0 && (
               <button
                 type="button"
                 onClick={() => setQuery("")}
-                className="absolute right-2.5 rounded p-1 text-steel hover:text-enamel focus:outline-none"
+                className="absolute right-2 rounded p-1 text-steel hover:text-enamel focus:outline-none"
                 aria-label="Clear search input"
               >
-                <X className="size-4" />
+                <X className="size-3.5" />
               </button>
             )}
           </div>
-          <Button type="submit" size="lg" className="shrink-0 gap-1.5 font-display tracking-wide uppercase px-6">
+
+          {/* Submit Action Button */}
+          <Button
+            type="submit"
+            size="lg"
+            className="shrink-0 gap-1.5 font-display tracking-wide uppercase px-6 text-sm bg-signal hover:bg-signal-lift text-chalk shadow-bench cursor-pointer"
+          >
             <Wrench className="size-4 text-signal-wash" />
             <span>{searchButtonText}</span>
           </Button>
         </div>
       </form>
 
-      {/* High-Intent Problem Diagnostic Chips */}
-      <div className="mt-4 flex flex-wrap items-center justify-center gap-1.5 sm:gap-2">
-        <span className="inline-flex items-center gap-1 font-mono text-eyebrow uppercase tracking-[0.14em] text-steel">
+      {/* Verified Database Category Diagnostic Chips */}
+      <div className="mt-3.5 flex flex-wrap items-center gap-1.5 sm:gap-2">
+        <span className="inline-flex items-center gap-1 font-mono text-[11px] uppercase tracking-wider text-steel font-medium">
           <Sparkles className="size-3 text-signal" />
-          Frequent Diagnostics:
+          Categories:
         </span>
-        {POPULAR_PROBLEMS.map((chip) => (
+        {REAL_CATEGORIES.map((chip) => (
           <button
             key={chip.label}
             type="button"
             onClick={() => handleSelectChip(chip)}
-            className="group inline-flex items-center gap-1.5 rounded-machined border border-hairline bg-chalk/80 px-2.5 py-1 text-xs text-steel transition-all hover:border-signal hover:bg-signal-wash hover:text-signal focus-visible:border-signal"
+            className="group inline-flex items-center gap-1 rounded-machined border border-hairline bg-chalk/90 px-2 py-1 text-xs text-steel transition-all hover:border-signal hover:bg-signal-wash hover:text-signal focus-visible:border-signal cursor-pointer"
           >
             <span>{chip.label}</span>
             {chip.badge && (

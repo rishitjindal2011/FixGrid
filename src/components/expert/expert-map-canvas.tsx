@@ -31,6 +31,11 @@ export function ExpertMapCanvas({
   lng: number;
   shopName: string;
 }) {
+  const cartoApiKey = process.env.NEXT_PUBLIC_CARTO_API_KEY;
+  const tileUrl = cartoApiKey
+    ? `https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png?key=${cartoApiKey}`
+    : `https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png`;
+
   return (
     <div className="aspect-[16/10] overflow-hidden rounded-machined border border-hairline">
       <MapContainer
@@ -41,9 +46,10 @@ export function ExpertMapCanvas({
         attributionControl
       >
         <TileLayer
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-          maxZoom={19}
+          url="https://mt{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}"
+          subdomains="0123"
+          attribution='&copy; Google Maps'
+          maxZoom={20}
         />
         <Marker position={[lat, lng]} icon={pinIcon} title={shopName} />
       </MapContainer>

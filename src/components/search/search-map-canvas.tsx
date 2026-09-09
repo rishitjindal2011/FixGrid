@@ -4,6 +4,8 @@ import * as React from "react";
 import Link from "next/link";
 import L from "leaflet";
 import { MapContainer, Marker, Popup, TileLayer, useMap, useMapEvents } from "react-leaflet";
+import { BadgeCheck, ArrowRight, ShieldCheck, MapPin } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 import { useSelection } from "@/components/search/selection-context";
 import type { SearchMapPin } from "@/components/search/search-map";
@@ -11,23 +13,30 @@ import type { SearchMapPin } from "@/components/search/search-map";
 import "leaflet/dist/leaflet.css";
 
 /**
- * Markers are built with `divIcon` rather than Leaflet's default image marker:
- * the default is a PNG referenced by a relative path that bundlers rewrite
- * incorrectly (the well-known broken-marker 404), and a div lets the pin use
- * the same tokens as the rest of the page.
+ * Custom modern machined markers matching FixGrid's industrial design tokens.
  */
 function buildIcon(active: boolean): L.DivIcon {
-  const fill = active ? "#123b4a" : "#e8590c";
-  const size = active ? 28 : 22;
+  const fill = active ? "#e8590c" : "#123b4a";
+  const size = active ? 32 : 24;
   return L.divIcon({
     className: "",
     html: `
-      <span style="
-        display:block;width:${size}px;height:${size}px;
-        border-radius:50% 50% 50% 0;transform:rotate(-45deg);
-        background:${fill};border:2px solid #ffffff;
-        box-shadow:0 2px 6px rgba(18,59,74,.35);
-      "></span>`,
+      <div style="position:relative;width:${size}px;height:${size}px;">
+        <span style="
+          display:block;width:${size}px;height:${size}px;
+          border-radius:50%;background:${fill};
+          border:3px solid #ffffff;box-shadow:0 2px 8px rgba(0,0,0,0.3);
+        "></span>
+        ${
+          active
+            ? `<span style="
+                position:absolute;top:50%;left:50%;width:8px;height:8px;
+                margin-top:-4px;margin-left:-4px;background:#ffffff;
+                border-radius:50%;
+              "></span>`
+            : ""
+        }
+      </div>`,
     iconSize: [size, size],
     iconAnchor: [size / 2, size],
     popupAnchor: [0, -size],
@@ -37,24 +46,29 @@ function buildIcon(active: boolean): L.DivIcon {
 const DEFAULT_ICON = buildIcon(false);
 const ACTIVE_ICON = buildIcon(true);
 
-/** Fits the map to the pins whenever the result set changes identity. */
+function isIndia(lat: number, lng: number): boolean {
+  return lat >= 6 && lat <= 38 && lng >= 68 && lng <= 98;
+}
+
+/** Fits the map to the pins, prioritizing Indian coordinates to prevent world-wide zoomouts. */
 function FitToPins({ pins }: { pins: SearchMapPin[] }) {
   const map = useMap();
-  const signature = pins.map((pin) => pin.id).join(",");
+  const indiaPins = pins.filter((pin) => isIndia(pin.lat, pin.lng));
+  const targetPins = indiaPins.length > 0 ? indiaPins : pins;
+  const signature = targetPins.map((pin) => pin.id).join(",");
 
   React.useEffect(() => {
-    if (pins.length === 0) return;
-    const bounds = L.latLngBounds(pins.map((pin) => [pin.lat, pin.lng] as [number, number]));
-    // A single pin produces a zero-area bounds that `fitBounds` would zoom to
-    // maximum on, so treat it as a centre point instead.
-    if (pins.length === 1) {
-      const first = pins[0];
+    if (targetPins.length === 0) {
+      map.setView([28.6139, 77.209], 12);
+      return;
+    }
+    if (targetPins.length === 1) {
+      const first = targetPins[0];
       if (first) map.setView([first.lat, first.lng], 14);
       return;
     }
+    const bounds = L.latLngBounds(targetPins.map((pin) => [pin.lat, pin.lng] as [number, number]));
     map.fitBounds(bounds, { padding: [40, 40], maxZoom: 15 });
-    // `signature` is the real dependency; `pins` is a fresh array every render.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [signature, map]);
 
   return null;
@@ -69,39 +83,42 @@ function PanToSelected({ pins }: { pins: SearchMapPin[] }) {
     if (!selectedId) return;
     const pin = pins.find((candidate) => candidate.id === selectedId);
     if (!pin) return;
-    map.flyTo([pin.lat, pin.lng], Math.max(map.getZoom(), 15), { duration: 0.6 });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    map.flyTo([pin.lat, pin.lng], 15, { duration: 0.6 });
   }, [selectedId, map]);
 
   return null;
 }
 
-/**
- * "Search this area" is an explicit button rather than an automatic refetch on
- * every pan. Auto-search on move fights the user: the list reshuffles under
- * their cursor while they are still looking for the place they just scrolled to.
- */
+/** Explicit "Search this area" floating pill. */
 function ViewportControl({ onSearchArea }: { onSearchArea: (bbox: string) => void }) {
   const [isDirty, setDirty] = React.useState(false);
-
   const map = useMapEvents({
-    moveend: () => setDirty(true),
-    zoomend: () => setDirty(true),
+    dragend: () => setDirty(true),
   });
+
+  const handleClick = () => {
+    const bounds = map.getBounds();
+    const bbox = [
+      bounds.getSouth().toFixed(5),
+      bounds.getWest().toFixed(5),
+      bounds.getNorth().toFixed(5),
+      bounds.getEast().toFixed(5),
+    ].join(",");
+    setDirty(false);
+    onSearchArea(bbox);
+  };
 
   if (!isDirty) return null;
 
   return (
-    <div className="pointer-events-none absolute inset-x-0 top-3 z-[1000] flex justify-center">
+    <div className="absolute top-3 left-1/2 -translate-x-1/2 z-[1000] pointer-events-none">
       <button
         type="button"
-        onClick={() => {
-          setDirty(false);
-          onSearchArea(map.getBounds().toBBoxString());
-        }}
-        className="pointer-events-auto rounded-machined border border-enamel bg-enamel px-3 py-1.5 font-mono text-eyebrow uppercase tracking-[0.14em] text-bench shadow-lift transition-colors hover:bg-enamel-lift"
+        onClick={handleClick}
+        className="pointer-events-auto rounded-full bg-enamel px-4 py-2 font-mono text-eyebrow uppercase tracking-[0.14em] text-bench shadow-lift hover:bg-signal transition-colors flex items-center gap-2 cursor-pointer"
       >
-        Search this area
+        <MapPin className="size-3 text-signal" />
+        Search this map area
       </button>
     </div>
   );
@@ -126,9 +143,10 @@ export function SearchMapCanvas({ pins, center, zoom, onSearchArea }: SearchMapC
         style={{ height: "100%", width: "100%" }}
       >
         <TileLayer
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-          maxZoom={19}
+          url="https://mt{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}"
+          subdomains="0123"
+          attribution='&copy; Google Maps'
+          maxZoom={20}
         />
 
         <FitToPins pins={pins} />
@@ -150,17 +168,24 @@ export function SearchMapCanvas({ pins, center, zoom, onSearchArea }: SearchMapC
                 click: () => setSelectedId(pin.id),
               }}
             >
-              <Popup>
-                <span className="block font-display uppercase tracking-[0.06em] text-enamel">
-                  {pin.shopName}
-                </span>
-                <span className="mt-1 block text-steel">{pin.address}</span>
-                <Link
-                  href={`/expert/${pin.slug}`}
-                  className="mt-2 inline-block font-mono text-eyebrow uppercase tracking-[0.14em] text-signal underline underline-offset-4"
-                >
-                  View profile
-                </Link>
+              <Popup className="fixgrid-map-popup">
+                <div className="p-1 min-w-[180px]">
+                  <span className="block font-display text-sm font-bold uppercase tracking-wide text-enamel">
+                    {pin.shopName}
+                  </span>
+                  <span className="mt-1 block text-xs text-steel leading-snug">{pin.address}</span>
+                  <div className="mt-2 pt-2 border-t border-hairline flex items-center justify-between">
+                    <span className="font-mono text-[9px] uppercase font-semibold text-verdigris flex items-center gap-1">
+                      <ShieldCheck className="size-3" /> Escrow Safe
+                    </span>
+                    <Link
+                      href={`/expert/${pin.slug}`}
+                      className="font-display text-xs uppercase tracking-wider text-signal font-bold hover:underline inline-flex items-center gap-0.5"
+                    >
+                      Profile &rarr;
+                    </Link>
+                  </div>
+                </div>
               </Popup>
             </Marker>
           );

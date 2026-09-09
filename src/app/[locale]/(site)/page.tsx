@@ -23,6 +23,7 @@ import {
 
 import { DiagnosticFinder } from "@/components/home/diagnostic-finder";
 import { FaqSection } from "@/components/home/faq-section";
+import { HeroTrustConsole } from "@/components/home/hero-trust-console";
 import { ResultCard } from "@/components/search/result-card";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { Badge } from "@/components/ui/badge";
@@ -267,60 +268,99 @@ export default async function HomePage() {
     <>
       <JsonLd data={schemas} />
 
-      {/* ── 1. Hero Section ───────────────────────────────────────────────── */}
-      <section className="relative overflow-hidden border-b border-hairline bg-chalk/40">
+      {/* ── 1. Hero Section (MyPerfectResume-Inspired High-Converting Split Layout) ── */}
+      <section className="relative overflow-hidden border-b border-hairline bg-gradient-to-b from-bench/60 via-chalk/90 to-bench/40">
+        {/* Subtle schematic grid background for technical workshop feel */}
         <div
           aria-hidden
-          className="schematic schematic-fade pointer-events-none absolute inset-0"
+          className="schematic schematic-fade pointer-events-none absolute inset-0 opacity-70"
         />
 
-        <div className="relative mx-auto max-w-5xl px-4 py-20 text-center sm:py-28">
-          {/* Live Platform Telemetry Pill */}
-          <div className="inline-flex items-center gap-2 rounded-machined border border-hairline bg-chalk/95 px-3.5 py-1.5 shadow-bench backdrop-blur">
-            <span className="relative flex size-2">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-verdigris opacity-75"></span>
-              <span className="relative inline-flex size-2 rounded-full bg-verdigris"></span>
-            </span>
-            <span className="font-mono text-eyebrow font-semibold uppercase tracking-[0.16em] text-enamel">
-              Live Escrow Protection · 72 Metro Hubs · 0% Advance Risk
-            </span>
-          </div>
+        {/* Ambient atmospheric highlights */}
+        <div
+          aria-hidden
+          className="pointer-events-none absolute -top-32 left-1/4 h-80 w-80 rounded-full bg-signal/10 blur-3xl"
+        />
+        <div
+          aria-hidden
+          className="pointer-events-none absolute top-1/3 -right-20 h-80 w-80 rounded-full bg-verdigris/10 blur-3xl"
+        />
 
-          <h1 className="mt-6 text-display-lg text-enamel tracking-tight">
-            FixGrid — Find a Local Repair Shop in India That Can Actually Fix It
-          </h1>
+        <div className="relative mx-auto max-w-7xl px-4 py-12 sm:py-16 lg:py-20">
+          <div className="grid grid-cols-1 items-center gap-10 lg:grid-cols-12 lg:gap-12">
+            {/* Left Column (7 cols): Social Proof, Punchy H1, Diagnostic Dual Finder, and 3 Guarantees */}
+            <div className="flex flex-col lg:col-span-7">
+              {/* Genuine Platform Telemetry - Zero Fake Reviews or Stats */}
+              <div className="self-start inline-flex items-center gap-2 rounded-machined border border-hairline bg-chalk/95 px-3 py-1.5 shadow-bench backdrop-blur">
+                <span className="relative flex size-2">
+                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-verdigris opacity-75" />
+                  <span className="relative inline-flex size-2 rounded-full bg-verdigris" />
+                </span>
+                <span className="font-mono text-eyebrow font-semibold uppercase tracking-[0.16em] text-enamel">
+                  Smart Escrow Protection Protocol · 0% Advance Payment Risk
+                </span>
+              </div>
 
-          <p className="mx-auto mt-5 max-w-[58ch] text-lg leading-relaxed text-steel">
-            India&apos;s verified directory of neighborhood electronics and appliance technicians.
-            Diagnose faults with bench-grade precision, inspect verified ratings, and
-            pay through smart escrow only when you are 100% satisfied.
-          </p>
+              {/* Punchy Outcome-Driven Main Heading */}
+              <h1 className="mt-5 font-display text-4xl font-semibold uppercase tracking-tight text-enamel sm:text-5xl lg:text-6xl">
+                Find a Verified Repair Shop.{" "}
+                <span className="bg-gradient-to-r from-signal via-signal-lift to-amber-600 bg-clip-text text-transparent">
+                  Get It Fixed Right.
+                </span>
+              </h1>
 
-          {/* Interactive Diagnostic Finder & Intent Chips */}
-          <div className="mt-8">
-            <DiagnosticFinder
-              placeholder="What broke? (e.g. MacBook screen, iPhone battery, Inverter PCB, PS5 HDMI...)"
-              searchLabel="Search verified repairs"
-              searchButtonText="Find Technicians"
-            />
-          </div>
+              {/* Subtitle & Value Proposition */}
+              <p className="mt-4 max-w-2xl text-base leading-relaxed text-steel sm:text-lg">
+                Connect with bench-tested electronics &amp; micro-soldering technicians near you.
+                Upfront itemized quotes, zero advance deposit risk, and smart escrow release only after
+                your device is tested and sealed.
+              </p>
 
-          {/* Trust Highlights Line */}
-          <div className="mt-6 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 font-mono text-eyebrow uppercase tracking-[0.14em] text-steel-soft">
-            <span className="inline-flex items-center gap-1.5">
-              <ShieldCheck className="size-3.5 text-verdigris" />
-              100% Smart Escrow Protection
-            </span>
-            <span className="hidden sm:inline text-hairline">|</span>
-            <span className="inline-flex items-center gap-1.5">
-              <Wrench className="size-3.5 text-signal" />
-              Verified Bench Diagnostics
-            </span>
-            <span className="hidden sm:inline text-hairline">|</span>
-            <span className="inline-flex items-center gap-1.5">
-              <Clock className="size-3.5 text-enamel" />
-              Real-Time Opening Status
-            </span>
+              {/* Interactive Dual Diagnostic Finder (Problem + City) */}
+              <div className="mt-6 w-full">
+                <DiagnosticFinder
+                  placeholder="What broke? (e.g. MacBook M1 screen, iPhone battery, Inverter PCB, PS5 HDMI...)"
+                  searchLabel="Search verified repairs"
+                  searchButtonText="Find Technicians"
+                />
+              </div>
+
+              {/* MyPerfectResume-Style 3 Core Value Guarantees */}
+              <div className="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-3.5 border-t border-hairline/80 pt-5">
+                <div className="flex items-start gap-2">
+                  <CheckCircle2 className="size-4 text-verdigris shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-xs font-bold text-enamel uppercase tracking-wide">0% Advance Risk</p>
+                    <p className="text-[11px] text-steel leading-tight mt-0.5">
+                      Funds held safely in escrow vault until you inspect.
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-2">
+                  <CheckCircle2 className="size-4 text-verdigris shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-xs font-bold text-enamel uppercase tracking-wide">Fixed Quotes</p>
+                    <p className="text-[11px] text-steel leading-tight mt-0.5">
+                      Itemized parts &amp; bench labor locked before work starts.
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-2">
+                  <CheckCircle2 className="size-4 text-verdigris shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-xs font-bold text-enamel uppercase tracking-wide">5-Day Warranty</p>
+                    <p className="text-[11px] text-steel leading-tight mt-0.5">
+                      Physical tamper-evident seal &amp; digital passport.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Right Column (5 cols): Interactive Repair Showcase & Escrow Simulator */}
+            <div className="lg:col-span-5">
+              <HeroTrustConsole />
+            </div>
           </div>
         </div>
       </section>

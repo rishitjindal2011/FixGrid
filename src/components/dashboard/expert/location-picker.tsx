@@ -122,8 +122,14 @@ export function LocationPicker({ defaultLat, defaultLng, onChange }: LocationPic
       <div className="flex-1 relative rounded-machined overflow-hidden border border-hairline z-0">
         <MapContainer center={mapCenter} zoom={position ? 15 : 10} className="h-full w-full">
           <TileLayer
-            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            attribution='&copy; <a href="https://carto.com/" target="_blank" rel="noopener noreferrer">CARTO</a> &copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap</a> contributors'
+            url={
+              process.env.NEXT_PUBLIC_CARTO_API_KEY
+                ? `https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png?api_key=${process.env.NEXT_PUBLIC_CARTO_API_KEY}`
+                : `https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png`
+            }
+            maxZoom={19}
+            subdomains="abcd"
           />
           {position && <Marker position={position} />}
           <MapEvents

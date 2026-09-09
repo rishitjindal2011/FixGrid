@@ -4,12 +4,22 @@ import * as React from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useTranslations } from "next-intl";
-import { BadgeCheck, MapPin } from "lucide-react";
+import {
+  BadgeCheck,
+  MapPin,
+  ShieldCheck,
+  ArrowRight,
+  Sparkles,
+  Wrench,
+  Clock,
+  Navigation,
+} from "lucide-react";
 
 import { WarrantyBadge } from "@/components/warranty-badge";
 import { RatingStars } from "@/components/rating-stars";
 import { StatusStrip } from "@/components/status-strip";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { useSelection } from "@/components/search/selection-context";
 import type { HoursInput, ShopStatus } from "@/lib/hours";
 import { cn } from "@/lib/utils";
@@ -22,15 +32,12 @@ export interface ResultCardProps {
   address: string;
   photo: string | null;
   verified: boolean;
-  /** The shop’s standard warranty in days. 0 renders no badge. */
   warrantyDays: number;
   ratingAvg: number;
   ratingCount: number;
   categories: RepairCategoryRow[];
   hours: HoursInput;
-  /** Computed on the server so the card is correct before hydration. */
   initialStatus: ShopStatus;
-  /** Position in the result list, shown as a mono index. */
   index: number;
   hasCoordinates: boolean;
 }
@@ -64,98 +71,140 @@ export function ResultCard({
       onFocus={() => setHoveredId(id)}
       onBlur={() => setHoveredId(null)}
       className={cn(
-        "group relative rounded-machined border bg-chalk transition-colors",
-        isActive ? "border-signal/50 bg-signal-wash/40" : "border-hairline hover:border-steel-soft",
+        "group relative overflow-hidden rounded-machined border bg-chalk transition-all",
+        isActive
+          ? "border-signal bg-signal-wash/30 shadow-lift scale-[1.008]"
+          : "border-hairline hover:border-signal/50 hover:shadow-bench",
       )}
     >
-      {/* The whole card is one link target; the interactive bits below sit on
-          top of it with their own z-index so they stay independently clickable. */}
-      <Link
-        href={`/expert/${slug}`}
-        className="absolute inset-0 rounded-machined focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-signal"
-        aria-label={`${shopName}, ${address}`}
-      />
+      <div className="p-4 sm:p-5">
+        {/* Header Bar: Index, Name, Verified Badge & Status */}
+        <div className="flex items-start justify-between gap-3 border-b border-hairline/60 pb-3">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <span className="shrink-0 rounded bg-enamel px-2 py-0.5 font-mono text-[11px] font-bold text-bench">
+              #{String(index).padStart(2, "0")}
+            </span>
+            <h3 className="truncate font-display text-lg sm:text-xl font-bold uppercase tracking-tight text-enamel group-hover:text-signal transition-colors">
+              <Link href={`/expert/${slug}`} className="hover:underline focus:outline-none">
+                {shopName}
+              </Link>
+            </h3>
+          </div>
 
-      <div className="pointer-events-none flex gap-4 p-4">
-        <div className="relative size-24 shrink-0 overflow-hidden rounded-machined bg-bench-sunk sm:size-28">
-          {photo ? (
-            <Image
-              src={photo}
-              alt={shopName}
-              fill
-              sizes="112px"
-              className="object-cover"
-            />
-          ) : (
-            <div className="schematic size-full" aria-hidden />
-          )}
-          <span className="absolute left-0 top-0 bg-enamel px-1.5 py-0.5 font-mono text-eyebrow text-bench">
-            {String(index).padStart(2, "0")}
-          </span>
+          <div className="flex items-center gap-2 shrink-0">
+            {verified ? (
+              <span className="inline-flex items-center gap-1 rounded bg-verdigris-wash border border-verdigris/30 px-2 py-0.5 font-mono text-[10px] font-bold uppercase text-verdigris">
+                <BadgeCheck className="size-3.5" />
+                Verified
+              </span>
+            ) : null}
+            <StatusStrip hours={hours} initialStatus={initialStatus} />
+          </div>
         </div>
 
-        <div className="min-w-0 flex-1">
-          <div className="flex items-start justify-between gap-3">
-            <h3 className="truncate text-base leading-tight">{shopName}</h3>
-            {verified ? (
-              <BadgeCheck aria-label={t("verified")} className="size-4 shrink-0 text-verdigris" />
+        {/* Content Body: Media Avatar & Workshop Details */}
+        <div className="mt-3.5 flex flex-col sm:flex-row gap-4">
+          {/* Workshop Media Frame */}
+          <div className="relative size-24 sm:size-28 shrink-0 overflow-hidden rounded-machined border border-hairline bg-bench-sunk">
+            {photo ? (
+              <Image
+                src={photo}
+                alt={shopName}
+                fill
+                sizes="112px"
+                className="object-cover transition-transform duration-300 group-hover:scale-105"
+              />
+            ) : (
+              <div className="flex size-full flex-col items-center justify-center bg-gradient-to-br from-enamel to-enamel-lift p-2 text-center text-bench">
+                <Wrench className="size-6 text-signal" />
+                <span className="mt-1 font-mono text-[9px] uppercase tracking-widest text-bench/80">
+                  Bench Lab
+                </span>
+              </div>
+            )}
+          </div>
+
+          {/* Details & Guarantees */}
+          <div className="min-w-0 flex-1 space-y-2">
+            {/* Rating / Review Status */}
+            <div className="flex flex-wrap items-center gap-2">
+              {ratingCount > 0 ? (
+                <RatingStars rating={ratingAvg} count={ratingCount} />
+              ) : (
+                <span className="inline-flex items-center gap-1 rounded bg-bench px-2 py-0.5 font-mono text-[10px] uppercase font-semibold text-steel">
+                  <Sparkles className="size-3 text-signal" />
+                  New Verified Listing · Awaiting First Review
+                </span>
+              )}
+
+              {/* Escrow Guarantee Pill */}
+              <span className="inline-flex items-center gap-1 rounded bg-verdigris-wash/80 border border-verdigris/20 px-2 py-0.5 font-mono text-[10px] font-bold uppercase text-verdigris">
+                <ShieldCheck className="size-3" />
+                Smart Escrow Protected
+              </span>
+            </div>
+
+            {/* Address */}
+            <p className="flex items-start gap-1.5 text-xs text-steel">
+              <MapPin aria-hidden className="mt-0.5 size-3.5 shrink-0 text-signal" />
+              <span className="line-clamp-2 text-enamel font-medium">{address}</span>
+            </p>
+
+            {/* Warranty Badge if applicable */}
+            {warrantyDays ? (
+              <div className="pt-0.5">
+                <WarrantyBadge days={warrantyDays} />
+              </div>
+            ) : null}
+
+            {/* Categories / Repair Specialties */}
+            {categories.length > 0 ? (
+              <div className="flex flex-wrap items-center gap-1.5 pt-1">
+                {categories.slice(0, 4).map((category) => (
+                  <Badge
+                    key={category.id}
+                    className="border-hairline bg-bench-sunk/50 text-[10px] text-steel font-mono uppercase hover:bg-bench-sunk"
+                  >
+                    {category.name}
+                  </Badge>
+                ))}
+                {categories.length > 4 ? (
+                  <Badge className="border-dashed border-hairline text-[10px] text-steel-soft font-mono">
+                    +{categories.length - 4} more
+                  </Badge>
+                ) : null}
+              </div>
+            ) : null}
+          </div>
+        </div>
+
+        {/* Action Footer */}
+        <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-hairline/60 pt-3">
+          <div className="flex items-center gap-3">
+            {hasCoordinates ? (
+              <button
+                type="button"
+                onClick={() => setSelectedId(id)}
+                className="inline-flex items-center gap-1.5 font-mono text-eyebrow uppercase tracking-[0.14em] text-steel hover:text-signal transition-colors cursor-pointer"
+              >
+                <Navigation className="size-3 text-signal" />
+                <span>{ts("showOnMap")}</span>
+              </button>
             ) : null}
           </div>
 
-          <div className="mt-1.5">
-            <RatingStars rating={ratingAvg} count={ratingCount} />
-          </div>
-
-          <p className="mt-1.5 flex items-start gap-1.5 text-sm text-steel">
-            <MapPin aria-hidden className="mt-0.5 size-3.5 shrink-0 text-steel-soft" />
-            <span className="line-clamp-2">{address}</span>
-          </p>
-
-          <div className="mt-2">
-            <StatusStrip hours={hours} initialStatus={initialStatus} />
-          </div>
-
-          {/*
-            Above the categories, not among them.
-
-            A warranty is a promise about the work; a category is a statement of
-            what the shop touches. Mixing them into one row of grey pills would
-            make the strongest thing on the card read as another tag.
-          */}
-          {warrantyDays ? (
-            <div className="mt-2">
-              <WarrantyBadge days={warrantyDays} />
-            </div>
-          ) : null}
-
-          {categories.length > 0 ? (
-            <ul className="mt-2.5 flex flex-wrap gap-1.5">
-              {categories.slice(0, 3).map((category) => (
-                <li key={category.id}>
-                  <Badge>{category.name}</Badge>
-                </li>
-              ))}
-              {categories.length > 3 ? (
-                <li>
-                  <Badge className="border-dashed">+{categories.length - 3}</Badge>
-                </li>
-              ) : null}
-            </ul>
-          ) : null}
+          <Button
+            asChild
+            size="sm"
+            className="bg-enamel hover:bg-enamel-lift text-bench font-display uppercase tracking-wider text-xs px-4 shadow-sm group-hover:bg-signal group-hover:text-chalk transition-colors"
+          >
+            <Link href={`/expert/${slug}`} className="inline-flex items-center gap-1.5">
+              <span>View Workshop &amp; Book</span>
+              <ArrowRight className="size-3.5" />
+            </Link>
+          </Button>
         </div>
       </div>
-
-      {hasCoordinates ? (
-        <div className="relative flex justify-end px-4 pb-3">
-          <button
-            type="button"
-            onClick={() => setSelectedId(id)}
-            className="font-mono text-eyebrow uppercase tracking-[0.14em] text-steel underline decoration-hairline underline-offset-4 transition-colors hover:text-signal hover:decoration-signal"
-          >
-            {ts("showOnMap")}
-          </button>
-        </div>
-      ) : null}
     </li>
   );
 }
