@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import type { Metadata } from "next";
+import { getTranslations } from "next-intl/server";
+import { useTranslations } from "next-intl";
 import { Banknote, FileText, Receipt, RotateCcw, ShieldCheck, Wallet } from "lucide-react";
 
 import { EmptyState } from "@/components/dashboard/empty-state";
@@ -19,12 +21,14 @@ import {
 } from "@/lib/dashboard/billing";
 import { listWarranties, type WarrantyEntry } from "@/lib/dashboard/warranty";
 import { daysUntil, formatDay, formatMoney } from "@/lib/format";
-import { pluralize } from "@/lib/utils";
 
-export const metadata: Metadata = {
-  title: "Payments",
-
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("dashboard.billing");
+  return {
+    title: t("metaTitle"),
+    robots: { index: false, follow: false },
+  };
+}
 
 /**
  * The customer's money: what they have spent, what is still held, and every
@@ -61,43 +65,45 @@ export default async function BillingPage() {
 
   const held = heldJobs(invoices, warranties);
 
+  const t = await getTranslations("dashboard.billing");
+
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        eyebrow="Payments"
-        title="Billing"
-        description="Every repair you have paid for, what is still held against a warranty, and the invoices behind both."
+        eyebrow={t("eyebrow")}
+        title={t("title")}
+        description={t("description")}
       />
 
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <StatTile
-          label="Total spent"
+          label={t("statTotalSpent")}
           value={formatMoney(summary.totalSpentPence, currency)}
-          hint="Across finished repairs"
+          hint={t("statTotalSpentHint")}
           icon={Banknote}
         />
         <StatTile
-          label="In escrow"
+          label={t("statInEscrow")}
           value={formatMoney(summary.inEscrowPence, currency)}
-          hint="Held until warranty closes"
+          hint={t("statInEscrowHint")}
           icon={ShieldCheck}
           // Live state, not decoration: this is money still in flight, with a
           // window counting down against it. Settled totals stay in enamel.
           emphasis={summary.inEscrowPence > 0}
         />
         <StatTile
-          label="Refunded"
+          label={t("statRefunded")}
           value={formatMoney(summary.refundedPence, currency)}
-          hint="Returned to you"
+          hint={t("statRefundedHint")}
           icon={RotateCcw}
         />
         <StatTile
-          label="Open invoices"
+          label={t("statOpenInvoices")}
           value={summary.openInvoices}
           // "Awaiting payment", never "unpaid": nothing has been presented for
           // collection yet, and the harsher wording would accuse the customer
           // of arrears that do not exist.
-          hint="Awaiting payment"
+          hint={t("statOpenInvoicesHint")}
           icon={Receipt}
         />
       </div>
@@ -110,9 +116,9 @@ export default async function BillingPage() {
       */}
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <StatTile
-          label="Balance"
+          label={t("statBalance")}
           value={formatMoney(wallet.balanceMinor, wallet.currency)}
-          hint="Tap to top up"
+          hint={t("statBalanceHint")}
           icon={Wallet}
           href="/dashboard/wallet"
           emphasis={wallet.balanceMinor <= 0}
@@ -123,11 +129,11 @@ export default async function BillingPage() {
 
       <section>
         <SectionHeader
-          title="Invoice history"
+          title={t("invoiceHistory")}
           action={
             invoices.length > 0 ? (
               <span className="font-mono text-eyebrow uppercase tracking-[0.14em] text-steel-soft">
-                {pluralize(invoices.length, "invoice")}
+                {t("invoiceCount", { count: invoices.length })}
               </span>
             ) : null
           }
@@ -138,11 +144,11 @@ export default async function BillingPage() {
         ) : (
           <EmptyState
             icon={FileText}
-            title="No invoices yet"
-            description="Once a repair is finished, its invoice lands here with the full breakdown — service, platform fee and VAT."
+            title={t("noInvoicesTitle")}
+            description={t("noInvoicesDesc")}
             action={
               <Button asChild variant="outline" size="sm">
-                <Link href="/dashboard/discover">Find an expert</Link>
+                <Link href="/dashboard/discover">{t("findExpert")}</Link>
               </Button>
             }
           />
@@ -150,15 +156,15 @@ export default async function BillingPage() {
       </section>
 
       <section>
-        <SectionHeader title="Refunds" />
+        <SectionHeader title={t("refunds")} />
 
         {refunds.length > 0 ? (
           <RefundTable refunds={refunds} />
         ) : (
           <EmptyState
             icon={RotateCcw}
-            title="No refunds"
-            description="If a repair is put right with a refund, it is listed here separately from the invoice it reverses."
+            title={t("noRefundsTitle")}
+            description={t("noRefundsDesc")}
           />
         )}
       </section>
@@ -234,14 +240,14 @@ function elapsedPercent(job: HeldJob, now: Date): number | null {
 }
 
 function EscrowTracker({ held, now }: { held: HeldJob[]; now: Date }) {
+  const t = useTranslations("dashboard.billing");
   return (
     <section>
-      <SectionHeader title="Held in escrow" />
+      <SectionHeader title={t("escrowTitle")} />
 
       <div className="rounded-machined border border-hairline bg-chalk p-5 shadow-bench">
         <p className="max-w-prose text-sm leading-relaxed text-steel">
-          When a repair is finished your money is held until the warranty window
-          closes, so there is something to put right if the fault comes back.
+          {t("escrowIntro")}
         </p>
 
         {held.length > 0 ? (
@@ -264,7 +270,7 @@ function EscrowTracker({ held, now }: { held: HeldJob[]; now: Date }) {
                         {job.shopName}
                       </Link>
                       <p className="truncate pt-0.5 text-xs text-steel">
-                        {job.serviceName ?? "Repair"} ·{" "}
+                        {job.serviceName ?? t("repairFallback")} ·{" "}
                         <span className="font-mono uppercase tracking-[0.06em]">
                           {job.reference}
                         </span>
@@ -282,15 +288,13 @@ function EscrowTracker({ held, now }: { held: HeldJob[]; now: Date }) {
                       // Signal, because an open window is live state: this is the
                       // money a claim could still reverse.
                       tone="signal"
-                      aria-label={`Warranty window for ${job.reference}`}
+                      aria-label={t("warrantyWindowAria", { reference: job.reference })}
                       className="mt-3"
                     />
                   )}
 
                   <p className="pt-2 font-mono text-eyebrow uppercase tracking-[0.14em] text-steel">
-                    {days === 0
-                      ? "Releases today"
-                      : `Releases in ${pluralize(days, "day")}`}{" "}
+                    {days === 0 ? t("releasesToday") : t("releasesIn", { days })}{" "}
                     <span className="text-steel-soft">
                       · {formatDay(job.expiresAt)}
                     </span>
@@ -301,8 +305,7 @@ function EscrowTracker({ held, now }: { held: HeldJob[]; now: Date }) {
           </ul>
         ) : (
           <p className="mt-4 rounded-machined border border-dashed border-hairline bg-bench/40 px-4 py-6 text-center text-sm text-steel">
-            Nothing is being held right now. Money appears here between a repair
-            being finished and its warranty window closing.
+            {t("nothingHeld")}
           </p>
         )}
       </div>

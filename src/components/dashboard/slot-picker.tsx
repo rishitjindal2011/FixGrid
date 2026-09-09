@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { useTranslations } from "next-intl";
 import { CalendarX } from "lucide-react";
 
 import { EmptyState } from "@/components/dashboard/empty-state";
@@ -43,6 +44,7 @@ export function SlotPicker({
   disabled?: boolean;
 }) {
   const [pickedDay, setPickedDay] = React.useState<string | null>(null);
+  const t = useTranslations("dashboard.slotPicker");
 
   // Derived, never synced. Changing service changes the duration, which
   // regenerates every day key: an effect reconciling `pickedDay` would paint the
@@ -57,8 +59,8 @@ export function SlotPicker({
     return (
       <EmptyState
         icon={CalendarX}
-        title="No times to show"
-        description="This shop has not published a bookable calendar yet. Send them a message and they will arrange a time with you."
+        title={t("noTimesTitle")}
+        description={t("noTimesDesc")}
       />
     );
   }
@@ -87,7 +89,7 @@ export function SlotPicker({
     <div>
       <div
         role="tablist"
-        aria-label="Days with times available"
+        aria-label={t("daysAria")}
         onKeyDown={moveTab}
         className="-mx-1 flex gap-1 overflow-x-auto border-b border-hairline px-1 pb-2"
       >
@@ -122,7 +124,7 @@ export function SlotPicker({
                   isActive ? "text-bench" : open > 0 ? "text-signal" : "text-steel-soft",
                 )}
               >
-                {open > 0 ? `${open} free` : "Full"}
+                {open > 0 ? t("freeCount", { count: open }) : t("full")}
               </span>
             </button>
           );
@@ -136,7 +138,7 @@ export function SlotPicker({
         className="pt-3"
       >
         <fieldset disabled={disabled}>
-          <legend className="sr-only">Times on {active.label}</legend>
+          <legend className="sr-only">{t("timesOn", { label: active.label })}</legend>
 
           <div className="grid grid-cols-3 gap-2 sm:grid-cols-4 lg:grid-cols-5">
             {active.slots.map((slot) => {
@@ -169,7 +171,7 @@ export function SlotPicker({
                     )}
                   >
                     {formatTime(slot.start, timezone)}
-                    {slot.available ? null : <span className="sr-only"> — taken</span>}
+                    {slot.available ? null : <span className="sr-only">{t("taken")}</span>}
                   </span>
                 </label>
               );

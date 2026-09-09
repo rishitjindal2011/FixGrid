@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import type { Metadata } from "next";
+import { getTranslations } from "next-intl/server";
 import { Bell } from "lucide-react";
 
 import { EmptyState } from "@/components/dashboard/empty-state";
@@ -12,10 +13,13 @@ import { listNotifications } from "@/lib/dashboard/notifications";
 import { formatRelative } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
-export const metadata: Metadata = {
-  title: "Notifications",
-
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("dashboard.notifications");
+  return {
+    title: t("metaTitle"),
+    robots: { index: false, follow: false },
+  };
+}
 
 /**
  * The notification centre.
@@ -28,18 +32,20 @@ export default async function NotificationsPage() {
   const user = await getCurrentUser();
   if (!user) redirect("/login?next=/dashboard/notifications");
 
+  const t = await getTranslations("dashboard.notifications");
+
   const notifications = await listNotifications(user.id, 50);
   const unread = notifications.filter((n) => n.read_at === null).length;
 
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        eyebrow="Your account"
-        title="Notifications"
+        eyebrow={t("eyebrow")}
+        title={t("title")}
         description={
           unread > 0
-            ? `${unread} unread of the last ${notifications.length}.`
-            : "Booking updates, messages and warranty reminders."
+            ? t("unread", { count: unread, total: notifications.length })
+            : t("descDefault")
         }
         actions={
           notifications.length > 0 ? <MarkAllReadButton disabled={unread === 0} /> : null
@@ -49,11 +55,11 @@ export default async function NotificationsPage() {
       {notifications.length === 0 ? (
         <EmptyState
           icon={Bell}
-          title="Nothing yet"
-          description="When a shop replies to a request, updates a repair or your warranty is about to lapse, it shows up here."
+          title={t("emptyTitle")}
+          description={t("emptyDesc")}
           action={
             <Button asChild size="sm">
-              <Link href="/dashboard/discover">Find an expert</Link>
+              <Link href="/dashboard/discover">{t("findExpert")}</Link>
             </Button>
           }
         />

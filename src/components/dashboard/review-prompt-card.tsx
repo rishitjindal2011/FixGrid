@@ -2,6 +2,7 @@
 
 import { useActionState, useState } from "react";
 import { useFormStatus } from "react-dom";
+import { useTranslations } from "next-intl";
 import { AlertTriangle, CheckCircle2, Star } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -10,7 +11,7 @@ import type { ReviewableBooking } from "@/lib/dashboard/reviews";
 import { formatRelative } from "@/lib/format";
 import { submitReview } from "@/lib/reviews/actions";
 import { REVIEW_INITIAL_STATE } from "@/lib/reviews/state";
-import { cn, pluralize } from "@/lib/utils";
+import { cn } from "@/lib/utils";
 
 /**
  * One finished repair, with the form to review it.
@@ -51,10 +52,11 @@ function RatingPicker({
 }) {
   const [hovered, setHovered] = useState(0);
   const active = hovered || value;
+  const t = useTranslations("dashboard.reviewCard");
 
   return (
     <fieldset className="flex flex-col gap-1.5">
-      <legend className="eyebrow mb-1.5">Your rating</legend>
+      <legend className="eyebrow mb-1.5">{t("yourRating")}</legend>
 
       <div className="flex items-center gap-1" onMouseLeave={() => setHovered(0)}>
         {[1, 2, 3, 4, 5].map((star) => (
@@ -81,7 +83,7 @@ function RatingPicker({
               )}
             />
             <span className="sr-only">
-              {star} {star === 1 ? "star" : "stars"}
+              {t("starCount", { count: star })}
             </span>
           </label>
         ))}
@@ -92,10 +94,11 @@ function RatingPicker({
 
 function SubmitButton() {
   const { pending } = useFormStatus();
+  const t = useTranslations("dashboard.reviewCard");
 
   return (
     <Button type="submit" size="sm" disabled={pending}>
-      {pending ? "Posting…" : "Post review"}
+      {pending ? t("posting") : t("postReview")}
     </Button>
   );
 }
@@ -113,6 +116,7 @@ export function ReviewPromptCard({
 }) {
   const [state, formAction] = useActionState(submitReview, REVIEW_INITIAL_STATE);
   const [rating, setRating] = useState(0);
+  const t = useTranslations("dashboard.reviewCard");
 
   const textId = `review-text-${booking.bookingId}`;
 
@@ -124,7 +128,7 @@ export function ReviewPromptCard({
             {booking.shopName}
           </p>
           <p className="pt-0.5 text-sm text-steel">
-            {booking.serviceName ?? "Repair"} ·{" "}
+            {booking.serviceName ?? t("repairFallback")} ·{" "}
             <span className="font-mono text-xs uppercase tracking-[0.06em] text-steel-soft">
               {booking.reference}
             </span>
@@ -136,7 +140,7 @@ export function ReviewPromptCard({
             dateTime={booking.finishedAt}
             className="font-mono text-eyebrow uppercase tracking-[0.14em] text-steel-soft"
           >
-            Finished {formatRelative(booking.finishedAt, now)}
+            {t("finished", { relative: formatRelative(booking.finishedAt, now) })}
           </time>
         ) : null}
       </div>
@@ -146,7 +150,7 @@ export function ReviewPromptCard({
         // are named rather than given their own cards that would overwrite
         // each other.
         <p className="pt-2 text-xs text-steel-soft">
-          Covers {pluralize(booking.alsoCount + 1, "repair")} with this shop.
+          {t("covers", { count: booking.alsoCount + 1 })}
         </p>
       ) : null}
 
@@ -158,15 +162,15 @@ export function ReviewPromptCard({
 
         <div className="flex flex-col gap-1.5 pt-4">
           <label htmlFor={textId} className="eyebrow">
-            What happened?{" "}
-            <span className="normal-case tracking-normal text-steel-soft">(optional)</span>
+            {t("textLabel")}{" "}
+            <span className="normal-case tracking-normal text-steel-soft">{t("optional")}</span>
           </label>
           <Textarea
             id={textId}
             name="text"
             rows={3}
             maxLength={4000}
-            placeholder="What did they fix, how long did it take, and would you go back?"
+            placeholder={t("textPlaceholder")}
           />
         </div>
 
@@ -188,7 +192,7 @@ export function ReviewPromptCard({
             className="mt-4 flex items-start gap-2 rounded-machined border border-verdigris/30 bg-verdigris-wash px-3 py-2.5 text-sm text-verdigris"
           >
             <CheckCircle2 aria-hidden className="mt-0.5 size-4 shrink-0" />
-            Thanks — your review of {booking.shopName} is live.
+            {t("success", { shopName: booking.shopName })}
           </p>
         ) : null}
 

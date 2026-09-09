@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import { revalidatePath } from "next/cache";
+import { getTranslations } from "next-intl/server";
 import { SearchX, Store } from "lucide-react";
 import { z } from "zod";
 
@@ -22,10 +23,13 @@ import { getOwnedShop } from "@/lib/dashboard/owned-shop";
 import { getCategories } from "@/lib/queries/search";
 import { createClient } from "@/lib/supabase/server";
 
-export const metadata: Metadata = {
-  title: "Find an expert",
-
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("dashboard.discover");
+  return {
+    title: t("metaTitle"),
+    robots: { index: false, follow: false },
+  };
+}
 
 const DISCOVER_PATH = "/dashboard/discover";
 
@@ -56,13 +60,15 @@ async function toggleSavedExpert(
 ): Promise<SaveExpertState> {
   "use server";
 
+  const t = await getTranslations("dashboard.discover");
+
   const parsed = SaveSchema.safeParse({
     fixerId: formData.get("fixerId"),
     saved: formData.get("saved"),
   });
 
   if (!parsed.success) {
-    return { saved: false, error: "We couldn't save that shop." };
+    return { saved: false, error: t("saveErrorGeneric") };
   }
 
   const wasSaved = parsed.data.saved === "1";
@@ -73,7 +79,7 @@ async function toggleSavedExpert(
   } = await supabase.auth.getUser();
 
   if (!user) {
-    return { saved: wasSaved, error: "Sign in to save shops." };
+    return { saved: wasSaved, error: t("saveErrorSignIn") };
   }
 
   const { error } = wasSaved
@@ -93,13 +99,13 @@ async function toggleSavedExpert(
     // The heart stays where the customer left it on failure — snapping it back
     // reads as "the shop vanished" rather than "that didn't save".
     if (error.code === "42501") {
-      return { saved: wasSaved, error: "You do not have permission to do that." };
+      return { saved: wasSaved, error: t("saveErrorPermission") };
     }
     console.error("[discover] toggle saved failed", {
       code: error.code,
       message: error.message,
     });
-    return { saved: wasSaved, error: "We couldn't save that shop. Try again in a moment." };
+    return { saved: wasSaved, error: t("saveErrorRetry") };
   }
 
   // The saved list is its own page, and the heart state is baked into the
@@ -154,17 +160,19 @@ export default async function DiscoverPage({
 
   const filtered = activeCount > 0;
 
+  const t = await getTranslations("dashboard.discover");
+
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        eyebrow="Discover"
-        title="Find an expert"
-        description="Every shop here is a real business with a real address. Filter down to what you need, then book a slot straight from the card."
+        eyebrow={t("eyebrow")}
+        title={t("title")}
+        description={t("description")}
         actions={
           <Button asChild variant="outline" size="sm">
             <Link href="/search">
               <Store aria-hidden />
-              Browse the map
+              {t("browseMap")}
             </Link>
           </Button>
         }
@@ -182,17 +190,24 @@ export default async function DiscoverPage({
           />
         </aside>
 
-        <section aria-label="Shops">
+        <section aria-label={t("shopsAria")}>
           <div className="flex flex-wrap items-baseline justify-between gap-2 pb-3">
             <p className="text-sm text-steel" aria-live="polite">
-              <span className="font-mono tabular-nums text-enamel">{visible.length}</span>{" "}
-              {visible.length === 1 ? "shop" : "shops"}
+              {t.rich("shopCount", {
+                count: visible.length,
+                c: (chunks) => (
+                  <span className="font-mono tabular-nums text-enamel">{chunks}</span>
+                ),
+              })}
               {filtered ? (
                 <>
                   {" "}
-                  matching{" "}
-                  <span className="font-mono tabular-nums text-enamel">{activeCount}</span>{" "}
-                  {activeCount === 1 ? "filter" : "filters"}
+                  {t.rich("filterMatch", {
+                    count: activeCount,
+                    c: (chunks) => (
+                      <span className="font-mono tabular-nums text-enamel">{chunks}</span>
+                    ),
+                  })}
                 </>
               ) : null}
             </p>
@@ -203,7 +218,7 @@ export default async function DiscoverPage({
                 owner's own card must not read as "there is no more to see". */}
             {experts.length >= DISCOVER_RESULT_LIMIT ? (
               <p className="text-xs text-steel-soft">
-                Showing the first {DISCOVER_RESULT_LIMIT}. Narrow the filters to see more.
+                {t("capMessage", { limit: DISCOVER_RESULT_LIMIT })}
               </p>
             ) : null}
           </div>
@@ -219,20 +234,16 @@ export default async function DiscoverPage({
           ) : (
             <EmptyState
               icon={SearchX}
-              title={filtered ? "Nothing matches those filters" : "No shops listed yet"}
-              description={
-                filtered
-                  ? "Try dropping the price ceiling or the rating floor — most shops quote on inspection rather than listing a price for every job."
-                  : "We're still signing up shops in your area. The public map covers a wider radius in the meantime."
-              }
+              title={filtered ? t("emptyFilteredTitle") : t("emptyTitle")}
+              description={filtered ? t("emptyFilteredDesc") : t("emptyDesc")}
               action={
                 filtered ? (
                   <Button asChild variant="outline" size="sm">
-                    <Link href={DISCOVER_PATH}>Clear filters</Link>
+                    <Link href={DISCOVER_PATH}>{t("clearFilters")}</Link>
                   </Button>
                 ) : (
                   <Button asChild variant="outline" size="sm">
-                    <Link href="/search">Browse the map</Link>
+                    <Link href="/search">{t("browseMap")}</Link>
                   </Button>
                 )
               }

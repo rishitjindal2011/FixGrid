@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import type { Metadata } from "next";
+import { getTranslations } from "next-intl/server";
+import { useTranslations } from "next-intl";
 import { ArrowLeft, FileWarning } from "lucide-react";
 
 import { PrintInvoiceButton } from "./print-button";
@@ -14,7 +16,6 @@ import { getCurrentUser } from "@/lib/auth/session";
 import { getInvoice, type InvoiceDetail } from "@/lib/dashboard/billing";
 import { formatDateLong, formatMoney, formatSlot } from "@/lib/format";
 import { SITE_NAME } from "@/lib/site";
-import { DELIVERY_MODE_LABELS } from "@/lib/types/marketplace";
 
 /**
  * The invoice timezone.
@@ -35,9 +36,11 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { reference } = await params;
 
-  return {
-    title: `Invoice ${reference}`,
+  const t = await getTranslations("dashboard.invoiceDetail");
 
+  return {
+    title: t("metaTitle", { reference }),
+    robots: { index: false, follow: false },
   };
 }
 
@@ -71,16 +74,17 @@ export default async function InvoicePage({
   const invoice = await getInvoice(user.id, reference);
 
   if (!invoice) {
+    const t = await getTranslations("dashboard.invoiceDetail");
     return (
       <div className="flex flex-col gap-6">
         <BackLink />
         <EmptyState
           icon={FileWarning}
-          title="Invoice not found"
-          description={`We could not find an invoice under ${reference} on your account. Check the reference, or open it from your billing history.`}
+          title={t("notFoundTitle")}
+          description={t("notFoundDesc", { reference })}
           action={
             <Button asChild variant="outline" size="sm">
-              <Link href="/dashboard/billing">Back to billing</Link>
+              <Link href="/dashboard/billing">{t("backToBilling")}</Link>
             </Button>
           }
         />
@@ -119,13 +123,14 @@ export default async function InvoicePage({
 }
 
 function BackLink() {
+  const t = useTranslations("dashboard.invoiceDetail");
   return (
     <Link
       href="/dashboard/billing"
       className="inline-flex items-center gap-1.5 font-mono text-eyebrow uppercase tracking-[0.14em] text-steel hover:text-enamel"
     >
       <ArrowLeft aria-hidden className="size-3.5" />
-      Billing
+      {t("billing")}
     </Link>
   );
 }
@@ -139,6 +144,8 @@ function InvoiceSheet({
   customerName: string;
   customerEmail: string | null;
 }) {
+  const t = useTranslations("dashboard.invoiceDetail");
+  const tDelivery = useTranslations("deliveryModes");
   const start = slotStart(invoice.slot);
   const end = slotEnd(invoice.slot);
 
@@ -150,12 +157,12 @@ function InvoiceSheet({
       {/* ── Letterhead ─────────────────────────────────────────────────── */}
       <header className="flex flex-wrap items-start justify-between gap-4 border-b border-hairline px-5 py-6 sm:px-8 print:border-black/40 print:px-0">
         <div>
-          <p className="eyebrow print:text-black">Invoice</p>
+          <p className="eyebrow print:text-black">{t("invoiceEyebrow")}</p>
           <h1 className="pt-2 font-mono text-2xl uppercase tracking-[0.06em] text-enamel print:text-black">
             {invoice.reference}
           </h1>
           <p className="pt-2 text-sm text-steel print:text-black">
-            Issued{" "}
+            {t("issued")}{" "}
             <time dateTime={invoice.date} className="font-mono tabular-nums">
               {formatDateLong(invoice.date, INVOICE_TZ)}
             </time>
@@ -176,7 +183,7 @@ function InvoiceSheet({
       {/* ── Parties ────────────────────────────────────────────────────── */}
       <div className="grid gap-6 border-b border-hairline px-5 py-6 sm:grid-cols-2 sm:px-8 print:border-black/20 print:px-0">
         <section>
-          <h2 className="eyebrow print:text-black">Billed to</h2>
+          <h2 className="eyebrow print:text-black">{t("billedTo")}</h2>
           <p className="pt-2.5 font-display text-base uppercase tracking-wide text-enamel print:text-black">
             {customerName}
           </p>
@@ -188,7 +195,7 @@ function InvoiceSheet({
         </section>
 
         <section>
-          <h2 className="eyebrow print:text-black">Repaired by</h2>
+          <h2 className="eyebrow print:text-black">{t("repairedBy")}</h2>
           <p className="pt-2.5 font-display text-base uppercase tracking-wide text-enamel print:text-black">
             {invoice.shopSlug ? (
               <>
@@ -212,16 +219,16 @@ function InvoiceSheet({
 
       {/* ── Line items ─────────────────────────────────────────────────── */}
       <div className="px-5 py-6 sm:px-8 print:px-0">
-        <h2 className="eyebrow print:text-black">Line items</h2>
+        <h2 className="eyebrow print:text-black">{t("lineItems")}</h2>
 
         <table className="mt-3 w-full border-collapse text-sm">
           <thead>
             <tr className="border-b border-hairline print:border-black/40">
               <th className="py-2 text-left font-mono text-eyebrow uppercase tracking-[0.14em] font-normal text-steel print:text-black">
-                Description
+                {t("colDescription")}
               </th>
               <th className="py-2 text-right font-mono text-eyebrow uppercase tracking-[0.14em] font-normal text-steel print:text-black">
-                Amount
+                {t("colAmount")}
               </th>
             </tr>
           </thead>
@@ -229,10 +236,10 @@ function InvoiceSheet({
             <tr className="border-b border-hairline print:border-black/20">
               <td className="py-3 pr-4 align-top text-enamel print:text-black">
                 <span className="block font-medium">
-                  {invoice.serviceName ?? "Repair"}
+                  {invoice.serviceName ?? t("repairFallback")}
                 </span>
                 <span className="block pt-1 text-xs text-steel print:text-black">
-                  {DELIVERY_MODE_LABELS[invoice.deliveryMode]}
+                  {tDelivery(invoice.deliveryMode)}
                   {start && end ? ` · ${formatSlot(start, end, INVOICE_TZ)}` : null}
                 </span>
               </td>
@@ -261,7 +268,7 @@ function InvoiceSheet({
       {/* ── Refunds ────────────────────────────────────────────────────── */}
       {invoice.refunds.length > 0 ? (
         <div className="border-t border-hairline px-5 py-6 sm:px-8 print:border-black/20 print:px-0">
-          <h2 className="eyebrow print:text-black">Refunds against this invoice</h2>
+          <h2 className="eyebrow print:text-black">{t("refundsAgainst")}</h2>
           <ul className="mt-3 flex flex-col gap-2">
             {invoice.refunds.map((refund) => (
               <li
@@ -285,10 +292,7 @@ function InvoiceSheet({
 
       <footer className="border-t border-hairline px-5 py-5 sm:px-8 print:border-black/40 print:px-0">
         <p className="max-w-prose text-xs leading-relaxed text-steel print:text-black">
-          Amounts are in {invoice.currency} and include the platform fee shown.
-          Payment is held until the warranty window on this repair closes. Keep
-          this invoice — its reference is what a shop or our support team will
-          ask for.
+          {t("footerNote", { currency: invoice.currency })}
         </p>
       </footer>
     </article>

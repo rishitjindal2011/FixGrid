@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ChevronRight } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { Badge } from "@/components/ui/badge";
 import {
@@ -29,20 +30,12 @@ import { cn } from "@/lib/utils";
  */
 
 /**
- * How each payment state is worded to the person who owes the money.
- *
- * `pending` is deliberately not "unpaid". Until the payment provider is wired
- * up no invoice has ever been presented for collection, so wording it as
- * arrears would accuse the customer of something that has not happened.
+ * How each payment state is worded to the person who owes the money lives in
+ * the `paymentStatuses` messages namespace. `pending` is deliberately not
+ * "unpaid": until the payment provider is wired up no invoice has ever been
+ * presented for collection, so wording it as arrears would accuse the customer
+ * of something that has not happened.
  */
-const PAYMENT_STATUS_LABELS: Record<PaymentStatus, string> = {
-  pending: "Awaiting payment",
-  authorized: "Authorised",
-  captured: "Paid",
-  refunded: "Refunded",
-  partially_refunded: "Part refunded",
-  failed: "Payment failed",
-};
 
 /**
  * Badge tone per payment state, following the token rule that signal orange is
@@ -70,30 +63,32 @@ export function PaymentStatusBadge({
   status: PaymentStatus;
   className?: string;
 }) {
+  const t = useTranslations("paymentStatuses");
   const tone = PAYMENT_STATUS_TONE[status];
 
   return (
     <Badge variant={tone.variant} className={cn(tone.className, className)}>
-      {PAYMENT_STATUS_LABELS[status]}
+      {t(status)}
     </Badge>
   );
 }
 
 export function InvoiceTable({ invoices }: { invoices: Invoice[] }) {
+  const t = useTranslations("dashboard.invoiceTable");
   return (
     <div className="overflow-hidden rounded-machined border border-hairline bg-chalk shadow-bench">
       <Table>
         <TableHeader>
           <TableRow className="hover:bg-transparent">
-            <TableHead>Date</TableHead>
-            <TableHead>Reference</TableHead>
-            <TableHead className="hidden sm:table-cell">Shop</TableHead>
-            <TableHead className="text-right">Total</TableHead>
-            <TableHead>Status</TableHead>
+            <TableHead>{t("colDate")}</TableHead>
+            <TableHead>{t("colReference")}</TableHead>
+            <TableHead className="hidden sm:table-cell">{t("colShop")}</TableHead>
+            <TableHead className="text-right">{t("colTotal")}</TableHead>
+            <TableHead>{t("colStatus")}</TableHead>
             {/* The chevron column is labelled for screen readers only — a
                 visible "Invoice" header above a row of chevrons is noise. */}
             <TableHead className="w-10">
-              <span className="sr-only">Invoice</span>
+              <span className="sr-only">{t("srInvoice")}</span>
             </TableHead>
           </TableRow>
         </TableHeader>
@@ -132,7 +127,7 @@ export function InvoiceTable({ invoices }: { invoices: Invoice[] }) {
                   className="inline-grid size-8 place-items-center rounded-machined text-steel-soft transition-colors hover:bg-bench hover:text-enamel"
                 >
                   <ChevronRight aria-hidden className="size-4" />
-                  <span className="sr-only">View invoice {invoice.reference}</span>
+                  <span className="sr-only">{t("viewInvoiceSr", { reference: invoice.reference })}</span>
                 </Link>
               </TableCell>
             </TableRow>
@@ -151,16 +146,17 @@ export function InvoiceTable({ invoices }: { invoices: Invoice[] }) {
  * would hide both the fact that something went wrong and when it was put right.
  */
 export function RefundTable({ refunds }: { refunds: RefundEntry[] }) {
+  const t = useTranslations("dashboard.invoiceTable");
   return (
     <div className="overflow-hidden rounded-machined border border-hairline bg-chalk shadow-bench">
       <Table>
         <TableHeader>
           <TableRow className="hover:bg-transparent">
-            <TableHead>Date</TableHead>
-            <TableHead>Reference</TableHead>
-            <TableHead className="hidden sm:table-cell">Shop</TableHead>
-            <TableHead className="hidden md:table-cell">Reason</TableHead>
-            <TableHead className="text-right">Refunded</TableHead>
+            <TableHead>{t("colDate")}</TableHead>
+            <TableHead>{t("colReference")}</TableHead>
+            <TableHead className="hidden sm:table-cell">{t("colShop")}</TableHead>
+            <TableHead className="hidden md:table-cell">{t("colReason")}</TableHead>
+            <TableHead className="text-right">{t("colRefunded")}</TableHead>
           </TableRow>
         </TableHeader>
 

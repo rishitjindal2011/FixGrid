@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import type { Metadata } from "next";
+import { getTranslations } from "next-intl/server";
+import { useTranslations } from "next-intl";
 import { CalendarDays, ChevronRight, Search } from "lucide-react";
 
 import { BookingBoard } from "@/components/dashboard/booking-board";
@@ -26,10 +28,13 @@ import {
   type BookingStatus,
 } from "@/lib/types/marketplace";
 
-export const metadata: Metadata = {
-  title: "Bookings",
-
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("dashboard.bookings");
+  return {
+    title: t("metaTitle"),
+    robots: { index: false, follow: false },
+  };
+}
 
 /**
  * Everything that is not live.
@@ -58,6 +63,7 @@ function historyDate(booking: CustomerBooking): string {
 }
 
 function HistoryRow({ booking }: { booking: CustomerBooking }) {
+  const t = useTranslations("dashboard.bookings");
   const href = `/dashboard/bookings/${booking.reference}`;
   const timeZone = booking.shop?.timezone ?? "Europe/London";
   const amount = booking.final_amount ?? booking.quoted_amount;
@@ -74,11 +80,11 @@ function HistoryRow({ booking }: { booking: CustomerBooking }) {
       </TableCell>
 
       <TableCell className="hidden max-w-[18ch] truncate sm:table-cell">
-        {booking.shop?.shop_name ?? "Shop removed"}
+        {booking.shop?.shop_name ?? t("shopRemoved")}
       </TableCell>
 
       <TableCell className="hidden max-w-[22ch] truncate md:table-cell text-steel">
-        {booking.service?.name ?? booking.device_details ?? "Repair"}
+        {booking.service?.name ?? booking.device_details ?? t("repairFallback")}
       </TableCell>
 
       <TableCell className="whitespace-nowrap font-mono text-sm tabular-nums text-steel">
@@ -100,7 +106,7 @@ function HistoryRow({ booking }: { booking: CustomerBooking }) {
       <TableCell className="w-10 text-right">
         <Link
           href={href}
-          aria-label={`Open booking ${booking.reference}`}
+          aria-label={t("openBookingAria", { reference: booking.reference })}
           className="inline-grid size-8 place-items-center rounded-machined text-steel-soft hover:bg-bench hover:text-signal"
         >
           <ChevronRight aria-hidden className="size-4" />
@@ -131,17 +137,19 @@ export default async function BookingsPage() {
 
   const nothingAtAll = active.length === 0 && history.length === 0;
 
+  const t = await getTranslations("dashboard.bookings");
+
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        eyebrow="Bookings"
-        title="Your repairs"
-        description="Everything on the go, stage by stage — and every job you have had done before."
+        eyebrow={t("eyebrow")}
+        title={t("title")}
+        description={t("description")}
         actions={
           <Button asChild variant="primary" size="sm">
             <Link href="/dashboard/discover">
               <Search aria-hidden />
-              Find an expert
+              {t("findExpert")}
             </Link>
           </Button>
         }
@@ -150,11 +158,11 @@ export default async function BookingsPage() {
       {nothingAtAll ? (
         <EmptyState
           icon={CalendarDays}
-          title="No bookings yet"
-          description="Find a shop that handles your device, send a request, and it will appear here — from first reply through to the end of the warranty."
+          title={t("emptyTitle")}
+          description={t("emptyDesc")}
           action={
             <Button asChild variant="primary" size="sm">
-              <Link href="/dashboard/discover">Find an expert</Link>
+              <Link href="/dashboard/discover">{t("findExpert")}</Link>
             </Button>
           }
         />
@@ -165,10 +173,10 @@ export default async function BookingsPage() {
               a screen reader announce the same words twice. */}
           <section>
             <SectionHeader
-              title="In progress"
+              title={t("inProgress")}
               action={
                 <span className="font-mono text-eyebrow uppercase tracking-[0.14em] text-steel-soft">
-                  {active.length} live
+                  {t("liveCount", { count: active.length })}
                 </span>
               }
             />
@@ -178,11 +186,11 @@ export default async function BookingsPage() {
             ) : (
               <EmptyState
                 icon={CalendarDays}
-                title="Nothing on the bench"
-                description="No live jobs right now. Your finished repairs are in the history below."
+                title={t("nothingBenchTitle")}
+                description={t("nothingBenchDesc")}
                 action={
                   <Button asChild variant="outline" size="sm">
-                    <Link href="/dashboard/discover">Book another repair</Link>
+                    <Link href="/dashboard/discover">{t("bookAnother")}</Link>
                   </Button>
                 }
               />
@@ -191,7 +199,7 @@ export default async function BookingsPage() {
 
           <section>
             <SectionHeader
-              title="History"
+              title={t("history")}
               action={
                 <span className="font-mono text-eyebrow uppercase tracking-[0.14em] text-steel-soft">
                   {history.length}
@@ -207,14 +215,14 @@ export default async function BookingsPage() {
                 <Table>
                   <TableHeader>
                     <TableRow className="hover:bg-transparent">
-                      <TableHead>Reference</TableHead>
-                      <TableHead className="hidden sm:table-cell">Shop</TableHead>
-                      <TableHead className="hidden md:table-cell">Service</TableHead>
-                      <TableHead>Date</TableHead>
-                      <TableHead className="text-right">Amount</TableHead>
-                      <TableHead>Status</TableHead>
+                      <TableHead>{t("colReference")}</TableHead>
+                      <TableHead className="hidden sm:table-cell">{t("colShop")}</TableHead>
+                      <TableHead className="hidden md:table-cell">{t("colService")}</TableHead>
+                      <TableHead>{t("colDate")}</TableHead>
+                      <TableHead className="text-right">{t("colAmount")}</TableHead>
+                      <TableHead>{t("colStatus")}</TableHead>
                       <TableHead>
-                        <span className="sr-only">Open</span>
+                        <span className="sr-only">{t("colOpen")}</span>
                       </TableHead>
                     </TableRow>
                   </TableHeader>
@@ -229,8 +237,8 @@ export default async function BookingsPage() {
             ) : (
               <EmptyState
                 icon={CalendarDays}
-                title="No finished jobs yet"
-                description="Once a repair is complete it moves down here, with its invoice and its warranty."
+                title={t("noFinishedTitle")}
+                description={t("noFinishedDesc")}
               />
             )}
           </section>

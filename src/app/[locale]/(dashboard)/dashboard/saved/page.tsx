@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import type { Metadata } from "next";
+import { getTranslations } from "next-intl/server";
 import { Heart, Search } from "lucide-react";
 
 import { EmptyState } from "@/components/dashboard/empty-state";
@@ -11,10 +12,13 @@ import { getCurrentUser } from "@/lib/auth/session";
 import { toggleSavedExpert } from "@/lib/bookings/actions";
 import { listSavedExperts } from "@/lib/dashboard/customer";
 
-export const metadata: Metadata = {
-  title: "Saved shops",
-
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("dashboard.saved");
+  return {
+    title: t("metaTitle"),
+    robots: { index: false, follow: false },
+  };
+}
 
 /**
  * Shops this customer has hearted.
@@ -32,23 +36,20 @@ export default async function SavedExpertsPage() {
   const user = await getCurrentUser();
   if (!user) redirect("/login?next=/dashboard/saved");
 
+  const t = await getTranslations("dashboard.saved");
   const saved = await listSavedExperts(user.id);
 
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        eyebrow="Your account"
-        title="Saved shops"
-        description={
-          saved.length > 0
-            ? "The shops you have kept. Book again without searching."
-            : "Shops you save are kept here, ready for the next repair."
-        }
+        eyebrow={t("eyebrow")}
+        title={t("title")}
+        description={saved.length > 0 ? t("descKept") : t("descEmpty")}
         actions={
           <Button asChild variant="outline" size="sm">
             <Link href="/dashboard/discover">
               <Search aria-hidden />
-              Find an expert
+              {t("findExpert")}
             </Link>
           </Button>
         }
@@ -57,11 +58,11 @@ export default async function SavedExpertsPage() {
       {saved.length === 0 ? (
         <EmptyState
           icon={Heart}
-          title="Nothing saved yet"
-          description="Tap the heart on any shop to keep it here. Handy for the ones you would use again."
+          title={t("emptyTitle")}
+          description={t("emptyDesc")}
           action={
             <Button asChild size="sm">
-              <Link href="/dashboard/discover">Browse shops</Link>
+              <Link href="/dashboard/discover">{t("browseShops")}</Link>
             </Button>
           }
         />

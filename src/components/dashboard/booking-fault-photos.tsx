@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { useTranslations } from "next-intl";
 import { Camera, ImageIcon, Loader2, X } from "lucide-react";
 
 import { FAULT_PHOTO_LIMITS } from "@/lib/bookings/attachments-client";
@@ -32,6 +33,7 @@ export function BookingFaultPhotos({
   className?: string;
 }) {
   const inputId = React.useId();
+  const t = useTranslations("dashboard.faultPhotos");
   const full = files.length >= FAULT_PHOTO_LIMITS.maxFiles;
 
   function handlePick(event: React.ChangeEvent<HTMLInputElement>) {
@@ -64,7 +66,7 @@ export function BookingFaultPhotos({
                 type="button"
                 onClick={() => removeAt(index)}
                 className="rounded p-0.5 text-steel hover:text-enamel"
-                aria-label={`Remove ${file.name}`}
+                aria-label={t("remove", { name: file.name })}
               >
                 <X aria-hidden className="size-3.5" />
               </button>
@@ -82,10 +84,13 @@ export function BookingFaultPhotos({
       >
         <Camera aria-hidden className="size-5 text-steel-soft" />
         <span className="text-sm text-enamel">
-          {full ? "Photo limit reached" : "Add photos of the fault (optional)"}
+          {full ? t("limitReached") : t("addPhotos")}
         </span>
         <span className="text-xs text-steel-soft">
-          Up to {FAULT_PHOTO_LIMITS.maxFiles} images · {formatBytes(FAULT_PHOTO_LIMITS.maxBytes)} each
+          {t("limits", {
+            max: FAULT_PHOTO_LIMITS.maxFiles,
+            size: formatBytes(FAULT_PHOTO_LIMITS.maxBytes),
+          })}
         </span>
         <input
           id={inputId}
@@ -99,7 +104,7 @@ export function BookingFaultPhotos({
       </label>
 
       <p className="text-xs text-steel-soft">
-        Photos upload when you send the request. The shop sees them on your booking.
+        {t("uploadHint")}
       </p>
     </div>
   );

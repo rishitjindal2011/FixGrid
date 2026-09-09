@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import type { Metadata } from "next";
+import { getTranslations } from "next-intl/server";
 import { ArrowLeft, BadgeCheck, MapPin, Phone, Store, Timer } from "lucide-react";
 
 import {
@@ -22,12 +23,15 @@ import { formatDuration } from "@/lib/format";
 import { resolveWeek } from "@/lib/hours";
 import { createClient } from "@/lib/supabase/server";
 import type { FixerProfileRow } from "@/lib/types/database";
-import { DELIVERY_MODE_LABELS, type DeliveryMode } from "@/lib/types/marketplace";
+import { type DeliveryMode } from "@/lib/types/marketplace";
 
-export const metadata: Metadata = {
-  title: "Book a repair",
-
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("dashboard.bookExpert");
+  return {
+    title: t("metaTitle"),
+    robots: { index: false, follow: false },
+  };
+}
 
 /** Mirrors the column defaults in `001_marketplace.sql`, for a pre-migration row. */
 const DEFAULTS = {
@@ -271,6 +275,9 @@ export default async function BookExpertPage({
     nowIso: now.toISOString(),
   };
 
+  const t = await getTranslations("dashboard.bookExpert");
+  const tDelivery = await getTranslations("deliveryModes");
+
   return (
     <div className="flex flex-col gap-6">
       <div>
@@ -279,7 +286,7 @@ export default async function BookExpertPage({
           className="inline-flex items-center gap-1.5 font-mono text-eyebrow uppercase tracking-[0.14em] text-steel hover:text-signal"
         >
           <ArrowLeft aria-hidden className="size-3.5" />
-          Find an expert
+          {t("findExpert")}
         </Link>
       </div>
 
@@ -288,13 +295,13 @@ export default async function BookExpertPage({
 
         <div className="relative flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div className="min-w-0">
-            <p className="eyebrow pb-2">Book a repair</p>
+            <p className="eyebrow pb-2">{t("eyebrow")}</p>
 
             <h1 className="flex flex-wrap items-center gap-2 font-display text-display-sm uppercase text-enamel">
               {profile.shop_name}
               {profile.verified ? (
                 <BadgeCheck
-                  aria-label="Verified shop"
+                  aria-label={t("verifiedShop")}
                   className="size-5 shrink-0 text-verdigris"
                 />
               ) : null}
@@ -312,7 +319,7 @@ export default async function BookExpertPage({
 
           <div className="flex shrink-0 flex-wrap items-center gap-2">
             <Button asChild variant="outline" size="sm">
-              <Link href={`/expert/${profile.slug}`}>View full profile</Link>
+              <Link href={`/expert/${profile.slug}`}>{t("viewProfile")}</Link>
             </Button>
           </div>
         </div>
@@ -323,15 +330,15 @@ export default async function BookExpertPage({
           {ownsThisShop ? (
             <EmptyState
               icon={Store}
-              title="This is your shop"
-              description={`You run ${profile.shop_name}, so you cannot book a repair with it. Requests from customers arrive in your shop dashboard.`}
+              title={t("ownTitle")}
+              description={t("ownDesc", { shopName: profile.shop_name })}
               action={
                 <div className="flex flex-wrap items-center justify-center gap-2">
                   <Button asChild variant="primary" size="sm">
-                    <Link href="/dashboard/expert/requests">View incoming requests</Link>
+                    <Link href="/dashboard/expert/requests">{t("viewRequests")}</Link>
                   </Button>
                   <Button asChild variant="outline" size="sm">
-                    <Link href="/dashboard/discover">Find another expert</Link>
+                    <Link href="/dashboard/discover">{t("findAnother")}</Link>
                   </Button>
                 </div>
               }
@@ -356,15 +363,15 @@ export default async function BookExpertPage({
           ) : (
             <EmptyState
               icon={Timer}
-              title="Not taking bookings right now"
-              description={`${profile.shop_name} has paused their online calendar. Their profile has a phone number and opening hours if it is urgent.`}
+              title={t("pausedTitle")}
+              description={t("pausedDesc", { shopName: profile.shop_name })}
               action={
                 <div className="flex flex-wrap items-center justify-center gap-2">
                   <Button asChild variant="primary" size="sm">
-                    <Link href={`/expert/${profile.slug}`}>Contact the shop</Link>
+                    <Link href={`/expert/${profile.slug}`}>{t("contactShop")}</Link>
                   </Button>
                   <Button asChild variant="outline" size="sm">
-                    <Link href="/dashboard/discover">Find another expert</Link>
+                    <Link href="/dashboard/discover">{t("findAnother")}</Link>
                   </Button>
                 </div>
               }
@@ -374,29 +381,31 @@ export default async function BookExpertPage({
 
         <aside className="flex flex-col gap-4 lg:col-span-2">
           <section className="rounded-machined border border-hairline bg-chalk p-5 shadow-bench">
-            <h2 className="eyebrow">What to expect</h2>
+            <h2 className="eyebrow">{t("whatToExpect")}</h2>
 
             <dl className="flex flex-col gap-3 pt-3 text-sm">
               <div>
-                <dt className="eyebrow pb-1">Typical reply</dt>
+                <dt className="eyebrow pb-1">{t("typicalReply")}</dt>
                 <dd className="font-mono tabular-nums text-enamel">
-                  Within {formatDuration(responseHours * 60)}
+                  {t("within", { duration: formatDuration(responseHours * 60) })}
                 </dd>
               </div>
 
               <div>
-                <dt className="eyebrow pb-1">Earliest slot</dt>
+                <dt className="eyebrow pb-1">{t("earliestSlot")}</dt>
                 <dd className="font-mono tabular-nums text-enamel">
-                  {leadHours > 0 ? `${formatDuration(leadHours * 60)} from now` : "Today"}
+                  {leadHours > 0
+                    ? t("fromNow", { duration: formatDuration(leadHours * 60) })
+                    : t("today")}
                 </dd>
               </div>
 
               <div>
-                <dt className="eyebrow pb-1">Ways to book</dt>
+                <dt className="eyebrow pb-1">{t("waysToBook")}</dt>
                 <dd className="flex flex-wrap gap-1.5 pt-0.5">
                   {shopDeliveryModes(profile).map((mode) => (
                     <Badge key={mode} variant="neutral">
-                      {DELIVERY_MODE_LABELS[mode]}
+                      {tDelivery(mode)}
                     </Badge>
                   ))}
                 </dd>
@@ -404,7 +413,7 @@ export default async function BookExpertPage({
 
               {profile.contact_phone ? (
                 <div>
-                  <dt className="eyebrow pb-1">Phone</dt>
+                  <dt className="eyebrow pb-1">{t("phone")}</dt>
                   <dd>
                     <a
                       href={`tel:${profile.contact_phone.replace(/\s+/g, "")}`}
@@ -421,7 +430,7 @@ export default async function BookExpertPage({
 
           {expert.categories.length > 0 ? (
             <section className="rounded-machined border border-hairline bg-chalk p-5 shadow-bench">
-              <h2 className="eyebrow">Works on</h2>
+              <h2 className="eyebrow">{t("worksOn")}</h2>
               <ul className="flex flex-wrap gap-1.5 pt-3">
                 {expert.categories.map((category) => (
                   <li key={category.id}>
@@ -433,8 +442,7 @@ export default async function BookExpertPage({
           ) : null}
 
           <p className="rounded-machined border border-hairline bg-bench px-4 py-3 text-xs leading-relaxed text-steel">
-            Requesting a booking does not charge you. The shop confirms the slot and the price
-            first, and you can cancel from your dashboard until they do.
+            {t("footerNote")}
           </p>
         </aside>
       </div>

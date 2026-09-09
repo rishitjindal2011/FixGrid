@@ -4,6 +4,7 @@ import * as React from "react";
 import Link from "next/link";
 import { useActionState } from "react";
 import { useFormStatus } from "react-dom";
+import { useTranslations } from "next-intl";
 import { AlertTriangle } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -83,6 +84,7 @@ function SubmitButton({
   className?: string;
 }) {
   const { pending } = useFormStatus();
+  const t = useTranslations("dashboard.bookingActions");
 
   return (
     <Button
@@ -92,7 +94,7 @@ function SubmitButton({
       disabled={pending}
       className={className}
     >
-      {pending ? "Working…" : action.label}
+      {pending ? t("working") : action.label}
     </Button>
   );
 }
@@ -134,6 +136,7 @@ function ConfirmForm({
     BOOKING_INITIAL_STATE,
   );
   const reasonId = React.useId();
+  const t = useTranslations("dashboard.bookingActions");
 
   return (
     <form action={formAction}>
@@ -151,7 +154,7 @@ function ConfirmForm({
         {action.needsReason ? (
           <div className="flex flex-col gap-1.5">
             <label htmlFor={reasonId} className="eyebrow">
-              Reason — required
+              {t("reasonRequired")}
             </label>
             <Textarea
               id={reasonId}
@@ -159,10 +162,10 @@ function ConfirmForm({
               rows={3}
               required
               maxLength={2000}
-              placeholder="A line on why. The shop sees this, and it is kept on the job's record."
+              placeholder={t("reasonPlaceholder")}
             />
             <p className="text-xs text-steel">
-              This is stored on the booking&apos;s timeline and cannot be edited afterwards.
+              {t("reasonStored")}
             </p>
           </div>
         ) : null}
@@ -173,7 +176,7 @@ function ConfirmForm({
       <DialogFooter>
         <DialogClose asChild>
           <Button type="button" variant="outline" size="sm">
-            Back
+            {t("back")}
           </Button>
         </DialogClose>
         <SubmitButton action={action} />

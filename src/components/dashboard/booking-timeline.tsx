@@ -15,14 +15,17 @@ import { cn } from "@/lib/utils";
  * question of who that is. Both render without an actor, and the sentence is
  * written to still read: "Expired" rather than "Nobody expired this".
  */
-function actorLabel(role: BookingTimelineEvent["actorRole"]): string | null {
+function actorLabel(
+  role: BookingTimelineEvent["actorRole"],
+  t: (key: string) => string,
+): string | null {
   switch (role) {
     case "customer":
-      return "You";
+      return t("actorYou");
     case "shop":
-      return "The shop";
+      return t("actorShop");
     case "admin":
-      return "Our team";
+      return t("actorAdmin");
     default:
       return null;
   }
@@ -41,17 +44,18 @@ function actorLabel(role: BookingTimelineEvent["actorRole"]): string | null {
 function headline(
   event: BookingTimelineEvent,
   tStatus: (key: string) => string,
+  t: (key: string, values?: Record<string, string>) => string,
 ): string {
-  if (!event.toStatus) return "Booking updated";
+  if (!event.toStatus) return t("bookingUpdated");
 
   const label = tStatus(event.toStatus).toLowerCase();
-  const who = actorLabel(event.actorRole);
+  const who = actorLabel(event.actorRole, t);
 
   if (!event.fromStatus) {
-    return who ? `${who} sent this request` : "Request sent";
+    return who ? t("sentRequestWho", { who }) : t("requestSent");
   }
 
-  return who ? `${who} moved this to ${label}` : `Moved to ${label}`;
+  return who ? t("movedToWho", { who, status: label }) : t("movedTo", { status: label });
 }
 
 const DOT_CLASS = {
@@ -84,13 +88,14 @@ export function BookingTimeline({
   timeZone: string;
 }) {
   const tStatus = useTranslations("statuses");
+  const t = useTranslations("dashboard.bookingTimeline");
 
   if (events.length === 0) {
     return (
       <EmptyState
         icon={History}
-        title="Nothing recorded yet"
-        description="Every accept, quote, start and completion on this job is logged here as it happens."
+        title={t("emptyTitle")}
+        description={t("emptyDesc")}
       />
     );
   }
@@ -122,7 +127,7 @@ export function BookingTimeline({
             />
 
             <div className="min-w-0 flex-1">
-              <p className="text-sm leading-snug text-enamel">{headline(event, tStatus)}</p>
+              <p className="text-sm leading-snug text-enamel">{headline(event, tStatus, t)}</p>
 
               {event.note?.trim() ? (
                 <p className="mt-1.5 border-l-2 border-hairline pl-3 text-sm leading-relaxed text-steel">

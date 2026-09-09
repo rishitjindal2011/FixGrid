@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import type { Metadata } from "next";
+import { useTranslations } from "next-intl";
+import { getTranslations } from "next-intl/server";
 import { BadgeCheck, PenLine, Star } from "lucide-react";
 
 import { EmptyState } from "@/components/dashboard/empty-state";
@@ -12,12 +14,14 @@ import { Button } from "@/components/ui/button";
 import { getCurrentUser } from "@/lib/auth/session";
 import { listMyReviews, listReviewableBookings, type MyReview } from "@/lib/dashboard/reviews";
 import { formatDateLong } from "@/lib/format";
-import { pluralize } from "@/lib/utils";
 
-export const metadata: Metadata = {
-  title: "Reviews",
-
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("dashboard.reviews");
+  return {
+    title: t("metaTitle"),
+    robots: { index: false, follow: false },
+  };
+}
 
 /**
  * The customer's review centre: what they owe, then what they have written.
@@ -39,21 +43,23 @@ export default async function ReviewsPage() {
     listMyReviews(user.id),
   ]);
 
+  const t = await getTranslations("dashboard.reviews");
+
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        eyebrow="Reviews"
-        title="Your reviews"
-        description="Rate the shops that have finished a repair for you, and read back what you have written."
+        eyebrow={t("eyebrow")}
+        title={t("title")}
+        description={t("description")}
       />
 
       <section>
         <SectionHeader
-          title="Awaiting your review"
+          title={t("awaitingTitle")}
           action={
             reviewable.length > 0 ? (
               <span className="font-mono text-eyebrow uppercase tracking-[0.14em] text-signal">
-                {pluralize(reviewable.length, "shop")}
+                {t("shopCount", { count: reviewable.length })}
               </span>
             ) : null
           }
@@ -68,11 +74,11 @@ export default async function ReviewsPage() {
         ) : (
           <EmptyState
             icon={PenLine}
-            title="Nothing waiting"
-            description="When a repair is finished, the shop that did it turns up here for a rating. One review per shop — a second job with the same shop updates the review you already left."
+            title={t("emptyAwaitingTitle")}
+            description={t("emptyAwaitingDesc")}
             action={
               <Button asChild variant="outline" size="sm">
-                <Link href="/dashboard/bookings">See your bookings</Link>
+                <Link href="/dashboard/bookings">{t("seeBookings")}</Link>
               </Button>
             }
           />
@@ -81,11 +87,11 @@ export default async function ReviewsPage() {
 
       <section>
         <SectionHeader
-          title="Your reviews"
+          title={t("yoursTitle")}
           action={
             myReviews.length > 0 ? (
               <span className="font-mono text-eyebrow uppercase tracking-[0.14em] text-steel-soft">
-                {pluralize(myReviews.length, "review")}
+                {t("reviewCount", { count: myReviews.length })}
               </span>
             ) : null
           }
@@ -100,11 +106,11 @@ export default async function ReviewsPage() {
         ) : (
           <EmptyState
             icon={Star}
-            title="You have not written a review yet"
-            description="Reviews are what the next person reads before trusting a shop with something broken. Yours carries more weight than you think."
+            title={t("emptyYoursTitle")}
+            description={t("emptyYoursDesc")}
             action={
               <Button asChild variant="outline" size="sm">
-                <Link href="/dashboard/discover">Find an expert</Link>
+                <Link href="/dashboard/discover">{t("findExpert")}</Link>
               </Button>
             }
           />
@@ -115,6 +121,7 @@ export default async function ReviewsPage() {
 }
 
 function MyReviewCard({ review }: { review: MyReview }) {
+  const t = useTranslations("dashboard.reviews");
   // `updated_at` moves on the upsert, so a review that has been rewritten
   // should say when it was rewritten rather than when it was first posted.
   const edited = review.updatedAt > review.createdAt;
@@ -134,7 +141,7 @@ function MyReviewCard({ review }: { review: MyReview }) {
           {review.verified ? (
             <Badge variant="verified">
               <BadgeCheck aria-hidden />
-              Verified booking
+              {t("verifiedBooking")}
             </Badge>
           ) : null}
         </div>
@@ -143,7 +150,7 @@ function MyReviewCard({ review }: { review: MyReview }) {
           dateTime={shownAt}
           className="font-mono text-eyebrow uppercase tracking-[0.14em] text-steel-soft"
         >
-          {edited ? "Updated " : null}
+          {edited ? t("updatedPrefix") : null}
           {formatDateLong(shownAt)}
         </time>
       </div>
@@ -162,7 +169,7 @@ function MyReviewCard({ review }: { review: MyReview }) {
         <p className="max-w-prose pt-3 leading-relaxed text-steel">{review.text}</p>
       ) : (
         <p className="pt-3 text-sm italic text-steel-soft">
-          You left a rating without a written review.
+          {t("noText")}
         </p>
       )}
 
@@ -171,7 +178,7 @@ function MyReviewCard({ review }: { review: MyReview }) {
           href={`/expert/${review.slug}`}
           className="font-mono text-eyebrow uppercase tracking-[0.14em] text-signal hover:underline"
         >
-          Edit on the shop&rsquo;s page
+          {t("editOnShop")}
         </Link>
       </p>
     </li>

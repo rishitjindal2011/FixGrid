@@ -143,6 +143,7 @@ export function BookingForm({
   addresses,
 }: BookingFormProps) {
   const router = useRouter();
+  const t = useTranslations("dashboard.bookingForm");
   const tDelivery = useTranslations("deliveryModes");
   const [state, setState] = React.useState(BOOKING_INITIAL_STATE);
   const [pending, setPending] = React.useState(false);
@@ -322,11 +323,11 @@ export function BookingForm({
       <input type="hidden" name="slotEnd" value={selected ? selected.end.toISOString() : ""} />
 
       {/* ── What ───────────────────────────────────────────────────────────── */}
-      <Panel step={1} title="What needs fixing">
+      <Panel step={1} title={t("panelWhatTitle")}>
         {services.length > 0 ? (
           <div className="flex flex-col gap-1.5">
             <label htmlFor="booking-service" className="eyebrow">
-              Service
+              {t("serviceLabel")}
             </label>
             <Select
               id="booking-service"
@@ -347,8 +348,7 @@ export function BookingForm({
           </div>
         ) : (
           <p className="text-sm leading-relaxed text-steel">
-            This shop has not published a price list yet. Describe the fault below and they
-            will quote you on inspection.
+            {t("noPriceList")}
           </p>
         )}
 
@@ -360,7 +360,7 @@ export function BookingForm({
           className="grid grid-cols-2 gap-3 rounded-machined border border-hairline bg-bench p-3 sm:grid-cols-3"
         >
           <div>
-            <dt className="eyebrow pb-1">Price</dt>
+            <dt className="eyebrow pb-1">{t("priceLabel")}</dt>
             <dd className="font-mono text-lg leading-none tabular-nums text-enamel">
               {service
                 ? formatPriceRange(
@@ -369,31 +369,32 @@ export function BookingForm({
                     service.priceMax,
                     service.currency,
                   )
-                : "On quote"}
+                : t("onQuote")}
             </dd>
           </div>
           <div>
-            <dt className="eyebrow pb-1">Time booked</dt>
+            <dt className="eyebrow pb-1">{t("timeBookedLabel")}</dt>
             <dd className="flex items-center gap-1.5 font-mono text-lg leading-none tabular-nums text-enamel">
               <Clock aria-hidden className="size-4 text-steel-soft" />
               {formatDuration(durationMinutes)}
             </dd>
           </div>
           <div>
-            <dt className="eyebrow pb-1">Warranty</dt>
+            <dt className="eyebrow pb-1">{t("warrantyLabel")}</dt>
             <dd className="flex items-center gap-1.5 font-mono text-lg leading-none tabular-nums text-enamel">
               <ShieldCheck aria-hidden className="size-4 text-steel-soft" />
-              {warrantyDays > 0 ? `${warrantyDays} days` : "None listed"}
+              {warrantyDays > 0
+                ? t("warrantyDaysValue", { days: warrantyDays })
+                : t("warrantyNone")}
             </dd>
           </div>
         </dl>
 
         <p className="flex items-start justify-between gap-3 rounded-machined border border-hairline bg-chalk px-3 py-2.5 text-sm">
           <span className="text-steel">
-            Booking fee
+            {t("bookingFeeLabel")}
             <span className="block pt-0.5 text-xs leading-relaxed text-steel-soft">
-              Taken from your balance when you send this request. The repair itself is
-              quoted by the shop and charged separately.
+              {t("bookingFeeHint")}
             </span>
           </span>
           <span className="shrink-0 font-mono tabular-nums text-enamel">
@@ -408,15 +409,14 @@ export function BookingForm({
           a lie the customer discovers in their statement.
         */}
         <p className="text-xs leading-relaxed text-steel-soft">
-          The repair price is not charged now. The shop confirms it before any work
-          starts.
+          {t("repairNotCharged")}
         </p>
       </Panel>
 
       {/* ── How ────────────────────────────────────────────────────────────── */}
-      <Panel step={2} title="How it gets fixed">
+      <Panel step={2} title={t("panelHowTitle")}>
         <fieldset>
-          <legend className="sr-only">Delivery arrangement</legend>
+          <legend className="sr-only">{t("deliveryLegend")}</legend>
           <div className="grid gap-2 sm:grid-cols-3">
             {modes.map((mode) => (
               <label key={mode} className="block">
@@ -449,8 +449,8 @@ export function BookingForm({
           <div className="grid gap-3 border-t border-hairline pt-4 sm:grid-cols-2">
             <p className="text-xs leading-relaxed text-steel sm:col-span-2">
               {deliveryMode === "home_visit"
-                ? "Where should the shop come to?"
-                : "Where should the shop collect from and return to?"}
+                ? t("addressPromptHome")
+                : t("addressPromptPickup")}
             </p>
 
             {/* Saved addresses first, so the common case is one click. Picking
@@ -459,7 +459,7 @@ export function BookingForm({
                 `createBooking` needs no knowledge of the address book. */}
             {addresses.length > 0 ? (
               <fieldset className="sm:col-span-2">
-                <legend className="eyebrow pb-1.5 text-steel">Saved addresses</legend>
+                <legend className="eyebrow pb-1.5 text-steel">{t("savedAddresses")}</legend>
 
                 <div className="flex flex-col gap-1.5">
                   {addresses.map((address) => (
@@ -482,8 +482,8 @@ export function BookingForm({
                       />
                       <span className="min-w-0">
                         <span className="block font-display text-xs uppercase tracking-wide text-enamel">
-                          {address.label ?? "Address"}
-                          {address.isDefault ? " · default" : ""}
+                          {address.label ?? t("addressFallbackLabel")}
+                          {address.isDefault ? ` · ${t("defaultTag")}` : ""}
                         </span>
                         <span className="block pt-0.5 text-xs text-steel">{address.oneLine}</span>
                       </span>
@@ -507,7 +507,7 @@ export function BookingForm({
                       className="size-3.5 accent-signal"
                     />
                     <span className="font-display text-xs uppercase tracking-wide">
-                      A different address
+                      {t("differentAddress")}
                     </span>
                   </label>
                 </div>
@@ -531,11 +531,11 @@ export function BookingForm({
                     defaultChecked
                     className="size-3.5 accent-signal"
                   />
-                  Save this address for next time
+                  {t("saveAddress")}
                 </label>
               ) : null}
 
-                <Field id="booking-line1" label="Address line 1" className="sm:col-span-2">
+                <Field id="booking-line1" label={t("addressLine1")} className="sm:col-span-2">
                 <Input
                   id="booking-line1"
                   name="addressLine1"
@@ -547,7 +547,7 @@ export function BookingForm({
                 />
               </Field>
 
-              <Field id="booking-line2" label="Address line 2" className="sm:col-span-2">
+              <Field id="booking-line2" label={t("addressLine2")} className="sm:col-span-2">
                 <Input
                   id="booking-line2"
                   name="addressLine2"
@@ -558,7 +558,7 @@ export function BookingForm({
                 />
               </Field>
 
-              <Field id="booking-city" label="Town or city">
+              <Field id="booking-city" label={t("townCity")}>
                 <Input
                   id="booking-city"
                   name="addressCity"
@@ -569,7 +569,7 @@ export function BookingForm({
                 />
               </Field>
 
-              <Field id="booking-postcode" label="Postcode">
+              <Field id="booking-postcode" label={t("postcode")}>
                 <Input
                   id="booking-postcode"
                   name="addressPostcode"
@@ -588,7 +588,7 @@ export function BookingForm({
       {/* ── When ───────────────────────────────────────────────────────────── */}
       <Panel
         step={3}
-        title="When"
+        title={t("panelWhenTitle")}
         aside={
           selected ? (
             <span className="font-mono text-xs tabular-nums text-signal">
@@ -607,35 +607,35 @@ export function BookingForm({
 
         {hasTimes ? (
           <p className="text-xs text-steel-soft">
-            Times are the shop&rsquo;s local clock. Struck-through times are already taken.
+            {t("slotHint")}
           </p>
         ) : null}
       </Panel>
 
       {/* ── Detail ─────────────────────────────────────────────────────────── */}
-      <Panel step={4} title="Tell the shop about it">
-        <Field id="booking-device" label="Device and fault">
+      <Panel step={4} title={t("panelDetailTitle")}>
+        <Field id="booking-device" label={t("deviceLabel")}>
           <Textarea
             id="booking-device"
             name="deviceDetails"
             rows={4}
             required
             maxLength={2000}
-            placeholder="Make, model and what it is doing — e.g. iPhone 13, screen cracked bottom-right, touch still works."
+            placeholder={t("devicePlaceholder")}
           />
         </Field>
 
-        <Field id="booking-notes" label="Anything else (optional)">
+        <Field id="booking-notes" label={t("notesLabel")}>
           <Textarea
             id="booking-notes"
             name="customerNotes"
             rows={3}
             maxLength={2000}
-            placeholder="Parking, access, a deadline you are working to."
+            placeholder={t("notesPlaceholder")}
           />
         </Field>
 
-        <Field id="booking-photos" label="Photos of the fault (optional)">
+        <Field id="booking-photos" label={t("photosLabel")}>
           <BookingFaultPhotos files={faultPhotos} onChange={setFaultPhotos} disabled={pending} />
         </Field>
       </Panel>
@@ -653,16 +653,16 @@ export function BookingForm({
       <div className="flex flex-wrap items-center gap-3">
         <Button type="submit" disabled={pending || !selected}>
           <CalendarCheck aria-hidden />
-          {pending ? "Sending request…" : "Request this booking"}
+          {pending ? t("sending") : t("submit")}
         </Button>
 
         {/* Says which step is outstanding rather than leaving a dead button. */}
         <p aria-live="polite" className="text-xs text-steel">
           {selected
-            ? `${shopName} will confirm before any work starts.`
+            ? t("hintSelected", { shopName })
             : hasTimes
-              ? "Pick a time above to send your request."
-              : "No times are bookable right now — try a shorter service or message the shop."}
+              ? t("hintPickTime")
+              : t("hintNoTimes")}
         </p>
       </div>
 
@@ -672,8 +672,8 @@ export function BookingForm({
           onClose={() => setHeld(null)}
           amountMinor={platformFeeMinor}
           balanceMinor={balanceMinor}
-          title="Booking fee"
-          description={`${shopName} confirms the price and the slot before any work starts. This fee is returned in full if they decline or do not answer.`}
+          title={t("bookingFeeLabel")}
+          description={t("paymentSheetDesc", { shopName })}
           purchaseFields={{}}
           /* The booking itself is the purchase, and this form owns it — including
              the photo uploads that follow a successful insert. The sheet only
@@ -748,6 +748,7 @@ function Field({
  * it, and it is what the customer quotes if they ring the shop.
  */
 function RequestSent({ shopName, message }: { shopName: string; message?: string }) {
+  const t = useTranslations("dashboard.bookingForm");
   return (
     <section
       role="status"
@@ -758,19 +759,18 @@ function RequestSent({ shopName, message }: { shopName: string; message?: string
       </span>
 
       <h2 className="pt-3 font-display text-lg uppercase tracking-wide text-enamel">
-        Request sent
+        {t("requestSentTitle")}
       </h2>
       <p className="mx-auto max-w-sm pt-2 text-sm leading-relaxed text-steel">
-        {message ?? `Your request is with ${shopName}.`} They will confirm the time and the
-        price before any work starts.
+        {message ?? t("requestWithShop", { shopName })} {t("requestSentBody")}
       </p>
 
       <div className="flex flex-wrap items-center justify-center gap-2 pt-4">
         <Button asChild variant="primary" size="sm">
-          <Link href="/dashboard/bookings">Track this booking</Link>
+          <Link href="/dashboard/bookings">{t("trackBooking")}</Link>
         </Button>
         <Button asChild variant="outline" size="sm">
-          <Link href="/dashboard/discover">Back to the directory</Link>
+          <Link href="/dashboard/discover">{t("backToDirectory")}</Link>
         </Button>
       </div>
     </section>

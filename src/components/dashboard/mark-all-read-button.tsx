@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
+import { useTranslations } from "next-intl";
 import { CheckCheck } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -16,6 +17,7 @@ import { BOOKING_INITIAL_STATE } from "@/lib/bookings/state";
  * error — the user's next move is to click it again.
  */
 export function MarkAllReadButton({ disabled }: { disabled?: boolean }) {
+  const t = useTranslations("dashboard.notifications");
   const [state, action, pending] = useActionState(
     () => markAllNotificationsRead(),
     BOOKING_INITIAL_STATE,
@@ -25,7 +27,7 @@ export function MarkAllReadButton({ disabled }: { disabled?: boolean }) {
     <form action={action} className="flex flex-col items-end gap-1">
       <Button type="submit" variant="outline" size="sm" disabled={disabled || pending}>
         <CheckCheck aria-hidden className="size-4" />
-        {pending ? "Marking…" : "Mark all read"}
+        {pending ? t("markingRead") : t("markAllRead")}
       </Button>
 
       {state.error ? (
