@@ -111,58 +111,62 @@ const METRO_HUBS = [
   {
     city: "Delhi NCR",
     hubs: [
-      { name: "Laptop & MacBooks", path: "/delhi/laptop-repair" },
-      { name: "Smartphone Repair", path: "/delhi/mobile-repair" },
-      { name: "Smart TV & Display", path: "/noida/tv-repair" },
-      { name: "AC & PCB Repair", path: "/gurugram/macbook-screen-repair" },
-      { name: "Refrigerator Service", path: "/ghaziabad/refrigerator-compressor-repair" },
+      { name: "Laptop & MacBooks", path: "/repair/laptops-delhi" },
+      { name: "Smartphone Repair", path: "/repair/phones-delhi" },
+      { name: "Smart TV & Display", path: "/repair/televisions-delhi" },
+      { name: "Home Appliances", path: "/repair/appliances-delhi" },
+      { name: "Audio Equipment", path: "/repair/audio-equipment-delhi" },
+      { name: "Desktop PCs", path: "/repair/desktops-delhi" },
     ],
   },
   {
     city: "Bengaluru",
     hubs: [
-      { name: "MacBook Retina Lab", path: "/bengaluru/macbook-screen-repair" },
-      { name: "Precision Laptop Care", path: "/bengaluru/laptop-repair" },
-      { name: "iPhone Battery Calibration", path: "/bengaluru/iphone-battery-replacement" },
-      { name: "Inverter & PCB Repair", path: "/bengaluru/pcb-repair" },
-      { name: "Drone & Robotics", path: "/bengaluru/drone-motor-replacement" },
+      { name: "Precision Laptop Care", path: "/repair/laptops-bengaluru" },
+      { name: "Smartphone Repair", path: "/repair/phones-bengaluru" },
+      { name: "Audio & Hi-Fi", path: "/repair/audio-equipment-bengaluru" },
+      { name: "Desktop Workstations", path: "/repair/desktops-bengaluru" },
+      { name: "Home Appliances", path: "/repair/appliances-bengaluru" },
+      { name: "Gaming Consoles", path: "/repair/consoles-bengaluru" },
     ],
   },
   {
     city: "Mumbai & Thane",
     hubs: [
-      { name: "Laptop Motherboards", path: "/mumbai/laptop-repair" },
-      { name: "Phone Screen & Glass", path: "/mumbai/mobile-repair" },
-      { name: "Washing Machines", path: "/thane/washing-machine-repair" },
-      { name: "Console & PS5 HDMI", path: "/mumbai/playstation-hdmi-repair" },
-      { name: "Camera & Optics", path: "/mumbai/camera-repair" },
+      { name: "Laptop Motherboards", path: "/repair/laptops-mumbai" },
+      { name: "Phone Screen & Glass", path: "/repair/phones-mumbai" },
+      { name: "Home Appliances", path: "/repair/appliances-mumbai" },
+      { name: "Gaming Consoles", path: "/repair/consoles-mumbai" },
+      { name: "Camera & Optics", path: "/repair/cameras-mumbai" },
+      { name: "TV & Display", path: "/repair/televisions-mumbai" },
     ],
   },
   {
     city: "Pune",
     hubs: [
-      { name: "Laptop & Ultrabooks", path: "/pune/laptop-repair" },
-      { name: "Smartphone Diagnostics", path: "/pune/mobile-repair" },
-      { name: "Inverter Board Repair", path: "/pune/inverter-pcb-repair" },
-      { name: "E-Bikes & Cycles", path: "/pune/bicycle-repair" },
+      { name: "Laptop & Ultrabooks", path: "/repair/laptops-pune" },
+      { name: "Smartphone Diagnostics", path: "/repair/phones-pune" },
+      { name: "Home Appliances", path: "/repair/appliances-pune" },
+      { name: "Bicycles & E-Bikes", path: "/repair/bicycles-pune" },
     ],
   },
   {
     city: "Hyderabad",
     hubs: [
-      { name: "Laptop Chip-Level", path: "/hyderabad/laptop-repair" },
-      { name: "Mobile Screen Replacement", path: "/hyderabad/mobile-repair" },
-      { name: "Inverter AC Diagnostics", path: "/hyderabad/ac-service" },
-      { name: "Secunderabad Hub", path: "/secunderabad/electronics-repair" },
+      { name: "Laptop Chip-Level", path: "/repair/laptops-hyderabad" },
+      { name: "Mobile Screen Replacement", path: "/repair/phones-hyderabad" },
+      { name: "Home Appliances", path: "/repair/appliances-hyderabad" },
+      { name: "TV & Display", path: "/repair/televisions-hyderabad" },
+      { name: "Desktop Systems", path: "/repair/desktops-hyderabad" },
     ],
   },
   {
     city: "Chennai",
     hubs: [
-      { name: "Laptop & Display Labs", path: "/chennai/laptop-repair" },
-      { name: "Phone Motherboard Care", path: "/chennai/mobile-repair" },
-      { name: "Gaming Console Ports", path: "/chennai/playstation-hdmi-repair" },
-      { name: "Drone Brushless Motors", path: "/chennai/drone-motor-replacement" },
+      { name: "Laptop & Display Labs", path: "/repair/laptops-chennai" },
+      { name: "Phone Motherboard Care", path: "/repair/phones-chennai" },
+      { name: "Home Appliances", path: "/repair/appliances-chennai" },
+      { name: "Camera & Optics", path: "/repair/cameras-chennai" },
     ],
   },
 ];
@@ -805,9 +809,9 @@ export default async function HomePage() {
                         <span>
                           {post.published_at
                             ? new Date(post.published_at).toLocaleDateString("en-IN", {
-                                month: "short",
-                                day: "numeric",
-                              })
+                              month: "short",
+                              day: "numeric",
+                            })
                             : "Guide"}
                         </span>
                         <span>{readTime} min read</span>
@@ -834,7 +838,7 @@ export default async function HomePage() {
       {/* ── 11. AEO FAQ Section ───────────────────────────────────────────── */}
       <FaqSection
         eyebrow="Answer Engine & Knowledge Hub"
-        heading="Frequently Asked Questions (AEO)"
+        heading="Frequently Asked Questions"
         intro="Direct answers for search engines and consumers on repair authenticity, smart escrow mechanisms, verified bench diagnostics, and warranty guarantees."
       />
 

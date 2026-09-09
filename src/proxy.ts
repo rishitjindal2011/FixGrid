@@ -83,7 +83,46 @@ async function loadRedirects(request: NextRequest): Promise<Map<string, Redirect
       .select("source_url, destination_url, status_code")
       .limit(2000);
 
-    if (error) throw new Error(error.message);
+    const COMMON_CITY_REDIRECTS: Record<string, string> = {
+      "/delhi/laptop-repair": "/repair/laptops-delhi",
+      "/delhi/mobile-repair": "/repair/phones-delhi",
+      "/delhi/phone-repair": "/repair/phones-delhi",
+      "/noida/tv-repair": "/repair/televisions-delhi",
+      "/gurugram/macbook-screen-repair": "/repair/macbook-screen-repair",
+      "/ghaziabad/refrigerator-compressor-repair": "/repair/refrigerator-compressor-repair",
+      "/bengaluru/macbook-screen-repair": "/repair/macbook-screen-repair",
+      "/bengaluru/laptop-repair": "/repair/laptops-bengaluru",
+      "/bengaluru/mobile-repair": "/repair/phones-bengaluru",
+      "/bengaluru/phone-repair": "/repair/phones-bengaluru",
+      "/bengaluru/iphone-battery-replacement": "/repair/iphone-battery-replacement",
+      "/bengaluru/pcb-repair": "/repair/inverter-pcb-repair",
+      "/bengaluru/drone-motor-replacement": "/repair/drone-motor-replacement",
+      "/mumbai/laptop-repair": "/repair/laptops-mumbai",
+      "/mumbai/mobile-repair": "/repair/phones-mumbai",
+      "/mumbai/phone-repair": "/repair/phones-mumbai",
+      "/thane/washing-machine-repair": "/repair/appliances-mumbai",
+      "/mumbai/playstation-hdmi-repair": "/repair/playstation-hdmi-repair",
+      "/mumbai/camera-repair": "/repair/cameras-mumbai",
+      "/pune/laptop-repair": "/repair/laptops-pune",
+      "/pune/mobile-repair": "/repair/phones-pune",
+      "/pune/phone-repair": "/repair/phones-pune",
+      "/pune/inverter-pcb-repair": "/repair/inverter-pcb-repair",
+      "/pune/bicycle-repair": "/repair/bicycles-pune",
+      "/hyderabad/laptop-repair": "/repair/laptops-hyderabad",
+      "/hyderabad/mobile-repair": "/repair/phones-hyderabad",
+      "/hyderabad/phone-repair": "/repair/phones-hyderabad",
+      "/hyderabad/ac-service": "/repair/appliances-hyderabad",
+      "/secunderabad/electronics-repair": "/repair/desktops-hyderabad",
+      "/chennai/laptop-repair": "/repair/laptops-chennai",
+      "/chennai/mobile-repair": "/repair/phones-chennai",
+      "/chennai/phone-repair": "/repair/phones-chennai",
+      "/chennai/playstation-hdmi-repair": "/repair/playstation-hdmi-repair",
+      "/chennai/drone-motor-replacement": "/repair/drone-motor-replacement",
+    };
+
+    for (const [src, dst] of Object.entries(COMMON_CITY_REDIRECTS)) {
+      rules.set(src, { destination: dst, statusCode: 301 });
+    }
 
     for (const row of data ?? []) {
       rules.set(normalizePath(row.source_url), {
