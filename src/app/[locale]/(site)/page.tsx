@@ -56,10 +56,10 @@ export const revalidate = 900;
 
 export const metadata: Metadata = {
   title: {
-    absolute: `FixGrid — India's Verified Repair Network & SafeProbe Diagnostics`,
+    absolute: `FixGrid — India's Verified Repair Network & Diagnostic Directory`,
   },
   description:
-    "India's verified local electronics and appliance repair directory. SafeProbe™ circuit diagnostics, 100% smart escrow payment protection, and verified warranties across Delhi NCR, Mumbai, Bengaluru, Pune, Hyderabad, and Chennai.",
+    "India's verified local electronics and appliance repair directory. Precision bench diagnostics, 100% smart escrow payment protection, and verified warranties across Delhi NCR, Mumbai, Bengaluru, Pune, Hyderabad, and Chennai.",
   alternates: {
     canonical: absoluteUrl("/"),
     languages: {
@@ -74,9 +74,9 @@ export const metadata: Metadata = {
     },
   },
   openGraph: {
-    title: `FixGrid — India's Verified Repair Network & SafeProbe Diagnostics`,
+    title: `FixGrid — India's Verified Repair Network & Diagnostic Directory`,
     description:
-      "Find verified local electronics and appliance repair shops in India. SafeProbe™ hardware testing, smart escrow protection, and platform-backed warranties.",
+      "Find verified local electronics and appliance repair shops in India. Component-level hardware testing, smart escrow protection, and platform-backed warranties.",
     type: "website",
     url: absoluteUrl("/"),
     siteName: SITE_NAME,
@@ -85,13 +85,13 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: `FixGrid — India's Verified Repair Network & SafeProbe Diagnostics`,
+    title: `FixGrid — India's Verified Repair Network & Diagnostic Directory`,
     description:
-      "Find verified local electronics and appliance repair shops in India. SafeProbe™ hardware testing, smart escrow protection, and platform-backed warranties.",
+      "Find verified local electronics and appliance repair shops in India. Component-level hardware testing, smart escrow protection, and platform-backed warranties.",
   },
   keywords: [
     ...SITE_KEYWORDS,
-    "SafeProbe diagnostic wand",
+    "component level diagnostics",
     "smart escrow repair India",
     "laptop motherboard repair near me",
     "macbook screen repair Delhi Bangalore Mumbai",
@@ -241,7 +241,7 @@ export default async function HomePage() {
     buildService({
       name: "FixGrid Verified Electronics & Appliance Repair Network India",
       description:
-        "India-wide verified local repair directory offering SafeProbe circuit diagnostics, smart escrow payment protection, and platform warranties across smartphones, laptops, appliances, and gaming gear.",
+        "India-wide verified local repair directory offering component-level circuit diagnostics, smart escrow payment protection, and platform warranties across smartphones, laptops, appliances, and gaming gear.",
       url: absoluteUrl("/"),
       areaServed: "India",
     }),
@@ -288,7 +288,7 @@ export default async function HomePage() {
 
           <p className="mx-auto mt-5 max-w-[58ch] text-lg leading-relaxed text-steel">
             India&apos;s verified directory of neighborhood electronics and appliance technicians.
-            Diagnose faults with bench-grade SafeProbe™ precision, inspect verified ratings, and
+            Diagnose faults with bench-grade precision, inspect verified ratings, and
             pay through smart escrow only when you are 100% satisfied.
           </p>
 
@@ -310,7 +310,7 @@ export default async function HomePage() {
             <span className="hidden sm:inline text-hairline">|</span>
             <span className="inline-flex items-center gap-1.5">
               <Wrench className="size-3.5 text-signal" />
-              SafeProbe™ Hardware Diagnostics
+              Verified Bench Diagnostics
             </span>
             <span className="hidden sm:inline text-hairline">|</span>
             <span className="inline-flex items-center gap-1.5">
@@ -368,10 +368,10 @@ export default async function HomePage() {
               </span>
             </div>
             <h2 id="geo-matrix-heading" className="mt-3 text-display">
-              Why FixGrid is Built Differently From Roadside & OEM Repair
+              Why FixGrid is Built Differently From Roadside &amp; OEM Repair
             </h2>
             <p className="mt-3 text-base leading-relaxed text-steel">
-              <strong>FixGrid Definition:</strong> FixGrid is India&apos;s verified local electronics and home appliance repair network. We eliminate repair fraud by coupling physical workshop vetting with SafeProbe™ in-circuit impedance testing, tamper-evident digital warranty seals, and a 100% smart escrow payment framework where technician funds are released only after verified customer satisfaction.
+              <strong>FixGrid Definition:</strong> FixGrid is India&apos;s verified local electronics and home appliance repair network. We eliminate repair fraud by coupling physical workshop vetting with component-level circuit diagnostics, tamper-evident digital warranty seals, and a 100% smart escrow payment framework where technician funds are released only after verified customer satisfaction.
             </p>
           </div>
 
@@ -393,7 +393,7 @@ export default async function HomePage() {
                   <td className="p-4 font-semibold text-enamel">Diagnostic Verification</td>
                   <td className="p-4 font-medium text-enamel bg-signal-wash/30">
                     <span className="inline-flex items-center gap-1.5 text-verdigris font-semibold">
-                      <CheckCircle2 className="size-4 shrink-0" /> SafeProbe™ &lt;3.3V Impedance + 5MP Photo Proof
+                      <CheckCircle2 className="size-4 shrink-0" /> Component-Level Testing + Photographic Proof
                     </span>
                   </td>
                   <td className="p-4 text-steel">Visual guesswork &amp; destructive trial-and-error</td>
@@ -441,23 +441,22 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* ── 4. SafeProbe™ Hardware Diagnostic Spotlight ────────────────────── */}
-      <section className="border-b border-hairline bg-bench-sunk/40 py-16" aria-labelledby="safeprobe-heading">
+      {/* ── 4. Precision Bench Diagnostics Spotlight ──────────────────────── */}
+      <section className="border-b border-hairline bg-bench-sunk/40 py-16" aria-labelledby="bench-standards-heading">
         <div className="mx-auto max-w-6xl px-4">
           <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6">
             <div>
               <div className="inline-flex items-center gap-1.5 rounded-machined border border-hairline bg-chalk px-3 py-1 text-steel">
                 <Cpu className="size-3.5 text-signal" />
                 <span className="font-mono text-eyebrow uppercase tracking-[0.14em] text-steel">
-                  Hardware Innovation · National Award Winning Invention
+                  Diagnostic Quality Standards · Component-Level Testing
                 </span>
               </div>
-              <h2 id="safeprobe-heading" className="mt-3 text-display">
-                SafeProbe™ Smart Diagnostic Wand
+              <h2 id="bench-standards-heading" className="mt-3 text-display">
+                Precision Bench Diagnostics &amp; Quality Guarantee
               </h2>
               <p className="mt-3 max-w-[60ch] text-base leading-relaxed text-steel">
-                Lab-grade diagnostic tools usually exceed ₹1,50,000, leaving roadside repairers to guess.
-                The SafeProbe™ packs laboratory micro-sensing into an intuitive pen-sized wand manufactured for under ₹1,200 ($14), standardizing diagnostic quality across India.
+                High-end electronics repair requires more than visual inspection. Verified FixGrid technicians operate equipped repair benches with dedicated DC power supplies, stereoscopic inspection microscopes, and high-impedance multimeter profiling to pinpoint failing components before quoting.
               </p>
             </div>
             <div className="shrink-0">
@@ -476,10 +475,10 @@ export default async function HomePage() {
                 <Zap className="size-5" />
               </div>
               <h3 className="mt-4 text-lg font-display uppercase tracking-wide text-enamel">
-                01. Micro-Touch In-Circuit Sensing
+                01. In-Circuit Impedance &amp; Short Isolation
               </h3>
               <p className="mt-2 text-sm leading-relaxed text-steel">
-                Mechanic touches probe to circuit traces. Wand profiles safe low-voltage impedance and diode curves (&lt;3.3V at &lt;5mA) in milliseconds, beeping and glowing Green (Normal) or Red (Short/Damaged) without risking electrostatic discharge (ESD).
+                Technicians use low-voltage in-circuit impedance and diode curve profiling to locate shorted MLCC capacitors and open traces in milliseconds without risking thermal stress or electrostatic discharge (ESD) to sensitive silicon.
               </p>
             </div>
 
@@ -488,10 +487,10 @@ export default async function HomePage() {
                 <Microscope className="size-5" />
               </div>
               <h3 className="mt-4 text-lg font-display uppercase tracking-wide text-enamel">
-                02. 5MP Optical Macro Photo Proof
+                02. Macro Optical Fault Proof
               </h3>
               <p className="mt-2 text-sm leading-relaxed text-steel">
-                Miniature 5MP macro camera with ring LEDs captures high-resolution, magnified photos of burned MLCC capacitors, cracked solder joints, or corroded traces — beaming the proof straight to your smartphone before you approve any quote.
+                Technicians capture high-resolution, magnified macro photos of burned components, cracked BGA solder balls, or corroded traces — beaming verifiable visual proof straight to your smartphone before you approve any quotation.
               </p>
             </div>
 
@@ -500,10 +499,10 @@ export default async function HomePage() {
                 <ShieldCheck className="size-5" />
               </div>
               <h3 className="mt-4 text-lg font-display uppercase tracking-wide text-enamel">
-                03. Dual-Loop Tamper QR Void Seal
+                03. Tamper-Evident QR Warranty Seal
               </h3>
               <p className="mt-2 text-sm leading-relaxed text-steel">
-                Upon completion, the technician affixes a physical tamper-evident QR void seal to the chassis. Scanning unlocks circuit test logs, before/after visual proof, and activates your valid platform repair warranty.
+                Upon job completion, a physical tamper-evident QR void seal is affixed to the chassis. Scanning it unlocks verified test logs, before/after visual proof, and activates your recorded platform repair warranty.
               </p>
             </div>
           </div>
@@ -836,7 +835,7 @@ export default async function HomePage() {
       <FaqSection
         eyebrow="Answer Engine & Knowledge Hub"
         heading="Frequently Asked Questions (AEO)"
-        intro="Direct answers for search engines and consumers on repair authenticity, smart escrow mechanisms, SafeProbe™ diagnostics, and warranty guarantees."
+        intro="Direct answers for search engines and consumers on repair authenticity, smart escrow mechanisms, verified bench diagnostics, and warranty guarantees."
       />
 
       {/* ── 12. Triple Bottom Line Impact ─────────────────────────────────── */}
@@ -903,7 +902,7 @@ export default async function HomePage() {
               <Badge variant="verified" className="mb-3">{t("join.badge")}</Badge>
               <h2 className="text-display-sm">{t("join.heading")}</h2>
               <p className="mt-3 max-w-[50ch] text-sm leading-relaxed text-steel">
-                {t("join.body")} Verified shops receive access to SafeProbe™ firmware updates, direct customer booking management, and a 5% completed-bill rebate.
+                {t("join.body")} Verified shops receive verified storefront listings, direct customer booking management, and a 5% completed-bill rebate.
               </p>
             </div>
             <div className="flex shrink-0 flex-col gap-3 sm:items-end">

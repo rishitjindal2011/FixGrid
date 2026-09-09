@@ -12,7 +12,7 @@ import { CheckCircle2, HelpCircle } from "lucide-react";
 export function FaqSection({
   eyebrow = "Direct Answers & Knowledge Hub",
   heading = "Frequently Asked Questions",
-  intro = "Engineered answers addressing repair authenticity, smart escrow security, SafeProbe™ diagnostics, and warranty policies.",
+  intro = "Engineered answers addressing repair authenticity, smart escrow security, verified bench diagnostics, and warranty policies.",
 }: {
   eyebrow?: string;
   heading?: string;

@@ -31,14 +31,14 @@ export const HOME_FAQS: FaqItem[] = [
     ],
   },
   {
-    id: "what-is-safeprobe",
-    question: "What is SafeProbe™ diagnostic hardware and how is it used during repair?",
+    id: "diagnostic-standards",
+    question: "What diagnostic standards and tools are used by verified FixGrid repair shops?",
     shortAnswer:
-      "SafeProbe™ is a patented pen-sized diagnostic wand used by verified FixGrid technicians. It runs safe low-voltage impedance and diode tests (<3.3V at <5mA) to pinpoint shorted capacitors, captures 5MP macro photo proof of damaged ICs, and generates a tamper-evident QR void seal.",
+      "Verified FixGrid technicians use professional bench diagnostic equipment including regulated DC power supplies, high-precision multimeters, thermal cameras, and stereoscopic inspection microscopes to isolate board-level faults before quoting.",
     detailedPoints: [
-      "Micro-touch sensing: Milisecond circuit impedance analysis with audible fault chirps without risk of electrostatic discharge (ESD).",
-      "5MP macro photo proof: High-resolution visual proof of burned components beamed directly to your phone prior to quote approval.",
-      "Tamper-proof digital passport: A physical chassis QR seal links to test readings, before/after imagery, and warranty records.",
+      "Component-level fault isolation: Pinpoint shorted MLCC capacitors, broken traces, and failing ICs without damaging sensitive silicon.",
+      "Photographic fault proof: High-resolution macro photos of defective parts sent directly to your phone for complete transparency.",
+      "Tamper-proof digital passport: Recorded test results and digital warranty tokens tracked directly through your booking dashboard.",
     ],
   },
   {
@@ -82,7 +82,7 @@ export const HOME_FAQS: FaqItem[] = [
     detailedPoints: [
       "One-time onboarding verification: Strict vetting protects network trust; rejected applicants are refunded.",
       "5% completion rebate: FixGrid shares value back with craftspeople on every verified invoice.",
-      "Pro diagnostics & storefront: Direct customer bookings, calendar management, and access to SafeProbe™ firmware.",
+      "Pro diagnostics & storefront: Direct customer bookings, calendar management, and shopfront analytics.",
     ],
   },
 ];

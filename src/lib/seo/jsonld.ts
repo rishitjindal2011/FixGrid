@@ -88,7 +88,7 @@ export function buildOrganization(): WithContext<Thing> {
       "Smartphone Diagnostics",
       "Laptop Servicing",
       "Hardware Repair Directory",
-      "SafeProbe Circuit Diagnostics",
+      "Component-Level Circuit Repair",
     ],
   });
 }

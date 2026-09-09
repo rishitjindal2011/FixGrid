@@ -18,7 +18,7 @@ let latestTelemetry: DiagnosticTelemetry | null = {
   booking_id: "BK-1001",
   measured_resistance: 0.04,
   status: "SHORT_CIRCUIT_DETECTED",
-  device_id: "SAFEPROBE-01",
+  device_id: "DIAGNOSTIC-01",
   voltage_drop: 0.38,
   timestamp: new Date().toISOString(),
   hardware_hash: "HW-STAMP-DEMO-INIT",
@@ -27,7 +27,7 @@ let latestTelemetry: DiagnosticTelemetry | null = {
 
 /**
  * POST /api/hardware/diagnostic
- * Receives live diagnostic telemetry from the ESP32 FixGrid SafeProbe.
+ * Receives live diagnostic telemetry from bench hardware.
  */
 export async function POST(request: NextRequest) {
   try {
@@ -50,14 +50,14 @@ export async function POST(request: NextRequest) {
       booking_id: String(booking_id),
       measured_resistance: Number(measured_resistance) || 0,
       status: status || "VERIFIED_PASS",
-      device_id: device_id || "SAFEPROBE-DEFAULT",
+      device_id: device_id || "DIAGNOSTIC-DEFAULT",
       voltage_drop: voltage_drop ? Number(voltage_drop) : undefined,
       timestamp,
       hardware_hash,
       photo_evidence_url: photo_evidence_url || "https://images.unsplash.com/photo-1518770660439-4636190af475?w=800&q=80"
     };
 
-    console.log(`[SafeProbe API] Telemetry saved for ${booking_id}:`, latestTelemetry);
+    console.log(`[Diagnostic API] Telemetry saved for ${booking_id}:`, latestTelemetry);
 
     return NextResponse.json({
       ok: true,
