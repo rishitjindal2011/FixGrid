@@ -46,24 +46,14 @@ const KEYS = {
   bbox: "bbox",
 } as const;
 
-/** Mirrors `RATING_STEPS` in `@/lib/queries/search`; "" is "no minimum". */
-const RATING_CHOICES = [
-  { value: "", label: "Any" },
-  { value: "3", label: "3.0+" },
-  { value: "4", label: "4.0+" },
-  { value: "4.5", label: "4.5+" },
-] as const;
-
 /**
- * Mirrors `WARRANTY_STEPS`. Same values and labels as the public panel, so the
- * two directories cannot come to mean different things by the same URL.
+ * Rating and warranty choices are built inside the component, because their
+ * word-labels ("Any", "Offered") come from the catalogue. The values mirror
+ * `RATING_STEPS`/`WARRANTY_STEPS` in `@/lib/queries/search`; "" is "no minimum",
+ * and the numeric labels ("3.0+", "30d+") are locale-neutral so they stay literal
+ * — the same values and meaning as the public filter panel, so the two
+ * directories cannot come to mean different things by the same URL.
  */
-const WARRANTY_CHOICES = [
-  { value: "", label: "Any" },
-  { value: "1", label: "Offered" },
-  { value: "30", label: "30d+" },
-  { value: "90", label: "90d+" },
-] as const;
 
 /**
  * Price ceilings in **pence**, because that is the unit the parameter carries
@@ -152,7 +142,22 @@ export function DiscoverFilterRail({
 }: DiscoverFilterRailProps) {
   const router = useRouter();
   const [isPending, startTransition] = React.useTransition();
+  const t = useTranslations("dashboard.discoverFilters");
   const tDelivery = useTranslations("deliveryModes");
+
+  const ratingChoices = [
+    { value: "", label: t("any") },
+    { value: "3", label: "3.0+" },
+    { value: "4", label: "4.0+" },
+    { value: "4.5", label: "4.5+" },
+  ];
+
+  const warrantyChoices = [
+    { value: "", label: t("any") },
+    { value: "1", label: t("warrantyOffered") },
+    { value: "30", label: "30d+" },
+    { value: "90", label: "90d+" },
+  ];
 
   const urlState = toRailState(filters);
 
@@ -197,7 +202,7 @@ export function DiscoverFilterRail({
     >
       <div role="search">
         <label htmlFor={`${idPrefix}-q`} className="eyebrow mb-2 block">
-          Shop or street
+          {t("shopOrStreet")}
         </label>
         <div className="relative">
           <Search
@@ -212,7 +217,7 @@ export function DiscoverFilterRail({
             type="search"
             value={draft.q}
             onChange={(event) => setDraft({ ...draft, q: event.target.value })}
-            placeholder="Screen repair, Elm St…"
+            placeholder={t("shopPlaceholder")}
             maxLength={80}
             className="pl-9"
           />
@@ -221,14 +226,14 @@ export function DiscoverFilterRail({
 
       <div role="search">
         <label htmlFor={`${idPrefix}-location`} className="eyebrow mb-2 block">
-          Location
+          {t("location")}
         </label>
         <div className="flex gap-2">
           <Input
             id={`${idPrefix}-location`}
             name="location-search"
             type="search"
-            placeholder="City, Zip or Area..."
+            placeholder={t("locationPlaceholder")}
             maxLength={80}
             onKeyDown={async (e) => {
               if (e.key === 'Enter') {
@@ -253,13 +258,13 @@ export function DiscoverFilterRail({
           />
         </div>
         <p className="pt-1.5 text-xs leading-snug text-steel-soft">
-          Press Enter to search
+          {t("pressEnter")}
         </p>
       </div>
 
       <div>
         <label htmlFor={`${idPrefix}-category`} className="eyebrow mb-2 block">
-          Category
+          {t("category")}
         </label>
         <Select
           id={`${idPrefix}-category`}
@@ -267,7 +272,7 @@ export function DiscoverFilterRail({
           value={draft.category}
           onChange={(event) => commit({ ...draft, category: event.target.value })}
         >
-          <option value="">All categories</option>
+          <option value="">{t("allCategories")}</option>
           {categories.map((category) => (
             <option key={category.id} value={category.id}>
               {category.name}
@@ -278,7 +283,7 @@ export function DiscoverFilterRail({
 
       <div>
         <label htmlFor={`${idPrefix}-price`} className="eyebrow mb-2 block">
-          Price up to
+          {t("priceUpTo")}
         </label>
         <Select
           id={`${idPrefix}-price`}
@@ -286,7 +291,7 @@ export function DiscoverFilterRail({
           value={draft.maxPrice}
           onChange={(event) => commit({ ...draft, maxPrice: event.target.value })}
         >
-          <option value="">Any price</option>
+          <option value="">{t("anyPrice")}</option>
           {PRICE_CHOICES.map((pence) => (
             <option key={pence} value={pence}>
               {formatMoney(pence)}
@@ -294,14 +299,14 @@ export function DiscoverFilterRail({
           ))}
         </Select>
         <p className="pt-1.5 text-xs leading-snug text-steel-soft">
-          Compared against the cheapest service each shop lists.
+          {t("priceHint")}
         </p>
       </div>
 
       <RadioFloor
-        legend="Minimum rating"
+        legend={t("minRating")}
         name={KEYS.rating}
-        choices={RATING_CHOICES}
+        choices={ratingChoices}
         value={draft.rating}
         onSelect={(value) => commit({ ...draft, rating: value })}
       />
@@ -309,16 +314,16 @@ export function DiscoverFilterRail({
       {/* Beside rating, for the same reason as on the public panel: these are the
           two trust questions, and warranty is the one nobody else is answering. */}
       <RadioFloor
-        legend="Warranty"
+        legend={t("warranty")}
         name={KEYS.warranty}
-        choices={WARRANTY_CHOICES}
+        choices={warrantyChoices}
         value={draft.warranty}
         onSelect={(value) => commit({ ...draft, warranty: value })}
       />
 
       <div>
         <label htmlFor={`${idPrefix}-delivery`} className="eyebrow mb-2 block">
-          How it gets fixed
+          {t("delivery")}
         </label>
         <Select
           id={`${idPrefix}-delivery`}
@@ -326,7 +331,7 @@ export function DiscoverFilterRail({
           value={draft.delivery}
           onChange={(event) => commit({ ...draft, delivery: event.target.value })}
         >
-          <option value="">Any arrangement</option>
+          <option value="">{t("anyArrangement")}</option>
           {DELIVERY_MODES.map((mode) => (
             <option key={mode} value={mode}>
               {tDelivery(mode)}
@@ -336,27 +341,27 @@ export function DiscoverFilterRail({
       </div>
 
       <fieldset className="space-y-2">
-        <legend className="eyebrow mb-2">Only show</legend>
+        <legend className="eyebrow mb-2">{t("onlyShow")}</legend>
 
         <ToggleRow
           id={`${idPrefix}-verified`}
           name={KEYS.verified}
           checked={draft.verified}
           onChange={(checked) => commit({ ...draft, verified: checked })}
-          label="Verified shops"
+          label={t("verifiedShops")}
         />
         <ToggleRow
           id={`${idPrefix}-available`}
           name={KEYS.available}
           checked={draft.available}
           onChange={(checked) => commit({ ...draft, available: checked })}
-          label="Taking bookings now"
+          label={t("takingBookings")}
         />
       </fieldset>
 
       <div>
         <label htmlFor={`${idPrefix}-sort`} className="eyebrow mb-2 block">
-          Sort by
+          {t("sortBy")}
         </label>
         <Select
           id={`${idPrefix}-sort`}
@@ -375,7 +380,7 @@ export function DiscoverFilterRail({
       {/* Submit exists for the no-JS path and for Enter in the search box; on
           screen the controls apply themselves, so it stays off-canvas. */}
       <button type="submit" className="sr-only">
-        Apply filters
+        {t("applyFilters")}
       </button>
 
       {activeCount > 0 ? (
@@ -384,7 +389,7 @@ export function DiscoverFilterRail({
           className="inline-flex items-center gap-1.5 font-mono text-eyebrow uppercase tracking-[0.14em] text-steel transition-colors hover:text-rust"
         >
           <X aria-hidden className="size-3" />
-          Clear all filters
+          {t("clearAllFilters")}
         </Link>
       ) : null}
     </form>
@@ -397,7 +402,7 @@ export function DiscoverFilterRail({
           filtering is how a customer concludes the directory is empty. */}
       <details className="rounded-machined border border-hairline bg-chalk lg:hidden">
         <summary className="flex cursor-pointer list-none items-center justify-between px-4 py-3 font-display uppercase tracking-[0.08em] text-enamel">
-          Filters
+          {t("filters")}
           {activeCount > 0 ? (
             <span className="rounded-machined bg-signal px-1.5 py-0.5 font-mono text-eyebrow text-chalk">
               {activeCount}

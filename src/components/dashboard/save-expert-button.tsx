@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
+import { useTranslations } from "next-intl";
 import { Heart } from "lucide-react";
 
 import { cn } from "@/lib/utils";
@@ -44,10 +45,11 @@ export function SaveExpertButton({
   className?: string;
 }) {
   const [state, formAction, pending] = useActionState(action, { saved, error: null });
+  const t = useTranslations("dashboard.saveExpert");
 
   const label = state.saved
-    ? `Remove ${shopName} from your saved shops`
-    : `Save ${shopName} to your shops`;
+    ? t("remove", { shopName })
+    : t("save", { shopName });
 
   return (
     <form action={formAction} className={cn("contents", className)}>
