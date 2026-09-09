@@ -82,6 +82,14 @@ const CATEGORY_ICONS: Record<string, string> = {
   "small-appliances": "Coffee",
   drones: "Radio",
   "e-scooters": "Zap",
+  "macbook-screen-repair": "Laptop",
+  "iphone-battery-replacement": "Smartphone",
+  "playstation-hdmi-repair": "Gamepad2",
+  "laptop-liquid-damage": "Laptop",
+  "inverter-pcb-repair": "Cpu",
+  "refrigerator-compressor-repair": "Snowflake",
+  "drone-motor-replacement": "Radio",
+  "mechanical-keyboard-switch-replacement": "Keyboard",
 };
 
 interface Result {
@@ -394,6 +402,222 @@ const CORE_PAGES: Array<{
       },
     ],
   },
+  {
+    slug: "right-to-repair",
+    title: "The Right to Repair — Championing Fair Repair Over Forced Upgrades",
+    meta_title: "The Right to Repair Movement & Consumer Rights | FixGrid",
+    meta_description: "Understand the Right to Repair movement, consumer hardware rights, parts pairing barriers, and how FixGrid empowers independent technicians and owners.",
+    keywords: ["right to repair", "fair repair act", "e-waste reduction", "independent repair rights", "parts pairing repair", "open repair data"],
+    blocks: [
+      {
+        type: "compact_hero",
+        eyebrow: "Repair Advocacy",
+        heading: "You Own It. You Have the Right to Repair It.",
+        subtitle: "FixGrid champions legislative and technical Right to Repair standards: public schematics, diagnostic tools, OEM spare parts, and zero digital lock-out barriers.",
+        ctas: [{ label: "Explore Verified Directory", href: "/search" }],
+      },
+      {
+        type: "highlights_strip",
+        items: [
+          { label: "Repair Advocacy", value: "100% Pro-Repair" },
+          { label: "Schematics Access", value: "Open Standards" },
+          { label: "E-Waste Target", value: "Zero Landfill" },
+        ],
+      },
+      {
+        type: "rich_text",
+        html: `
+<h2>The Engineering & Environmental Case for Repair</h2>
+<p>Modern consumers generate over 50 million metric tons of electronic waste annually. The primary driver of this crisis is planned obsolescence: hardware engineered with permanent adhesives, proprietary screw heads, software serialization locking replacement parts, and artificial restrictions withholding component schematics from independent repairers.</p>
+<p>FixGrid exists to counteract this trend. We believe that once you purchase a smartphone, computer, appliance, or vehicle, you own the right to repair it yourself or bring it to any independent technician of your choice without punitive software lockouts.</p>
+
+<h3>The Four Pillars of True Right to Repair</h3>
+<ul>
+  <li><strong>1. Open Diagnostic Tools:</strong> Independent workshops must have equal access to diagnostic software, error code readouts, and calibration utilities equivalent to factory repair centers.</li>
+  <li><strong>2. Availability of Component Schematics:</strong> Wiring diagrams, boardview files, and component value documentation must be accessible so technicians can micro-solder failed capacitors rather than discarding entire functional motherboards.</li>
+  <li><strong>3. Unrestricted Spare Parts Supply:</strong> Consumers and independent shops should be able to purchase authentic OEM and high-tier aftermarket replacement parts at reasonable commercial prices.</li>
+  <li><strong>4. Elimination of Digital Parts Pairing:</strong> Disabling Face ID, true tone, battery health statistics, or camera autofocus simply because a part was replaced without manufacturer cloud authorization is an anti-consumer practice that must end.</li>
+</ul>
+
+<h3>Supporting Independent Trade Economies</h3>
+<p>Independent repair technicians are neighborhood artisans and engineers. When you repair an existing device locally, 80% or more of that repair expenditure remains inside your local community economy, while simultaneously sparing the environment from raw mineral extraction and carbon emissions required to produce new hardware.</p>
+        `.trim(),
+        width: "prose",
+      },
+      {
+        type: "faq_accordion",
+        title: "Right to Repair Questions",
+        items: [
+          {
+            question: "Does repairing my phone or laptop at an independent shop void my consumer rights?",
+            answer:
+              "In most modern jurisdictions, the law prohibits manufacturers from voiding consumer warranties simply because an independent technician opened or serviced the device, provided the repair itself did not cause damage.",
+          },
+          {
+            question: "What is 'parts pairing' or serialization?",
+            answer:
+              "Parts pairing is a manufacturer practice where microcontrollers on screens, batteries, or camera modules are cryptographically linked to the motherboard CPU, causing software warnings or feature shutdowns if swapped without proprietary factory software.",
+          },
+          {
+            question: "How does FixGrid support the Right to Repair?",
+            answer:
+              "FixGrid provides public diagnostic guides, transparent component pricing benchmarks, and a commission-free discovery directory for vetted independent repair technicians.",
+          },
+        ],
+      },
+      {
+        type: "cta_banner",
+        heading: "Support your local independent repair economy",
+        body: "Find skilled local technicians offering component-level diagnostics and honest pricing.",
+        cta: { label: "Search Verified Repair Shops", href: "/search" },
+        tone: "signal",
+      },
+    ],
+  },
+  {
+    slug: "warranty-protection",
+    title: "FixGrid 90-Day Warranty Protection & Dispute Resolution",
+    meta_title: "FixGrid 90-Day Repair Warranty Protection & Guarantee",
+    meta_description: "Learn how FixGrid's mandatory 90-day minimum repair warranty protects consumers against component defects and ensures fair service mediation.",
+    keywords: ["repair warranty guarantee", "90 day repair warranty", "fixgrid warranty protection", "dispute resolution repair", "certified repair guarantee"],
+    blocks: [
+      {
+        type: "compact_hero",
+        eyebrow: "Customer Assurance",
+        heading: "Guaranteed 90-Day Repair Protection",
+        subtitle: "Every verified repair shop on FixGrid provides a minimum 90-day parts and labor warranty, backed by impartial platform mediation.",
+        ctas: [{ label: "Find Protected Shops", href: "/search" }],
+      },
+      {
+        type: "highlights_strip",
+        items: [
+          { label: "Minimum Period", value: "90 Days" },
+          { label: "Coverage", value: "Parts & Labor" },
+          { label: "Platform Mediation", value: "100% Free" },
+        ],
+      },
+      {
+        type: "rich_text",
+        html: `
+<h2>Transparent Warranty Standards You Can Trust</h2>
+<p>Leaving expensive electronics or essential household appliances with a repair shop requires trust. To eliminate uncertainty, FixGrid requires all verified repairers to adhere to standardized warranty protocols.</p>
+
+<h3>What Is Covered Under the 90-Day Warranty</h3>
+<ul>
+  <li><strong>Replacement Component Defects:</strong> If a replaced screen develops touch digitizer glitches, a new battery fails to hold charge, or an HDMI port loses signal within 90 days, the shop will replace the defective part at zero cost to you.</li>
+  <li><strong>Technician Workmanship:</strong> Solder connections, thermal paste application, internal shielding alignment, and adhesive re-bonding are fully guaranteed against failure under standard operating conditions.</li>
+</ul>
+
+<h3>What Is Excluded from Warranty Coverage</h3>
+<p>Warranties cover manufacturing and assembly defects, but do not cover accidental damage occurring after device pickup, including:</p>
+<ul>
+  <li>Physical drop impacts resulting in cracked glass or bent metal chassis</li>
+  <li>Subsequent liquid immersion or moisture exposure</li>
+  <li>Unauthorized third-party teardown or firmware tampering after repair completion</li>
+</ul>
+
+<h3>How Our Dispute Mediation Works</h3>
+<p>If you experience any issue with a completed repair and the shop fails to resolve it promptly, submit your service receipt and diagnostic photos to our dispute team at support@vytron.me. Our technical advisors review bench logs and ensure the shop fulfills their warranty commitment.</p>
+        `.trim(),
+        width: "prose",
+      },
+      {
+        type: "faq_accordion",
+        title: "Warranty Protection FAQs",
+        items: [
+          {
+            question: "How do I claim a warranty repair?",
+            answer:
+              "Contact the repair shop directly with your digital invoice or receipt. If you encounter any friction, notify FixGrid support with your booking details for immediate escalation.",
+          },
+          {
+            question: "Can shops offer longer warranties than 90 days?",
+            answer:
+              "Yes! Many premium verified shops offer 6-month or 1-year warranties on modular screen and battery replacements. The 90-day requirement is our platform baseline.",
+          },
+        ],
+      },
+      {
+        type: "cta_banner",
+        heading: "Book repair with guaranteed warranty protection",
+        body: "Browse certified repair experts with upfront pricing and verified warranties.",
+        cta: { label: "Search Protected Shops", href: "/search" },
+        tone: "signal",
+      },
+    ],
+  },
+  {
+    slug: "diagnostic-bench-standards",
+    title: "FixGrid Technical Diagnostic Bench Standards for Repairers",
+    meta_title: "Repair Diagnostic Bench & Equipment Standards | FixGrid",
+    meta_description: "Explore the professional bench equipment, ESD safety protocols, and micro-soldering precision standards required of FixGrid verified repair shops.",
+    keywords: ["repair bench standards", "esd safety electronics", "ultrasonic cleaning standards", "micro-soldering repair", "certified technician bench"],
+    blocks: [
+      {
+        type: "compact_hero",
+        eyebrow: "Bench Engineering Standards",
+        heading: "Precision Diagnostic & Safety Standards",
+        subtitle: "Behind every FixGrid verified badge is a rigorous evaluation of workshop diagnostic equipment, thermal imaging, ESD grounding, and safe battery handling.",
+        ctas: [{ label: "Browse Verified Technicians", href: "/search" }],
+      },
+      {
+        type: "highlights_strip",
+        items: [
+          { label: "ESD Protection", value: "Mandatory" },
+          { label: "Optical Zoom", value: "45x Trinocular" },
+          { label: "Ultrasonic Bath", value: "99.9% Anhydrous IPA" },
+        ],
+      },
+      {
+        type: "rich_text",
+        html: `
+<h2>The Anatomy of a Professional Repair Bench</h2>
+<p>FixGrid verifies that independent repairers operate clean, equipped, and safety-compliant diagnostic workstations. Modern micro-electronics operate at microscopic tolerances where improper tools cause irreversible logic board destruction.</p>
+
+<h3>1. Electrostatic Discharge (ESD) Protection</h3>
+<p>Human bodies regularly accumulate electrostatic charges exceeding 3,000 volts—sufficient to blow delicate 1.2V semiconductor gates without an audible spark. Verified workshops must maintain dissipative grounded silicone work mats, ESD wrist straps, and conductive parts bins.</p>
+
+<h3>2. Precision Micro-Soldering & Thermal Imaging</h3>
+<p>Component-level board repair requires optical magnification and controlled thermal profiles:</p>
+<ul>
+  <li>Trinocular stereo microscopes with minimum 7x–45x continuous zoom for inspecting 0201 surface-mount passive components.</li>
+  <li>Thermal imaging cameras (minimum 256x192 sensor resolution) paired with programmable DC bench power supplies to locate shorted ceramic capacitors by thermal signature.</li>
+  <li>Temperature-controlled hot-air rework stations and precision micro-soldering iron tips with rapid thermocouple thermal recovery.</li>
+</ul>
+
+<h3>3. Ultrasonic Cleaning & Chemical Safety</h3>
+<p>Liquid-damaged electronics require ultrasonic cavitation baths filled with anhydrous 99.9% electronic-grade isopropyl alcohol to dislodge mineral crusts beneath ball grid array (BGA) packages without mechanical scratching.</p>
+
+<h3>4. Lithium Battery Fire Containment</h3>
+<p>Swollen or punctured lithium-ion cells represent a volatile combustion hazard. Verified facilities maintain fireproof LiPo safety bags, Class D extinguishing agents, and sand containment buckets.</p>
+        `.trim(),
+        width: "prose",
+      },
+      {
+        type: "faq_accordion",
+        title: "Technical Standards FAQs",
+        items: [
+          {
+            question: "Why does component-level micro-soldering matter?",
+            answer:
+              "Micro-soldering allows technicians to replace a 50-cent failed power capacitor rather than charging you hundreds of dollars for a complete motherboard replacement.",
+          },
+          {
+            question: "How does FixGrid audit bench standards?",
+            answer:
+              "We perform photographic audits, business license verifications, and cross-reference equipment capabilities before issuing verified workshop status.",
+          },
+        ],
+      },
+      {
+        type: "cta_banner",
+        heading: "Find a verified repair workshop with audited bench tools",
+        body: "Browse certified technicians equipped for precision electronics and appliance diagnostics.",
+        cta: { label: "Search Verified Bench Shops", href: "/search" },
+        tone: "signal",
+      },
+    ],
+  },
 ];
 
 async function seedCorePages(): Promise<void> {
@@ -480,12 +704,58 @@ async function main(): Promise<void> {
 
   console.log(`\n  Seeding High-Intent Local SEO City Pages (Mumbai & Key Metros)…\n`);
 
-  const LOCAL_CITY_SEEDS = [
-    { slug: "audio-equipment", city: "Mumbai" },
-    { slug: "desktops", city: "Mumbai" },
+  const LOCAL_CITY_SEEDS: Array<{ slug: string; city: string }> = [
+    // Mumbai (12 high-demand categories)
     { slug: "phones", city: "Mumbai" },
     { slug: "laptops", city: "Mumbai" },
     { slug: "appliances", city: "Mumbai" },
+    { slug: "desktops", city: "Mumbai" },
+    { slug: "audio-equipment", city: "Mumbai" },
+    { slug: "tablets", city: "Mumbai" },
+    { slug: "consoles", city: "Mumbai" },
+    { slug: "televisions", city: "Mumbai" },
+    { slug: "cameras", city: "Mumbai" },
+    { slug: "smart-home", city: "Mumbai" },
+    { slug: "bicycles", city: "Mumbai" },
+    { slug: "power-tools", city: "Mumbai" },
+
+    // Delhi NCR (8 core electronics & appliance categories)
+    { slug: "phones", city: "Delhi" },
+    { slug: "laptops", city: "Delhi" },
+    { slug: "appliances", city: "Delhi" },
+    { slug: "desktops", city: "Delhi" },
+    { slug: "audio-equipment", city: "Delhi" },
+    { slug: "tablets", city: "Delhi" },
+    { slug: "consoles", city: "Delhi" },
+    { slug: "televisions", city: "Delhi" },
+
+    // Bengaluru (7 tech hub categories)
+    { slug: "phones", city: "Bengaluru" },
+    { slug: "laptops", city: "Bengaluru" },
+    { slug: "appliances", city: "Bengaluru" },
+    { slug: "desktops", city: "Bengaluru" },
+    { slug: "audio-equipment", city: "Bengaluru" },
+    { slug: "tablets", city: "Bengaluru" },
+    { slug: "consoles", city: "Bengaluru" },
+
+    // Hyderabad (5 categories)
+    { slug: "phones", city: "Hyderabad" },
+    { slug: "laptops", city: "Hyderabad" },
+    { slug: "appliances", city: "Hyderabad" },
+    { slug: "desktops", city: "Hyderabad" },
+    { slug: "televisions", city: "Hyderabad" },
+
+    // Pune (4 categories)
+    { slug: "phones", city: "Pune" },
+    { slug: "laptops", city: "Pune" },
+    { slug: "appliances", city: "Pune" },
+    { slug: "bicycles", city: "Pune" },
+
+    // Chennai (4 categories)
+    { slug: "phones", city: "Chennai" },
+    { slug: "laptops", city: "Chennai" },
+    { slug: "appliances", city: "Chennai" },
+    { slug: "cameras", city: "Chennai" },
   ];
 
   for (const item of LOCAL_CITY_SEEDS) {

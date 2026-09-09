@@ -851,6 +851,367 @@ export const CATEGORY_SEEDS: CategorySeed[] = [
       "Note the exact error code appearing on the handlebar display",
     ],
   },
+  {
+    slug: "macbook-screen-repair",
+    noun: "MacBook displays",
+    label: "MacBook Screen Repair",
+    priceRange: "$140–$480",
+    turnaround: "1–3 days",
+    replaceWhen:
+      "the machine is over seven years old and the logic board has suffered widespread liquid ingress or GPU delamination alongside panel damage",
+    faults: [
+      {
+        symptom: "Cracked Retina glass or vertical lines across Liquid Retina panel",
+        cause:
+          "Mechanical stress or foreign object (like a webcam cover or pen) closed inside the clamshell, fracturing the ultra-thin TFT glass substrate.",
+        fix: "Complete upper display clamshell assembly swap or raw LCD panel replacement with optical backlight calibration.",
+        cost: "$180–$480",
+        time: "1–2 days",
+      },
+      {
+        symptom: "Stage light effect or backlight cut-off when opening lid past 45 degrees ('Flexgate')",
+        cause:
+          "Fatigue tearing in the integrated flexible display backlight ribbon cable due to repeated lid hinge cycling.",
+        fix: "Precision micro-soldering ribbon cable extension or full display assembly replacement.",
+        cost: "$120–$260",
+        time: "1–2 days",
+      },
+      {
+        symptom: "Dim display with no backlight, Apple logo barely visible with external flashlight",
+        cause:
+          "Blown backlight fuse, failed LP8550/LP8548 LED driver IC, or shorted ceramic capacitor on the 50V backlight rail.",
+        fix: "Logic board micro-soldering, backlight power rail troubleshooting, and driver IC replacement.",
+        cost: "$140–$290",
+        time: "2–3 days",
+      },
+      {
+        symptom: "Damaged silicone rubber perimeter gasket and chipped aluminum lid corners",
+        cause: "Impact drops on corner edges deforming aluminum bezels and compromising display dust sealing.",
+        fix: "Corner metal chassis reshaping, gasket renewal, and panel realigning.",
+        cost: "$70–$140",
+        time: "1 day",
+      },
+    ],
+    prep: [
+      "Perform a full Time Machine or cloud backup of your macOS data",
+      "Sign out of Apple ID and disable Find My Mac before drop-off",
+      "Provide user login passcode or configure a temporary guest account for post-repair bench testing",
+    ],
+  },
+  {
+    slug: "iphone-battery-replacement",
+    noun: "iPhone batteries",
+    label: "iPhone Battery Replacement",
+    priceRange: "$45–$95",
+    turnaround: "45–90 minutes",
+    replaceWhen:
+      "the chassis is severely twisted or logic board layers have delaminated from violent drops",
+    faults: [
+      {
+        symptom: "Maximum capacity health below 80% with iOS 'Service' battery advisory",
+        cause:
+          "Chemical aging of lithium-ion pouch cells after 500+ full charge-discharge cycles, elevating internal cell resistance.",
+        fix: "Installation of certified OEM-grade replacement battery, new stretch-release adhesive pull-tabs, and battery health calibration.",
+        cost: "$45–$85",
+        time: "45–60 minutes",
+      },
+      {
+        symptom: "Device abruptly powers down at 20–30% during photo capture or intensive app loading",
+        cause:
+          "Worn electrode chemistry unable to supply peak operating voltage during CPU/GPU burst frequencies, triggering protective shutdown.",
+        fix: "Battery pack replacement and fuel gauge IC impedance reset.",
+        cost: "$50–$90",
+        time: "45 minutes",
+      },
+      {
+        symptom: "Screen lifting from frame or back glass bulging from battery expansion",
+        cause:
+          "Gaseous electrolyte decomposition caused by overcharging, micro-punctures, or thermal stress producing flammable internal gas pockets.",
+        fix: "Urgent hazardous battery safe removal in ESD-safe fireproof station and structural frame inspection.",
+        cost: "$55–$95",
+        time: "1 hour",
+      },
+      {
+        symptom: "Phone warms up significantly during basic web browsing and battery percentage jumps erratically",
+        cause: "Internal micro-short circuiting across separator membranes or failed BMS thermistor resistor.",
+        fix: "Battery module replacement and thermal camera diagnostics across PMIC power lines.",
+        cost: "$50–$90",
+        time: "1 hour",
+      },
+    ],
+    prep: [
+      "Create an iCloud or iTunes local computer backup before servicing",
+      "Discharge battery below 25% if possible to minimize thermal hazard during adhesive pull-tab extraction",
+      "Turn off Find My iPhone in settings to allow bench diagnostic authorization",
+    ],
+  },
+  {
+    slug: "playstation-hdmi-repair",
+    noun: "PlayStation & Xbox HDMI ports",
+    label: "PlayStation HDMI Port Repair",
+    priceRange: "$75–$160",
+    turnaround: "1–2 days",
+    replaceWhen:
+      "the main APU processor has suffered silicon fracturing or Southbridge motherboard burns beyond micro-soldering recovery",
+    faults: [
+      {
+        symptom: "White Light of Death (WLOD) — console boots to white light but TV displays 'No Signal'",
+        cause:
+          "Blown Panasonic MN864739 / Texas Instruments HDMI retimer transmitter IC or damaged ESD filtering diodes.",
+        fix: "Micro-soldering replacement of the HDMI encoder chip, filter array inspection, and thermal paste renewal.",
+        cost: "$95–$160",
+        time: "1–2 days",
+      },
+      {
+        symptom: "Bent, flattened, or missing gold contact pins inside the rear HDMI jack",
+        cause: "Tripping over HDMI cables, inserting cords at harsh angles, or aggressive port insertion during relocation.",
+        fix: "Hot-air desoldering of damaged port, through-hole solder sucker clearing, and precision alignment of new reinforced OEM socket.",
+        cost: "$75–$130",
+        time: "2–4 hours",
+      },
+      {
+        symptom: "Torn micro-copper PCB solder traces from violent cable pulls",
+        cause: "Excessive lateral force tearing conductive copper pads directly off the top motherboard layer.",
+        fix: "Micro-wire jumpering using 0.02mm enameled copper wire and ultraviolet (UV) curable solder mask insulation.",
+        cost: "$95–$150",
+        time: "1–2 days",
+      },
+      {
+        symptom: "Display flickers, drops resolution to 480p, or flashes snow-like static artifacts",
+        cause: "Fractured cold solder joints on TMDS high-speed differential signal pins from thermal cycling.",
+        fix: "Full connector reflow with rosin-flux and silver-bearing lead-free solder alloy.",
+        cost: "$65–$110",
+        time: "2 hours",
+      },
+    ],
+    prep: [
+      "Eject any physical game discs from the optical drive before packing the console",
+      "Leave external power and HDMI cables at home unless specifically requested by technician",
+      "Perform a PlayStation Plus or USB flash drive save data backup",
+    ],
+  },
+  {
+    slug: "laptop-liquid-damage",
+    noun: "liquid-damaged laptops",
+    label: "Laptop Liquid Damage Repair",
+    priceRange: "$110–$380",
+    turnaround: "2–5 days",
+    replaceWhen:
+      "liquid electrolysis has burned carbonized trenches through internal multi-layer PCB substrate ground planes",
+    faults: [
+      {
+        symptom: "Device completely dead with no power LEDs after water, coffee, or soda spill",
+        cause:
+          "Corrosive mineral electrolysis bridging surface-mount capacitors and burning main input power MOSFETs (PPBUS / 19V rail).",
+        fix: "Full motherboard extraction, ultrasonic cleaning bath in 99.9% anhydrous isopropyl alcohol, and micro-soldering shorted MOSFETs.",
+        cost: "$120–$340",
+        time: "2–4 days",
+      },
+      {
+        symptom: "Sticky, repeating, or unresponsive keys and trackpad glitching after spill",
+        cause: "Liquid residues drying into conductive syrupy films inside membrane switches and trackpad sensor grids.",
+        fix: "Keyboard assembly swap and trackpad flex cable contact ultrasonic cleaning.",
+        cost: "$90–$210",
+        time: "1–2 days",
+      },
+      {
+        symptom: "Backlight failure with faint ghost image on screen after liquid entered hinge vent",
+        cause: "Corroded display eDP connector pins shorting high-voltage backlight rails to low-voltage data lanes.",
+        fix: "Connector desoldering, PCB pad cleaning, and replacement of eDP socket and fuse.",
+        cost: "$110–$240",
+        time: "2 days",
+      },
+      {
+        symptom: "Battery status displays 'No Battery Detected' or charging stops abruptly at 1%",
+        cause: "Corroded SMBus battery data clock and data pull-up resistors on the charging daughterboard.",
+        fix: "SMBus data line tracing, resistor replacement, and battery connector cleaning.",
+        cost: "$90–$180",
+        time: "1–2 days",
+      },
+    ],
+    prep: [
+      "DO NOT plug into AC charger or try repeatedly to turn on a wet laptop",
+      "DO NOT place the device in uncooked rice — dry starch creates caustic paste inside ports",
+      "Wipe exterior liquid with a clean towel and bring device to repair bench as fast as possible",
+    ],
+  },
+  {
+    slug: "inverter-pcb-repair",
+    noun: "inverter appliance PCBs",
+    label: "Inverter PCB Motherboard Repair",
+    priceRange: "$65–$190",
+    turnaround: "1–4 days",
+    replaceWhen:
+      "the central microcontroller firmware ROM is permanently corrupted or the compressor itself has locked rotor with burnt motor windings",
+    faults: [
+      {
+        symptom: "Outdoor AC unit fan spins but compressor does not start, blinking communication error",
+        cause:
+          "Blown Intelligent Power Module (IPM) IGBT transistor bridge unable to generate 3-phase variable frequency drive power.",
+        fix: "IPM chip desoldering, thermal paste re-application, and replacement of driving gate resistors.",
+        cost: "$80–$180",
+        time: "2–3 days",
+      },
+      {
+        symptom: "Appliance dead after thunderstorm or high-voltage grid spike",
+        cause: "High-voltage surge tripping metal oxide varistors (MOVs) and destroying ceramic fuse and input bridge rectifier.",
+        fix: "Power surge protection stage rebuild: MOV replacement, rectifier replacement, and trace repair.",
+        cost: "$65–$130",
+        time: "1 day",
+      },
+      {
+        symptom: "Compressor starts for 30 seconds then stops repeatedly with DC bus undervoltage error",
+        cause: "Degraded 450V electrolytic filter capacitors losing capacitance and creating severe DC ripple under load.",
+        fix: "High-voltage capacitor replacement with high-temp 105°C rated low-ESR capacitors.",
+        cost: "$70–$140",
+        time: "1–2 days",
+      },
+      {
+        symptom: "Indoor and outdoor unit communication failure (e.g., E6 / CH05 error codes)",
+        cause: "Failed optocoupler optical isolators and burnt current-limiting resistors on the serial data link line.",
+        fix: "Optocoupler replacement and 24V communication loop diode testing.",
+        cost: "$60–$120",
+        time: "1 day",
+      },
+    ],
+    prep: [
+      "Note down the exact error code or count the flashing LED pulses on the outdoor unit PCB",
+      "Turn off the mains breaker before inspecting or disconnecting appliance wiring",
+      "Take clear smartphone photos of all color-coded PCB terminal connections before drop-off",
+    ],
+  },
+  {
+    slug: "refrigerator-compressor-repair",
+    noun: "refrigerator compressors",
+    label: "Refrigerator Compressor Repair",
+    priceRange: "$95–$290",
+    turnaround: "same day to 2 days",
+    replaceWhen:
+      "the internal cabinet evaporator tubing has suffered hidden pinhole corrosion inside non-serviceable polyurethane foam insulation",
+    faults: [
+      {
+        symptom: "Clicking noise from compressor every few minutes, but cooling does not begin",
+        cause: "Burned PTC starter relay or open overload protector preventing the motor starting winding from energizing.",
+        fix: "PTC starter relay replacement, overload protector renewal, and run capacitor testing.",
+        cost: "$75–$130",
+        time: "1–2 hours",
+      },
+      {
+        symptom: "Compressor runs continuously but refrigerator and freezer are barely lukewarm",
+        cause: "Refrigerant gas leak at copper-to-steel braze joints or discharge tube vibration fracture.",
+        fix: "Nitrogen pressure leak testing, brazing repair, filter drier replacement, vacuum pull, and precision R600a/R134a charging.",
+        cost: "$120–$280",
+        time: "3–6 hours",
+      },
+      {
+        symptom: "Inverter compressor not modulating speed or vibrating violently",
+        cause: "Inverter inverter inverter driver board phase imbalance or seized internal mechanical crankshaft bearings.",
+        fix: "Inverter driver PCB testing and compressor replacement with original hermetic motor unit.",
+        cost: "$180–$310",
+        time: "1–2 days",
+      },
+      {
+        symptom: "Capillary tube frost build-up and compressor overheating",
+        cause: "Moisture or burned oil sludge freezing inside tiny 0.8mm capillary metering tube.",
+        fix: "System flush with dry nitrogen, capillary tube replacement, and new desiccant filter drier.",
+        cost: "$110–$220",
+        time: "4–6 hours",
+      },
+    ],
+    prep: [
+      "Clear items away from the bottom and rear vents of the refrigerator",
+      "Leave the refrigerator unplugged if the compressor is clicking repeatedly to prevent motor burnout",
+      "Check model number and refrigerant gas type (R600a or R134a) listed on the interior door sticker",
+    ],
+  },
+  {
+    slug: "drone-motor-replacement",
+    noun: "drone motors & gimbals",
+    label: "Drone Motor & Gimbal Repair",
+    priceRange: "$60–$180",
+    turnaround: "1–3 days",
+    replaceWhen:
+      "the central unibody carbon-fiber frame has suffered structural delamination or the craft was completely immersed in saltwater",
+    faults: [
+      {
+        symptom: "Gimbal motor overload error and erratic camera shuddering during flight",
+        cause: "Bent roll/pitch arm from crash impact or fine dust sand grains wedged in brushless motor airgap.",
+        fix: "Gimbal arm straightening, brushless motor cleaning, and multi-axis IMU calibration.",
+        cost: "$70–$160",
+        time: "1–2 days",
+      },
+      {
+        symptom: "Brushless motor stutters, twitches, or refuses to arm before takeoff",
+        cause: "Blown Electronic Speed Controller (ESC) phase MOSFET or severed 3-phase motor wire.",
+        fix: "ESC board micro-soldering or brushless motor stator unit replacement.",
+        cost: "$65–$140",
+        time: "1 day",
+      },
+      {
+        symptom: "Video transmission black screen or flickering camera feed on remote controller",
+        cause: "Torn flexible flat ribbon cable (FFC) routed through the hollow gimbal rotational axes.",
+        fix: "Precision disassembly and replacement of the high-flex 3-axis gimbal ribbon cable.",
+        cost: "$60–$130",
+        time: "2–4 hours",
+      },
+      {
+        symptom: "Propeller mount loose or motor bell wobbles with high vibration noise",
+        cause: "Deformed titanium motor shaft or crushed precision ball bearings after prop collision.",
+        fix: "Rotor bell swap, bearing extraction and replacement, and dynamic vibration testing.",
+        cost: "$45–$90",
+        time: "2 hours",
+      },
+    ],
+    prep: [
+      "Remove damaged propeller blades and camera lens filters before transporting",
+      "Bring remote controller, one charged flight battery, and the craft for post-repair flight checks",
+      "Remove microSD memory card storing your flight footage",
+    ],
+  },
+  {
+    slug: "mechanical-keyboard-switch-replacement",
+    noun: "mechanical keyboards",
+    label: "Mechanical Keyboard Repair",
+    priceRange: "$35–$110",
+    turnaround: "same day to 2 days",
+    replaceWhen:
+      "the PCB has snapped along structural mounting lines or suffered widespread conductive liquid copper dissolution",
+    faults: [
+      {
+        symptom: "Keypress chattering (double-typing) or key failing to register reliably",
+        cause: "Oxidized gold crosspoint switch contacts or bent terminal pins inside the switch housing.",
+        fix: "Switch desoldering and replacement with genuine Cherry/Gateron/Kailh switch, or contact leaf deoxidation.",
+        cost: "$35–$75",
+        time: "same day",
+      },
+      {
+        symptom: "Hot-swap socket torn completely off PCB after forcing switch with bent pins",
+        cause: "Mechanical shear stress breaking the fragile surface-mount copper solder pads off the fiberglass substrate.",
+        fix: "Epoxy anchor reconstruction and micro-jumper wire routing to adjacent matrix trace diode.",
+        cost: "$45–$85",
+        time: "1–2 hours",
+      },
+      {
+        symptom: "Entire row or column of keys dead simultaneously",
+        cause: "Blown 1N4148 switching diode or fractured PCB matrix trace from drop or flex fatigue.",
+        fix: "Matrix multimeter continuity diagnosis, diode replacement, and enamel wire trace jumpering.",
+        cost: "$40–$80",
+        time: "1 day",
+      },
+      {
+        symptom: "Loose, intermittent, or physically broken USB-C socket on keyboard rear",
+        cause: "Cord tension ripping the surface-mount USB-C receptacle grounding pins from the PCB.",
+        fix: "Hot-air connector replacement and structural epoxy reinforcement of mounting tabs.",
+        cost: "$40–$85",
+        time: "2 hours",
+      },
+    ],
+    prep: [
+      "Remove custom artisan keycaps or delicate accessories before workshop drop-off",
+      "Note the specific keys that chatter or fail to actuate",
+      "Bring the detachable USB cable used with the keyboard",
+    ],
+  },
 ];
 
 export function buildBlocks(seed: CategorySeed, city?: string): Block[] {
@@ -881,7 +1242,7 @@ export function buildBlocks(seed: CategorySeed, city?: string): Block[] {
     { type: "table_of_contents", title: "On this page" },
     {
       type: "rich_text",
-      html: introHtml(seed),
+      html: introHtml(seed, city),
       width: "prose",
     },
     {
@@ -895,7 +1256,7 @@ export function buildBlocks(seed: CategorySeed, city?: string): Block[] {
     },
     {
       type: "rich_text",
-      html: costHtml(seed),
+      html: costHtml(seed, city),
       width: "prose",
     },
     {
@@ -910,19 +1271,26 @@ export function buildBlocks(seed: CategorySeed, city?: string): Block[] {
     },
     {
       type: "rich_text",
-      html: chooseShopHtml(seed),
+      html: chooseShopHtml(seed, city),
       width: "prose",
     },
     {
       type: "faq_accordion",
       title: "Frequently Asked Questions",
-      items: buildFaq(seed),
+      items: buildFaq(seed, city),
     },
     {
       type: "cta_banner",
-      heading: `Find a verified ${shortLabel.toLowerCase()} expert near you`,
-      body: "Filter by active opening hours, on-site home visits, collection service, and transparent part warranties.",
-      cta: { label: "Search the local directory", href: `/search?category=${seed.slug}` },
+      heading: city
+        ? `Find verified ${shortLabel.toLowerCase()} experts in ${city}`
+        : `Find a verified ${shortLabel.toLowerCase()} expert near you`,
+      body: city
+        ? `Browse local repair shops in ${city} with verified bench tools, transparent pricing, and 90-day warranty coverage.`
+        : "Filter by active opening hours, on-site home visits, collection service, and transparent part warranties.",
+      cta: {
+        label: city ? `Search verified shops in ${city}` : "Search the local directory",
+        href: ctaHref,
+      },
       tone: "signal",
     },
   ];
@@ -936,15 +1304,20 @@ function escapeHtml(input: string): string {
     .replace(/"/g, "&quot;");
 }
 
-function introHtml(seed: CategorySeed): string {
+function introHtml(seed: CategorySeed, city?: string): string {
+  const cityIntro = city
+    ? `<p>If you are located in <strong>${escapeHtml(city)}</strong>, finding dependable technical repair shouldn't mean gambling on unverified shops. FixGrid connects you with certified independent specialists in ${escapeHtml(city)} offering upfront bench estimates, genuine replacement components, and guaranteed 90-day warranty coverage.</p>`
+    : "";
+
   return `
 <h2>Is it worth repairing your ${escapeHtml(seed.noun)}?</h2>
+${cityIntro}
 <p>Most ${escapeHtml(seed.noun)} that develop faults can be repaired reliably for a fraction of the cost of buying new. Choosing repair preserves working hardware, prevents unnecessary electronic waste, and supports independent local trade technicians.</p>
 <p>However, transparent advice matters: repair stops making financial sense when ${escapeHtml(seed.replaceWhen)}. A professional shop will provide an honest pre-repair assessment before proceeding with work.</p>
 <p>Typical repair costs for ${escapeHtml(seed.noun)} fall within the <strong>${escapeHtml(seed.priceRange)}</strong> range, with standard turnarounds spanning <strong>${escapeHtml(seed.turnaround)}</strong> depending on whether replacement components are in local inventory or require specialist supply ordering.</p>`.trim();
 }
 
-function costHtml(seed: CategorySeed): string {
+function costHtml(seed: CategorySeed, city?: string): string {
   const rows = seed.faults
     .map(
       (fault) =>
@@ -952,9 +1325,14 @@ function costHtml(seed: CategorySeed): string {
     )
     .join("");
 
+  const cityNote = city
+    ? `<p>Bench costs in ${escapeHtml(city)} typically reflect standardized regional component pricing and skilled technician labor rates.</p>`
+    : "";
+
   return `
 <h2>Realistic Repair Costs & Benchmark Pricing</h2>
 <p>The price table below provides verified industry benchmarks for common ${escapeHtml(seed.noun)} repairs. Use these figures to evaluate repair quotes accurately.</p>
+${cityNote}
 <table>
 <thead><tr><th>Fault / Symptom</th><th>Typical Cost Range</th><th>Bench Turnaround</th></tr></thead>
 <tbody>${rows}</tbody>
@@ -964,9 +1342,13 @@ function costHtml(seed: CategorySeed): string {
 <p><strong>2. Component-Level Diagnosis:</strong> Technicians who diagnose and micro-solder specific failed resistors, capacitors, or ports save you significant money compared to shops that simply swap out entire expensive sub-assemblies.</p>`.trim();
 }
 
-function chooseShopHtml(seed: CategorySeed): string {
+function chooseShopHtml(seed: CategorySeed, city?: string): string {
+  const cityContext = city
+    ? ` across ${escapeHtml(city)}`
+    : "";
+
   return `
-<h2>How to Choose a Reputable Local Repair Shop</h2>
+<h2>How to Choose a Reputable Local Repair Shop${cityContext}</h2>
 <p>Before leaving your ${escapeHtml(seed.noun)} with a repair shop, ask these four critical questions:</p>
 <h3>1. What warranty do you provide on parts and labor?</h3>
 <p>Reputable independent repair shops typically offer a 90-day to 1-year written warranty covering both replacement components and bench labor.</p>
@@ -978,15 +1360,17 @@ function chooseShopHtml(seed: CategorySeed): string {
 <p>Confirm whether common parts are on the shelf or need to be ordered, so you have an accurate timeline for pickup.</p>`.trim();
 }
 
-function buildFaq(seed: CategorySeed): { question: string; answer: string }[] {
+function buildFaq(seed: CategorySeed, city?: string): { question: string; answer: string }[] {
   const primary = seed.faults[0];
+  const locationText = city ? ` in ${city}` : "";
+
   const items = [
     {
-      question: `How much does ${seed.label.toLowerCase()} typically cost?`,
+      question: `How much does ${seed.label.toLowerCase()} typically cost${locationText}?`,
       answer: `Most standard repairs range between ${seed.priceRange}, depending on component availability and whether the fault is a modular replacement or micro-soldering.`,
     },
     {
-      question: "How long will the repair take?",
+      question: `How long will the repair take${locationText}?`,
       answer: `Most jobs are completed within ${seed.turnaround}. In-stock modular repairs are frequently finished the same day.`,
     },
     {
@@ -1014,3 +1398,4 @@ function buildFaq(seed: CategorySeed): { question: string; answer: string }[] {
 
   return items;
 }
+
