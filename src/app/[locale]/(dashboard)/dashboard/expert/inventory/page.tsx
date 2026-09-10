@@ -14,7 +14,6 @@ import { getCategories } from "@/lib/queries/search";
 
 export const metadata: Metadata = {
   title: "Inventory",
-
 };
 
 export default async function ExpertInventoryPage() {
@@ -55,6 +54,16 @@ export default async function ExpertInventoryPage() {
                 Add item
               </Button>
             </InventoryForm>
+            <Button asChild variant="outline" size="sm">
+              <a
+                href={process.env.NEXT_PUBLIC_PARTS_URL || "https://parts.vytron.me"}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <ExternalLink aria-hidden />
+                Parts Exchange
+              </a>
+            </Button>
             <Button asChild variant="outline" size="sm">
               <Link href={`/expert/${shop.slug}?tab=inventory`}>
                 <ExternalLink aria-hidden />

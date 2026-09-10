@@ -3,13 +3,12 @@
 import * as React from "react";
 import { useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
+import { Briefcase, Info, Package, Star } from "lucide-react";
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 /**
- * Tab shell only. Both panels are server-rendered and passed in as children,
- * so review markup and JSON-LD stay on the server and neither panel's content
- * ships as client JS.
+ * Modern segmented tab control for the workshop profile.
  */
 export function ExpertTabs({
   about,
@@ -28,11 +27,6 @@ export function ExpertTabs({
   inventoryCount: number;
   jobsCount?: number;
 }) {
-  // `?tab=reviews` has to actually land on reviews — the sign-in round-trip
-  // from the review gate returns here and would otherwise drop the visitor back
-  // on About, having forgotten why they signed in. Read on the client rather
-  // than from the page's `searchParams`, because touching those in the page
-  // would opt this route out of static generation.
   const queryTab = useSearchParams().get("tab");
   const requested =
     queryTab === "reviews"
@@ -44,43 +38,62 @@ export function ExpertTabs({
       : "about";
   const t = useTranslations("expert");
 
-  // Keyed rather than controlled: on a prerendered route the param is only
-  // legible after hydration, and keying lets the resolved value re-seed
-  // `defaultValue` without an effect that writes state on every param change.
-  // Tab clicks stay uncontrolled; only a change of `?tab=` resets the choice,
-  // which is what arriving on a new URL should do.
   return (
-    <Tabs key={requested} defaultValue={requested}>
-      <TabsList>
-        <TabsTrigger value="about">{t("tabAbout")}</TabsTrigger>
-        <TabsTrigger value="reviews">
-          {t("tabReviews")}
-          <span className="ml-2 font-mono text-xs tabular-nums text-steel-soft">
+    <Tabs key={requested} defaultValue={requested} className="w-full">
+      {/* Modern Segmented Navigation Bar */}
+      <TabsList className="flex flex-wrap items-center gap-1.5 p-1.5 bg-bench-sunk/50 rounded-xl border border-hairline/70 w-full justify-start">
+        <TabsTrigger
+          value="about"
+          className="flex items-center gap-1.5 rounded-lg px-4 py-2 font-display text-xs sm:text-sm font-bold uppercase tracking-wider transition-all border-none -mb-0 pb-2 pt-2 text-steel hover:text-enamel data-[state=active]:bg-chalk data-[state=active]:text-enamel data-[state=active]:shadow-xs"
+        >
+          <Info className="size-3.5 text-signal" />
+          <span>{t("tabAbout")}</span>
+        </TabsTrigger>
+
+        <TabsTrigger
+          value="reviews"
+          className="flex items-center gap-1.5 rounded-lg px-4 py-2 font-display text-xs sm:text-sm font-bold uppercase tracking-wider transition-all border-none -mb-0 pb-2 pt-2 text-steel hover:text-enamel data-[state=active]:bg-chalk data-[state=active]:text-enamel data-[state=active]:shadow-xs"
+        >
+          <Star className="size-3.5 text-amber-500" />
+          <span>{t("tabReviews")}</span>
+          <span className="ml-1 rounded-md bg-bench px-1.5 py-0.5 font-mono text-[10px] font-semibold text-steel tabular-nums border border-hairline/50">
             {reviewCount}
           </span>
         </TabsTrigger>
+
         {inventoryCount > 0 && (
-          <TabsTrigger value="inventory">
-            {t("tabInventory")}
-            <span className="ml-2 font-mono text-xs tabular-nums text-steel-soft">
+          <TabsTrigger
+            value="inventory"
+            className="flex items-center gap-1.5 rounded-lg px-4 py-2 font-display text-xs sm:text-sm font-bold uppercase tracking-wider transition-all border-none -mb-0 pb-2 pt-2 text-steel hover:text-enamel data-[state=active]:bg-chalk data-[state=active]:text-enamel data-[state=active]:shadow-xs"
+          >
+            <Package className="size-3.5 text-verdigris" />
+            <span>{t("tabInventory")}</span>
+            <span className="ml-1 rounded-md bg-verdigris-wash px-1.5 py-0.5 font-mono text-[10px] font-semibold text-verdigris tabular-nums border border-verdigris/30">
               {inventoryCount}
             </span>
           </TabsTrigger>
         )}
+
         {jobsCount > 0 && (
-          <TabsTrigger value="jobs" className="gap-1.5 text-cyan hover:text-cyan">
-            Hiring
-            <span className="rounded-full bg-cyan/15 px-1.5 py-0.2 font-mono text-xs font-semibold text-cyan tabular-nums">
+          <TabsTrigger
+            value="jobs"
+            className="flex items-center gap-1.5 rounded-lg px-4 py-2 font-display text-xs sm:text-sm font-bold uppercase tracking-wider transition-all border-none -mb-0 pb-2 pt-2 text-steel hover:text-enamel data-[state=active]:bg-chalk data-[state=active]:text-enamel data-[state=active]:shadow-xs"
+          >
+            <Briefcase className="size-3.5 text-signal" />
+            <span>Hiring</span>
+            <span className="ml-1 rounded-md bg-signal-wash px-1.5 py-0.5 font-mono text-[10px] font-semibold text-signal tabular-nums border border-signal/30">
               {jobsCount}
             </span>
           </TabsTrigger>
         )}
       </TabsList>
 
-      <TabsContent value="about">{about}</TabsContent>
-      <TabsContent value="reviews">{reviews}</TabsContent>
-      {inventoryCount > 0 && <TabsContent value="inventory">{inventory}</TabsContent>}
-      {jobsCount > 0 && <TabsContent value="jobs">{jobs}</TabsContent>}
+      <div className="mt-6">
+        <TabsContent value="about">{about}</TabsContent>
+        <TabsContent value="reviews">{reviews}</TabsContent>
+        {inventoryCount > 0 && <TabsContent value="inventory">{inventory}</TabsContent>}
+        {jobsCount > 0 && <TabsContent value="jobs">{jobs}</TabsContent>}
+      </div>
     </Tabs>
   );
 }

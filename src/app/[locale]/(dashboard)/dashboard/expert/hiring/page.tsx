@@ -13,7 +13,6 @@ import { listShopJobs } from "@/lib/dashboard/expert";
 
 export const metadata: Metadata = {
   title: "Hiring & Job Openings",
-
 };
 
 export default async function ExpertHiringPage() {
@@ -46,6 +45,16 @@ export default async function ExpertHiringPage() {
                 Post Opening
               </Button>
             </JobForm>
+            <Button asChild variant="outline" size="sm">
+              <a
+                href={process.env.NEXT_PUBLIC_HIRING_URL || "https://hiring.vytron.me"}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <ExternalLink className="size-4" />
+                Hiring Portal
+              </a>
+            </Button>
             <Button asChild variant="outline" size="sm">
               <Link href={`/expert/${shop.slug}?tab=jobs`}>
                 <ExternalLink className="size-4" />

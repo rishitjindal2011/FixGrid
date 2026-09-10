@@ -1,16 +1,25 @@
 import type { ComponentType } from "react";
 import Link from "next/link";
-import { CalendarOff, ExternalLink, Plus, Store } from "lucide-react";
+import { Boxes, Briefcase, CalendarOff, ExternalLink, Plus, Store } from "lucide-react";
 
 /**
- * The four things a shop owner starts a session to do.
- *
- * "View public page" points out of the dashboard at the live listing, which is
- * why it carries an explicit external mark — everything else here stays inside.
+ * The core things a shop owner starts a session to do.
  */
 export function QuickActions({ slug }: { slug: string }) {
   return (
-    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+      <QuickAction
+        href="/dashboard/expert/hiring"
+        icon={Briefcase}
+        title="Post bench vacancy"
+        description="Technicians & apprentices"
+      />
+      <QuickAction
+        href="/dashboard/expert/inventory"
+        icon={Boxes}
+        title="List hardware stock"
+        description="Parts, screens & IC chips"
+      />
       <QuickAction
         href="/dashboard/expert/services"
         icon={Plus}
@@ -38,6 +47,7 @@ export function QuickActions({ slug }: { slug: string }) {
     </div>
   );
 }
+
 
 function QuickAction({
   href,

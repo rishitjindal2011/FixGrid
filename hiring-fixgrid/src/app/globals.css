@@ -1,0 +1,90 @@
+@import "tailwindcss";
+
+@theme {
+  --color-bench: #eef1f4;
+  --color-bench-sunk: #e2e7ec;
+  --color-chalk: #ffffff;
+
+  --color-enamel: #123b4a;
+  --color-enamel-lift: #1c5165;
+  --color-steel: #5a6b75;
+  --color-steel-soft: #8b99a3;
+  --color-hairline: #ccd5dc;
+
+  --color-signal: #e8590c;
+  --color-signal-lift: #c9490a;
+  --color-signal-wash: #fdf0e7;
+
+  --color-verdigris: #2a8c82;
+  --color-verdigris-wash: #e7f4f2;
+
+  --color-rust: #b42318;
+  --color-rust-wash: #fdeceb;
+
+  --font-display: 'Barlow Condensed', 'Arial Narrow', sans-serif;
+  --font-sans: 'Public Sans', system-ui, -apple-system, sans-serif;
+  --font-mono: 'IBM Plex Mono', 'JetBrains Mono', ui-monospace, monospace;
+
+  --radius-machined: 6px;
+  --shadow-bench: 0 1px 2px rgb(18 59 74 / 0.06), 0 4px 12px rgb(18 59 74 / 0.05);
+  --shadow-lift: 0 2px 4px rgb(18 59 74 / 0.08), 0 12px 28px rgb(18 59 74 / 0.10);
+}
+
+@layer base {
+  :root {
+    color-scheme: light;
+  }
+
+  body {
+    background-color: var(--color-bench);
+    color: var(--color-enamel);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
+
+  h1, h2, h3, h4 {
+    font-family: var(--font-display);
+    font-weight: 600;
+    text-transform: uppercase;
+  }
+}
+
+/* Schematic graph paper grid */
+.schematic {
+  background-image:
+    linear-gradient(to right, rgb(18 59 74 / 0.06) 1px, transparent 1px),
+    linear-gradient(to bottom, rgb(18 59 74 / 0.06) 1px, transparent 1px);
+  background-size: 28px 28px;
+  background-position: center center;
+}
+
+.schematic-fade {
+  -webkit-mask-image: radial-gradient(ellipse 90% 70% at 50% 0%, #000 40%, transparent 100%);
+  mask-image: radial-gradient(ellipse 90% 70% at 50% 0%, #000 40%, transparent 100%);
+}
+
+/* Status animations */
+.status-dot--open {
+  background-color: var(--color-verdigris);
+  box-shadow: 0 0 0 0 rgb(42 140 130 / 0.55);
+  animation: status-pulse 2.4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.status-dot--live {
+  background-color: var(--color-signal);
+  box-shadow: 0 0 0 0 rgb(232 89 12 / 0.55);
+  animation: status-pulse-live 2.4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes status-pulse-live {
+  0% { box-shadow: 0 0 0 0 rgb(232 89 12 / 0.5); }
+  70% { box-shadow: 0 0 0 6px rgb(232 89 12 / 0); }
+  100% { box-shadow: 0 0 0 0 rgb(232 89 12 / 0); }
+}
+
+@keyframes status-pulse {
+  0% { box-shadow: 0 0 0 0 rgb(42 140 130 / 0.5); }
+  70% { box-shadow: 0 0 0 6px rgb(42 140 130 / 0); }
+  100% { box-shadow: 0 0 0 0 rgb(42 140 130 / 0); }
+}

@@ -171,9 +171,9 @@ export default async function SearchPage({ searchParams }: PageProps) {
     <>
       {schemas.length > 0 ? <JsonLd data={schemas} /> : null}
 
-      <div className="mx-auto max-w-[94rem] px-4 py-6 sm:px-6">
+      <div className="mx-auto max-w-[96rem] px-4 py-6 sm:px-6">
         {/* Breadcrumb Navigation */}
-        <nav aria-label="Breadcrumb" className="mb-4 flex items-center gap-2 text-xs text-steel">
+        <nav aria-label="Breadcrumb" className="mb-3 flex items-center gap-2 text-xs text-steel">
           <Link href="/" className="transition hover:text-signal">Home</Link>
           <ChevronRight className="size-3 text-steel/50" />
           <span className="text-steel">Directory</span>
@@ -181,53 +181,52 @@ export default async function SearchPage({ searchParams }: PageProps) {
           <span className="font-semibold text-charcoal">Verified Workshops</span>
         </nav>
 
-        {/* Directory Header Bar */}
-        <header className="mb-6 rounded-machined border border-hairline bg-bench-raised p-6 shadow-sm">
-          <div className="flex flex-wrap items-center justify-between gap-4">
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="relative flex size-2">
-                  <span className="absolute inline-flex size-full animate-ping rounded-full bg-emerald-400 opacity-75"></span>
-                  <span className="relative inline-flex size-2 rounded-full bg-emerald-500"></span>
-                </span>
-                <span className="text-[11px] font-bold uppercase tracking-wider text-steel">
-                  FixGrid Verified Workshop Radar
-                </span>
-              </div>
-              <h1 className="mt-1 font-heading text-2xl font-bold tracking-tight text-charcoal sm:text-3xl">
-                {heading}
-              </h1>
-              <p className="mt-1 text-sm text-steel">
-                {outcome.failed ? t("unavailable") : matchLabel}
-              </p>
+        {/* Directory Telemetry Header */}
+        <header className="mb-4 flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="relative flex size-2">
+                <span className="absolute inline-flex size-full animate-ping rounded-full bg-emerald-400 opacity-75"></span>
+                <span className="relative inline-flex size-2 rounded-full bg-emerald-500"></span>
+              </span>
+              <span className="text-[11px] font-bold uppercase tracking-wider text-steel">
+                FixGrid Verified Workshop Network
+              </span>
             </div>
+            <h1 className="mt-0.5 font-heading text-2xl font-bold tracking-tight text-charcoal sm:text-3xl">
+              {heading}
+            </h1>
+            <p className="text-xs text-steel">
+              {outcome.failed ? t("unavailable") : matchLabel}
+            </p>
+          </div>
 
-            {/* Trust Badges */}
-            <div className="flex flex-wrap items-center gap-3">
-              <div className="flex items-center gap-2 rounded-machined border border-emerald-200 bg-emerald-50/70 px-3 py-1.5 text-xs font-medium text-emerald-800">
-                <ShieldCheck className="size-4 text-emerald-600" />
-                <span>Smart Escrow Protected</span>
-              </div>
-              <div className="hidden sm:flex items-center gap-2 rounded-machined border border-hairline bg-bench-canvas px-3 py-1.5 text-xs font-medium text-steel">
-                <span className="size-1.5 rounded-full bg-signal" />
-                <span>Direct Workshop Payouts</span>
-              </div>
+          {/* Trust Guarantees */}
+          <div className="flex flex-wrap items-center gap-2.5">
+            <div className="flex items-center gap-2 rounded-machined border border-emerald-200 bg-emerald-50/80 px-3 py-1.5 text-xs font-semibold text-emerald-800">
+              <ShieldCheck className="size-4 text-emerald-600" />
+              <span>Smart Escrow Protected · 0% Advance Risk</span>
+            </div>
+            <div className="hidden sm:flex items-center gap-2 rounded-machined border border-hairline bg-bench-raised px-3 py-1.5 text-xs font-medium text-steel">
+              <span className="size-1.5 rounded-full bg-signal" />
+              <span>Direct Workshop Payouts</span>
             </div>
           </div>
         </header>
 
         <SelectionProvider>
-          <div className="grid gap-6 lg:grid-cols-[17.5rem_minmax(0,1fr)_minmax(0,25rem)]">
-            <aside className="lg:sticky lg:top-24 lg:self-start">
-              <Suspense fallback={<div className="h-64 animate-pulse rounded-machined bg-bench-sunk" />}>
-                <FilterPanel
-                  categories={categories}
-                  activeCount={countActiveFilters(filters)}
-                />
-              </Suspense>
-            </aside>
+          {/* Top Sticky Filter Command Ribbon */}
+          <Suspense fallback={<div className="h-24 animate-pulse rounded-machined bg-bench-sunk mb-6" />}>
+            <FilterPanel
+              categories={categories}
+              activeCount={countActiveFilters(filters)}
+            />
+          </Suspense>
 
-            <section aria-label={t("resultsLabel")}>
+          {/* Modern 55/45 Discovery Split */}
+          <div className="grid gap-6 lg:grid-cols-[1.18fr_0.92fr] items-start">
+            {/* Left: Workshop Feed */}
+            <section aria-label={t("resultsLabel")} className="min-w-0">
               {outcome.failed ? (
                 <ErrorState />
               ) : outcome.results.length === 0 ? (
@@ -252,6 +251,14 @@ export default async function SearchPage({ searchParams }: PageProps) {
                         initialStatus={getShopStatus(toHoursInput(result))}
                         index={index + 1}
                         hasCoordinates={result.lat !== null && result.lng !== null}
+                        bio={result.bio}
+                        offersInShop={result.offers_in_shop}
+                        offersHomeService={result.offers_home_service}
+                        offersPickupDrop={result.offers_pickup_drop}
+                        responseHours={result.response_hours}
+                        workingDays={result.working_days}
+                        openingTime={result.opening_time}
+                        closingTime={result.closing_time}
                       />
                     ))}
                   </ul>
@@ -265,13 +272,11 @@ export default async function SearchPage({ searchParams }: PageProps) {
               )}
             </section>
 
-            {/* Live Interactive Radar Map */}
-            <aside className="hidden lg:block">
-              <div className="sticky top-24 h-[calc(100vh-8rem)]">
-                <Suspense fallback={<div className="size-full animate-pulse rounded-machined bg-bench-sunk" />}>
-                  <SearchMap pins={pins} />
-                </Suspense>
-              </div>
+            {/* Right: Sticky Full-Height Radar Viewport */}
+            <aside className="hidden lg:block sticky top-20 h-[calc(100vh-6.5rem)]">
+              <Suspense fallback={<div className="size-full animate-pulse rounded-machined bg-bench-sunk" />}>
+                <SearchMap pins={pins} />
+              </Suspense>
             </aside>
           </div>
         </SelectionProvider>

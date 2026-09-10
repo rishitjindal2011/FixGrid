@@ -338,6 +338,8 @@ export interface SearchResult extends FixerProfileRow {
    * to accommodate a null the database cannot produce would have been the wrong fix.
    */
   default_warranty_days: number;
+  response_hours?: number;
+  accepts_bookings?: boolean;
 }
 
 export interface SearchOutcome {

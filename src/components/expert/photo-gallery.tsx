@@ -37,10 +37,15 @@ export function PhotoGallery({ photos, shopName }: { photos: string[]; shopName:
 
   if (count === 0) {
     return (
-      <div className="schematic grid aspect-[16/9] place-items-center rounded-machined border border-hairline bg-chalk">
-        <p className="flex items-center gap-2 font-mono text-eyebrow uppercase tracking-[0.14em] text-steel-soft">
-          <ImageOff aria-hidden className="size-4" />
-          {t("noPhotos")}
+      <div className="relative aspect-[16/10] sm:aspect-[16/9] max-h-[340px] flex flex-col items-center justify-center rounded-2xl border border-hairline bg-gradient-to-br from-enamel to-enamel-lift p-6 text-center text-bench shadow-bench">
+        <div className="size-14 rounded-2xl bg-white/10 backdrop-blur-sm border border-white/20 flex items-center justify-center">
+          <ImageOff className="size-7 text-signal" />
+        </div>
+        <p className="mt-3 font-display text-lg font-bold uppercase tracking-wider text-bench">
+          {shopName} Lab Facility
+        </p>
+        <p className="mt-1 max-w-sm text-xs text-bench/70 font-mono">
+          Verified on-site hardware workbench &amp; diagnostics lab.
         </p>
       </div>
     );
@@ -55,23 +60,26 @@ export function PhotoGallery({ photos, shopName }: { photos: string[]; shopName:
       aria-label={t("photosOf", { shopName })}
       tabIndex={0}
       onKeyDown={onKeyDown}
-      className="rounded-machined focus-visible:outline-2"
+      className="rounded-2xl focus-visible:outline-2"
     >
-      <div className="relative aspect-[16/9] overflow-hidden rounded-machined border border-hairline bg-bench-sunk">
+      <div className="relative aspect-[16/10] sm:aspect-[16/9] max-h-[380px] overflow-hidden rounded-2xl border border-hairline bg-bench-sunk shadow-bench group">
         <Image
           src={current}
           alt={t("photoAlt", { shopName, index: index + 1, count })}
           fill
           priority={index === 0}
-          className="object-cover"
+          className="object-cover transition-transform duration-500 group-hover:scale-105"
           sizes="(min-width: 1024px) 640px, 100vw"
         />
+
+        {/* Subtle Vignette */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-black/20 pointer-events-none" />
 
         {count > 1 ? (
           <>
             <CarouselButton side="left" onClick={() => go(index - 1)} label={t("previousPhoto")} />
             <CarouselButton side="right" onClick={() => go(index + 1)} label={t("nextPhoto")} />
-            <span className="absolute bottom-3 right-3 rounded-machined bg-enamel/85 px-2 py-1 font-mono text-eyebrow tabular-nums text-bench">
+            <span className="absolute bottom-3 right-3 rounded-lg bg-black/80 backdrop-blur-md px-2.5 py-1 font-mono text-xs tabular-nums text-white border border-white/10 shadow-sm">
               {index + 1} / {count}
             </span>
           </>
@@ -83,7 +91,7 @@ export function PhotoGallery({ photos, shopName }: { photos: string[]; shopName:
       </p>
 
       {count > 1 ? (
-        <ul className="mt-3 flex gap-2 overflow-x-auto pb-1">
+        <ul className="mt-3 flex gap-2.5 overflow-x-auto pb-1">
           {photos.map((photo, thumbIndex) => (
             <li key={`${photo}-${thumbIndex}`}>
               <button
@@ -92,10 +100,10 @@ export function PhotoGallery({ photos, shopName }: { photos: string[]; shopName:
                 aria-label={t("showPhoto", { index: thumbIndex + 1 })}
                 aria-current={thumbIndex === index}
                 className={cn(
-                  "relative size-16 shrink-0 overflow-hidden rounded-machined border-2 transition-colors",
+                  "relative size-16 shrink-0 overflow-hidden rounded-xl border-2 transition-all",
                   thumbIndex === index
-                    ? "border-signal"
-                    : "border-hairline hover:border-steel-soft",
+                    ? "border-signal shadow-sm scale-105"
+                    : "border-hairline opacity-70 hover:opacity-100 hover:border-steel-soft",
                 )}
               >
                 <Image
@@ -121,7 +129,6 @@ function CarouselButton({
 }: {
   side: "left" | "right";
   onClick: () => void;
-  /** Passed in rather than looked up here, so the parent owns the one namespace. */
   label: string;
 }) {
   const Icon = side === "left" ? ChevronLeft : ChevronRight;
@@ -131,7 +138,7 @@ function CarouselButton({
       onClick={onClick}
       aria-label={label}
       className={cn(
-        "absolute top-1/2 grid size-9 -translate-y-1/2 place-items-center rounded-machined bg-chalk/90 text-enamel shadow-bench transition-colors hover:bg-chalk",
+        "absolute top-1/2 grid size-10 -translate-y-1/2 place-items-center rounded-xl bg-black/60 backdrop-blur-md text-white border border-white/20 shadow-bench transition-all hover:bg-black/80 hover:scale-110",
         side === "left" ? "left-3" : "right-3",
       )}
     >

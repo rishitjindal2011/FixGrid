@@ -690,6 +690,14 @@ export default async function HomePage() {
                 initialStatus={getShopStatus(toHoursInput(fixer))}
                 index={index + 1}
                 hasCoordinates={false}
+                bio={fixer.bio}
+                offersInShop={fixer.offers_in_shop}
+                offersHomeService={fixer.offers_home_service}
+                offersPickupDrop={fixer.offers_pickup_drop}
+                responseHours={fixer.response_hours}
+                workingDays={fixer.working_days}
+                openingTime={fixer.opening_time}
+                closingTime={fixer.closing_time}
               />
             ))}
           </ul>
