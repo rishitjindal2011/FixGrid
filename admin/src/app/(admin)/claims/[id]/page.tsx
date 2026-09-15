@@ -11,6 +11,7 @@ import { getSession } from "@/lib/auth/session";
 import {
   claimEvidenceNotes,
   parseClaimEvidencePaths,
+  parseClaimPortal,
   type StoredAttachment,
 } from "@/lib/attachments";
 import { getClaim } from "@/lib/queries/claims";
@@ -108,6 +109,12 @@ export default async function ClaimDetailPage({
             </h2>
             <dl>
               <Field label="Name">{claim.shopName}</Field>
+              <Field label="Portal Origin">
+                {(() => {
+                  const p = parseClaimPortal(claim.evidence);
+                  return <Badge variant={p.badgeVariant}>{p.label}</Badge>;
+                })()}
+              </Field>
               <Field label="Address">{claim.shopAddress || "—"}</Field>
               <Field label="Verified">
                 {claim.shopVerified ? (

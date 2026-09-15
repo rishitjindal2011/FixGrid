@@ -198,19 +198,19 @@ export function JobCard({ job, onApplyClick }: JobCardProps) {
       </div>
 
       {/* Action Footer */}
-      <div className="mt-5 pt-4 border-t border-hairline flex flex-col sm:flex-row items-center justify-between gap-3">
+      <div className="mt-5 pt-4 border-t border-hairline flex flex-col md:flex-row items-start md:items-center justify-between gap-3">
         <div className="flex items-center gap-1.5 font-mono text-xs text-steel">
           <ShieldCheck className="size-4 text-verdigris" />
           <span>FixGrid Escrow Protection Assured</span>
         </div>
 
-        <div className="flex items-center gap-2 w-full sm:w-auto">
+        <div className="flex flex-wrap items-center gap-2 w-full md:w-auto">
           {/* WhatsApp Direct Connect */}
           <a
             href={whatsappUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 rounded-machined bg-[#25D366] px-4 py-2 font-mono text-xs font-bold text-white shadow-sm hover:bg-[#1EBE5D] transition-colors"
+            className="flex-1 md:flex-none inline-flex items-center justify-center gap-1.5 rounded-machined bg-[#25D366] px-3.5 py-2 font-mono text-xs font-bold text-white shadow-sm hover:bg-[#1EBE5D] transition-colors"
           >
             <MessageSquare className="size-3.5 fill-current" />
             <span>WhatsApp</span>
@@ -220,7 +220,7 @@ export function JobCard({ job, onApplyClick }: JobCardProps) {
           {cleanPhone && (
             <a
               href={`tel:${cleanPhone}`}
-              className="inline-flex size-9 items-center justify-center rounded-machined border border-hairline bg-chalk text-steel hover:text-enamel hover:bg-bench transition-colors"
+              className="inline-flex size-9 items-center justify-center rounded-machined border border-hairline bg-chalk text-steel hover:text-enamel hover:bg-bench transition-colors shrink-0"
               title="Call Workshop"
             >
               <Phone className="size-3.5" />
@@ -230,7 +230,7 @@ export function JobCard({ job, onApplyClick }: JobCardProps) {
           {/* Dedicated Full-Page Candidate Application Portal */}
           <Link
             href={`/apply/${job.id}`}
-            className="flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 rounded-machined bg-signal px-5 py-2 font-display text-xs font-semibold uppercase tracking-wider text-white shadow-sm hover:bg-signal-lift transition-all"
+            className="flex-1 md:flex-none inline-flex items-center justify-center gap-1.5 rounded-machined bg-signal px-4 py-2 font-display text-xs font-semibold uppercase tracking-wider text-white shadow-sm hover:bg-signal-lift transition-all whitespace-nowrap"
           >
             <span>Apply for Bench</span>
             <ArrowRight className="size-3.5" />

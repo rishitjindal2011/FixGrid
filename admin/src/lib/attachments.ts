@@ -81,6 +81,42 @@ export function parseClaimEvidencePaths(evidence: string | null): string[] {
     .filter(Boolean);
 }
 
+export interface ClaimPortalInfo {
+  portal: "hiring" | "parts" | "main";
+  label: string;
+  badgeVariant: "signal" | "neutral" | "verified";
+}
+
+export function parseClaimPortal(evidence: string | null): ClaimPortalInfo {
+  if (!evidence) {
+    return {
+      portal: "main",
+      label: "Main Platform",
+      badgeVariant: "neutral",
+    };
+  }
+  const lower = evidence.toLowerCase();
+  if (lower.includes("portal: hiring") || lower.includes("hiring.vytron.me") || lower.includes("portal: recruitment")) {
+    return {
+      portal: "hiring",
+      label: "Hiring Portal (hiring.vytron.me)",
+      badgeVariant: "signal",
+    };
+  }
+  if (lower.includes("portal: parts") || lower.includes("parts.vytron.me") || lower.includes("portal: hardware")) {
+    return {
+      portal: "parts",
+      label: "Parts Portal (parts.vytron.me)",
+      badgeVariant: "verified",
+    };
+  }
+  return {
+    portal: "main",
+    label: "Main Platform (fixgrid.vytron.me)",
+    badgeVariant: "neutral",
+  };
+}
+
 export function claimEvidenceNotes(evidence: string | null, paths: string[]): string | null {
   if (!evidence) return null;
 

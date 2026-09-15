@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import { useCart } from "@/lib/cart-context";
+import { BrandMark } from "@/components/brand-mark";
 
 export function Navbar() {
   const { user, workshop, signOut } = useAuth();
@@ -29,56 +30,47 @@ export function Navbar() {
         <div className="flex items-center gap-4">
           <Link
             href="/"
-            className="flex items-center gap-3 transition-opacity hover:opacity-90 group"
+            className="flex items-center gap-2.5 transition-opacity hover:opacity-90 group"
           >
-            <div className="flex size-9 items-center justify-center rounded-machined bg-enamel text-bench shadow-sm group-hover:bg-enamel-lift transition-colors">
-              <Cpu className="size-4 text-signal" />
-            </div>
-            <div className="flex flex-col leading-none">
-              <div className="flex items-center gap-1.5">
-                <span className="font-display text-xl font-bold tracking-tight text-enamel uppercase">
-                  FIX<span className="text-signal">GRID</span>
-                </span>
-                <span className="rounded bg-signal-wash border border-signal/20 px-1.5 py-0.5 font-mono text-[9px] font-bold tracking-wider text-signal uppercase">
-                  PARTS &amp; SUPPLY
-                </span>
-              </div>
-              <span className="font-mono text-[10px] text-steel-soft tracking-wider">
-                parts.vytron.me
+            <BrandMark size="md" className="group-hover:scale-105" />
+            <div className="flex items-center gap-2">
+              <span className="flex items-baseline font-display text-xl uppercase tracking-tight text-enamel font-bold">
+                <span>FIX</span>
+                <span className="text-[#0284c7]">GRID</span>
+              </span>
+              <span className="rounded border border-signal/30 bg-signal-wash px-1.5 py-0.5 font-mono text-[9px] font-bold tracking-wider text-signal uppercase">
+                PARTS &amp; SUPPLY
               </span>
             </div>
           </Link>
-
-          {/* Telemetry Indicator */}
-          <div className="hidden lg:flex items-center gap-2 rounded-machined border border-hairline bg-bench px-2.5 py-1 text-xs">
-            <span className="relative flex size-2">
-              <span className="animate-ping absolute inline-flex size-full rounded-full bg-verdigris opacity-75" />
-              <span className="relative inline-flex size-2 rounded-full bg-verdigris" />
-            </span>
-            <span className="font-mono text-[11px] font-medium text-enamel uppercase tracking-wider">
-              Workshop Shelves Live
-            </span>
-          </div>
         </div>
 
         {/* Navigation Links & Action */}
-        <nav className="flex items-center gap-3 sm:gap-4">
-          <a
-            href="#quality"
-            className="hidden md:inline-flex items-center gap-1.5 text-xs font-mono font-medium text-steel hover:text-enamel transition-colors uppercase tracking-wider"
+        <nav className="flex items-center gap-3 sm:gap-5">
+          <Link
+            href="/catalog"
+            className="hidden sm:inline-flex items-center gap-1.5 font-display text-xs uppercase tracking-wide text-steel hover:text-signal transition-colors font-semibold"
           >
-            <ShieldCheck className="size-4 text-verdigris" />
-            Quality Mandates
-          </a>
+            <Cpu className="size-3.5 text-signal" />
+            Parts Catalog
+          </Link>
+
+          <Link
+            href="/join"
+            className="hidden sm:inline-flex items-center gap-1.5 font-display text-xs uppercase tracking-wide text-steel hover:text-signal transition-colors font-semibold"
+          >
+            <ShieldCheck className="size-3.5 text-signal" />
+            Join as Supplier
+          </Link>
 
           <a
             href="http://localhost:3003"
             target="_blank"
             rel="noopener noreferrer"
-            className="hidden sm:inline-flex items-center gap-1 text-xs font-mono font-medium text-steel hover:text-enamel transition-colors uppercase tracking-wider"
+            className="hidden sm:inline-flex items-center gap-1 font-display text-xs uppercase tracking-wide text-steel hover:text-enamel transition-colors"
           >
             <Package className="size-3.5 text-signal" />
-            Bench Careers
+            <span>Bench Careers</span>
             <ArrowUpRight className="size-3 text-steel-soft" />
           </a>
 
@@ -183,10 +175,9 @@ export function Navbar() {
           ) : (
             <Link
               href="/login"
-              className="inline-flex items-center gap-1.5 rounded-machined border border-hairline bg-bench hover:bg-chalk px-3 py-1.5 font-mono text-xs font-medium text-enamel transition-colors shadow-sm"
+              className="inline-flex h-9 items-center justify-center rounded-machined border border-hairline bg-chalk px-3.5 font-display text-xs uppercase tracking-wide text-enamel transition-colors hover:bg-bench"
             >
-              <Lock className="size-3 text-signal" />
-              <span>Workshop Sign In</span>
+              Sign in
             </Link>
           )}
 

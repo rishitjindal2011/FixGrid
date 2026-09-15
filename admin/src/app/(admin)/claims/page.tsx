@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { getSession } from "@/lib/auth/session";
 import { getClaimCounts, listClaims, type ClaimRow } from "@/lib/queries/claims";
+import { parseClaimPortal } from "@/lib/attachments";
 import { formatRelative } from "@/lib/format";
 import type { ClaimStatus } from "@/lib/types/marketplace";
 import { cn } from "@/lib/utils";
@@ -82,6 +83,15 @@ export default async function ClaimsPage({
           ) : null}
         </span>
       ),
+    },
+    {
+      key: "portal",
+      header: "Portal Origin",
+      hideOnMobile: true,
+      cell: (row) => {
+        const p = parseClaimPortal(row.evidence);
+        return <Badge variant={p.badgeVariant}>{p.label}</Badge>;
+      },
     },
     {
       key: "owned",

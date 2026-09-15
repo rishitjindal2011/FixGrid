@@ -450,8 +450,9 @@ export const config = {
    * Anything added here must be a URL that neither carries a session nor should
    * ever be localized.
    */
+  // Yoga has its own public root layout and does not use locale or account routing.
   matcher: [
-    "/((?!_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml|(?:api|auth|icon|apple-icon)(?:/|$)|.*\\.(?:svg|png|jpg|jpeg|gif|webp|avif|ico|css|js|woff|woff2|ttf|xsl|xml)$).*)",
+    "/((?!_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml|(?:api|auth|icon|apple-icon|yoga)(?:/|$)|.*\\.(?:svg|png|jpg|jpeg|gif|webp|avif|ico|css|js|woff|woff2|ttf|xsl|xml)$).*)",
     "/(api|trpc)(.*)",
     "/__clerk/:path*",
   ],

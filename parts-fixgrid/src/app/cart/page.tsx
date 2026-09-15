@@ -23,6 +23,7 @@ import {
   Zap,
 } from "lucide-react";
 import { useCart } from "@/lib/cart-context";
+import { BrandMark } from "@/components/brand-mark";
 import { useAuth } from "@/lib/auth-context";
 
 export default function CartPage() {
@@ -190,21 +191,15 @@ export default function CartPage() {
       {/* Top Header */}
       <header className="sticky top-0 z-40 w-full border-b border-hairline bg-chalk/95 backdrop-blur shadow-sm">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
-          <Link href="/" className="flex items-center gap-3 group">
-            <div className="flex size-9 items-center justify-center rounded-machined bg-enamel text-bench group-hover:bg-enamel-lift transition-colors">
-              <Cpu className="size-4 text-signal" />
-            </div>
-            <div className="flex flex-col leading-none">
-              <div className="flex items-center gap-1.5">
-                <span className="font-display text-xl font-bold tracking-tight text-enamel uppercase">
-                  FIX<span className="text-signal">GRID</span>
-                </span>
-                <span className="rounded bg-signal-wash border border-signal/20 px-1.5 py-0.5 font-mono text-[9px] font-bold tracking-wider text-signal uppercase">
-                  BENCH CART
-                </span>
-              </div>
-              <span className="font-mono text-[10px] text-steel-soft tracking-wider">
-                parts.vytron.me
+          <Link href="/" className="flex items-center gap-2.5 group">
+            <BrandMark size="md" className="group-hover:scale-105" />
+            <div className="flex items-center gap-2">
+              <span className="flex items-baseline font-display text-xl uppercase tracking-tight text-enamel font-bold">
+                <span>FIX</span>
+                <span className="text-[#0284c7]">GRID</span>
+              </span>
+              <span className="rounded border border-signal/30 bg-signal-wash px-1.5 py-0.5 font-mono text-[9px] font-bold tracking-wider text-signal uppercase">
+                PARTS &amp; SUPPLY
               </span>
             </div>
           </Link>

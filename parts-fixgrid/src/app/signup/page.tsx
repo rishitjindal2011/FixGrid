@@ -1,18 +1,20 @@
 "use client";
 
 import React, { useState, Suspense } from "react";
+import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { AuthShell, Field, AuthMessage, AuthLink } from "@/components/auth-shell";
+import { GoogleSignInButton } from "@/components/google-sign-in-button";
 import { useAuth } from "@/lib/auth-context";
-import { ArrowRight, Loader2, ShieldCheck } from "lucide-react";
+import { ArrowRight, Loader2, Store } from "lucide-react";
 
 function SignupForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const nextTarget = searchParams.get("next") || "/list";
+  const nextTarget = searchParams.get("next") || "/";
 
   const { signUp } = useAuth();
-  const [shopName, setShopName] = useState("");
+  const [displayName, setDisplayName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -24,103 +26,131 @@ function SignupForm() {
     setError(null);
     setLoading(true);
 
-    const res = await signUp(email, password, shopName);
+    const res = await signUp(email, password, {
+      displayName: displayName.trim(),
+    });
     setLoading(false);
 
     if (res.error) {
       setError(res.error);
     } else {
-      setNotice("Workshop inventory terminal created! Redirecting to reclamation portal...");
+      setNotice("Account initialized successfully! Redirecting...");
       setTimeout(() => {
         router.push(nextTarget);
-      }, 900);
+      }, 700);
     }
   };
 
   return (
     <AuthShell
-      title="Register Workshop"
-      intro="Create an authorized workshop profile to list OEM pulls, tested IC chips, and surplus replacement hardware."
+      title="Create FixGrid Parts Account"
+      intro="Create your account to order bench-tested replacement assemblies, track shipments, and communicate with workshops."
       footer={
         <>
-          Already managing an authorized workshop?{" "}
+          Already registered?{" "}
           <AuthLink href={`/login${nextTarget ? `?next=${encodeURIComponent(nextTarget)}` : ""}`}>
             Sign In Here &rarr;
           </AuthLink>
         </>
       }
     >
-      <form onSubmit={handleSubmit} className="flex flex-col gap-4.5" noValidate>
-        <Field
-          label="Workshop / Laboratory Name"
-          htmlFor="shopName"
-          hint="The trade name displayed on all component listings."
-        >
-          <input
-            id="shopName"
-            type="text"
-            required
-            value={shopName}
-            onChange={(e) => setShopName(e.target.value)}
-            placeholder="e.g., Precision Logic Repair Labs"
-            className="w-full rounded-machined border border-hairline bg-bench/50 px-3.5 py-2.5 text-sm text-enamel placeholder:text-steel-soft focus:border-signal focus:bg-chalk focus:outline-none focus:ring-1 focus:ring-signal transition-all"
-          />
-        </Field>
+      <div className="flex flex-col gap-4.5">
+        {/* Google OAuth Provider */}
+        <GoogleSignInButton next={nextTarget} label="Continue with Google" />
 
-        <Field label="Technician Lead Email" htmlFor="email">
-          <input
-            id="email"
-            type="email"
-            required
-            autoComplete="username"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="parts@precisionlogic.in"
-            className="w-full rounded-machined border border-hairline bg-bench/50 px-3.5 py-2.5 text-sm text-enamel placeholder:text-steel-soft focus:border-signal focus:bg-chalk focus:outline-none focus:ring-1 focus:ring-signal transition-all"
-          />
-        </Field>
-
-        <Field label="Workshop Password" htmlFor="password" hint="Minimum 6 characters">
-          <input
-            id="password"
-            type="password"
-            required
-            minLength={6}
-            autoComplete="new-password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder="••••••••••••"
-            className="w-full rounded-machined border border-hairline bg-bench/50 px-3.5 py-2.5 text-sm text-enamel placeholder:text-steel-soft focus:border-signal focus:bg-chalk focus:outline-none focus:ring-1 focus:ring-signal transition-all"
-          />
-        </Field>
-
-        <AuthMessage error={error} notice={notice} />
-
-        <button
-          type="submit"
-          disabled={loading}
-          className="mt-2 w-full flex items-center justify-center gap-2 rounded-machined bg-signal px-4 py-3 font-display text-sm font-semibold uppercase tracking-wider text-white shadow-sm hover:bg-signal-lift transition-all disabled:opacity-50 cursor-pointer active:scale-98"
-        >
-          {loading ? (
-            <>
-              <Loader2 className="size-4 animate-spin" />
-              <span>Registering Workshop Inventory...</span>
-            </>
-          ) : (
-            <>
-              <span>Create Workshop &amp; Continue</span>
-              <ArrowRight className="size-4" />
-            </>
-          )}
-        </button>
-
-        <div className="pt-2 text-center">
-          <span className="font-mono text-[11px] text-steel-soft flex items-center justify-center gap-1.5">
-            <ShieldCheck className="size-3.5 text-verdigris" />
-            100% Bench Jig / Multimeter Quality Assurance Standard
-          </span>
+        <div className="relative my-1">
+          <div className="absolute inset-0 flex items-center">
+            <div className="w-full border-t border-hairline"></div>
+          </div>
+          <div className="relative flex justify-center text-[11px]">
+            <span className="bg-chalk px-3 font-mono text-steel-soft uppercase tracking-wider">
+              or register with email
+            </span>
+          </div>
         </div>
-      </form>
+
+        <form onSubmit={handleSubmit} className="flex flex-col gap-4" noValidate>
+          <Field label="Full Legal / Display Name" htmlFor="displayName">
+            <input
+              id="displayName"
+              type="text"
+              required
+              value={displayName}
+              onChange={(e) => setDisplayName(e.target.value)}
+              placeholder="e.g. Amit Patel"
+              className="w-full rounded-machined border border-hairline bg-bench/50 px-3.5 py-2.5 text-sm text-enamel placeholder:text-steel-soft focus:border-signal focus:bg-chalk focus:outline-none focus:ring-1 focus:ring-signal transition-all"
+            />
+          </Field>
+
+          <Field label="Email Address" htmlFor="email">
+            <input
+              id="email"
+              type="email"
+              required
+              autoComplete="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="e.g. amit@example.com"
+              className="w-full rounded-machined border border-hairline bg-bench/50 px-3.5 py-2.5 text-sm text-enamel placeholder:text-steel-soft focus:border-signal focus:bg-chalk focus:outline-none focus:ring-1 focus:ring-signal transition-all"
+            />
+          </Field>
+
+          <Field label="Password" htmlFor="password" hint="Minimum 6 characters">
+            <input
+              id="password"
+              type="password"
+              required
+              minLength={6}
+              autoComplete="new-password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="••••••••••••"
+              className="w-full rounded-machined border border-hairline bg-bench/50 px-3.5 py-2.5 text-sm text-enamel placeholder:text-steel-soft focus:border-signal focus:bg-chalk focus:outline-none focus:ring-1 focus:ring-signal transition-all"
+            />
+          </Field>
+
+          <AuthMessage error={error} notice={notice} />
+
+          <button
+            type="submit"
+            disabled={loading}
+            className="mt-1 w-full flex items-center justify-center gap-2 rounded-machined bg-signal px-4 py-3 font-display text-sm font-semibold uppercase tracking-wider text-white shadow-sm hover:bg-signal-lift transition-all disabled:opacity-50 cursor-pointer active:scale-98"
+          >
+            {loading ? (
+              <>
+                <Loader2 className="size-4 animate-spin" />
+                <span>Creating Account...</span>
+              </>
+            ) : (
+              <>
+                <span>Create Account</span>
+                <ArrowRight className="size-4" />
+              </>
+            )}
+          </button>
+        </form>
+
+        {/* Dedicated Workshop Verification Callout (matches main FixGrid app pattern) */}
+        <div className="mt-3 flex items-start gap-3 rounded-machined border border-hairline bg-bench p-4">
+          <span className="grid size-9 shrink-0 place-items-center rounded-machined bg-enamel text-bench">
+            <Store aria-hidden className="size-4" />
+          </span>
+          <div className="min-w-0">
+            <p className="font-display text-xs uppercase tracking-wide text-enamel font-bold">
+              Are you an electronics workshop or parts supplier?
+            </p>
+            <p className="mt-1 text-xs leading-relaxed text-steel">
+              List your workshop to sell surplus donor lots and manage orders through our official verification onboarding.{" "}
+              <Link
+                href={`/join${nextTarget ? `?next=${encodeURIComponent(nextTarget)}` : ""}`}
+                className="font-semibold text-signal hover:underline inline-flex items-center gap-1"
+              >
+                Register on Verification Desk &rarr;
+              </Link>
+            </p>
+          </div>
+        </div>
+      </div>
     </AuthShell>
   );
 }

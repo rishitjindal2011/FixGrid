@@ -157,39 +157,47 @@ export function PartCard({ item, onInquireClick }: PartCardProps) {
       </div>
 
       {/* Pricing & Actions */}
-      <div className="mt-5 pt-4 border-t border-hairline flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-        <div>
-          <span className="font-mono text-[10px] uppercase tracking-wider text-steel-soft block">
-            Unit Price (Inc. Tax)
-          </span>
-          <div className="flex items-baseline gap-1.5">
-            <span className="font-display text-2xl font-bold uppercase text-signal tracking-tight">
-              ₹{priceRupees.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+      <div className="mt-5 pt-4 border-t border-hairline flex flex-col gap-3">
+        {/* Price & Escrow Row */}
+        <div className="flex items-center justify-between">
+          <div>
+            <span className="font-mono text-[10px] uppercase tracking-wider text-steel-soft block">
+              Unit Price (Inc. Tax)
+            </span>
+            <div className="flex items-baseline gap-1.5">
+              <span className="font-display text-2xl font-bold uppercase text-signal tracking-tight">
+                ₹{priceRupees.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+              </span>
+            </div>
+          </div>
+
+          <div className="text-right">
+            <span className="inline-flex items-center gap-1 rounded-machined bg-verdigris-wash border border-verdigris/30 px-2.5 py-1 font-mono text-[10px] font-semibold text-verdigris uppercase">
+              <ShieldCheck className="size-3 text-verdigris" />
+              <span>Escrow Protected</span>
             </span>
           </div>
-          <span className="font-mono text-[10px] text-verdigris flex items-center gap-1">
-            <ShieldCheck className="size-3" /> 0% Advance Risk Escrow
-          </span>
         </div>
 
-        <div className="flex items-center gap-2 w-full sm:w-auto">
-          {/* WhatsApp Direct Buy */}
+        {/* Action Buttons Grid (Fits 100% card width, zero overflow) */}
+        <div className="grid grid-cols-12 gap-2 pt-0.5">
+          {/* WhatsApp Direct */}
           <a
             href={whatsappUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center justify-center gap-1.5 rounded-machined bg-[#25D366] px-3 py-2 font-mono text-xs font-bold text-white shadow-sm hover:bg-[#1EBE5D] transition-colors"
-            title="Chat on WhatsApp"
+            className="col-span-3 inline-flex items-center justify-center gap-1 rounded-machined bg-[#25D366] px-2 py-2 font-mono text-xs font-bold text-white shadow-xs hover:bg-[#1EBE5D] transition-colors"
+            title="Chat with Workshop on WhatsApp"
           >
-            <MessageSquare className="size-3.5 fill-current" />
-            <span className="hidden md:inline">WhatsApp</span>
+            <MessageSquare className="size-3.5 fill-current shrink-0" />
+            <span className="text-[11px]">Chat</span>
           </a>
 
           {/* Add to Cart Button */}
           <button
             type="button"
             onClick={handleAddToCart}
-            className={`flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 rounded-machined border px-3.5 py-2 font-mono text-xs font-bold uppercase transition-all cursor-pointer ${
+            className={`col-span-4 inline-flex items-center justify-center gap-1.5 rounded-machined border px-2 py-2 font-mono text-xs font-bold uppercase transition-all cursor-pointer ${
               added
                 ? "border-verdigris bg-verdigris text-white shadow-xs"
                 : "border-hairline bg-bench text-enamel hover:bg-chalk"
@@ -197,27 +205,27 @@ export function PartCard({ item, onInquireClick }: PartCardProps) {
           >
             {added ? (
               <>
-                <Check className="size-3.5 stroke-[3]" />
-                <span>Added</span>
+                <Check className="size-3.5 stroke-[3] shrink-0" />
+                <span className="text-[11px]">Added</span>
               </>
             ) : (
               <>
-                <ShoppingCart className="size-3.5" />
-                <span>+ Cart</span>
+                <ShoppingCart className="size-3.5 shrink-0" />
+                <span className="text-[11px]">+ Cart</span>
               </>
             )}
           </button>
 
-          {/* Direct Order Now link to /cart */}
+          {/* Direct Order Lot Link to /cart */}
           <Link
             href="/cart"
             onClick={() => {
               addToCart(item, 1);
             }}
-            className="flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 rounded-machined bg-signal px-4 py-2 font-display text-xs font-semibold uppercase tracking-wider text-white shadow-sm hover:bg-signal-lift transition-all whitespace-nowrap"
+            className="col-span-5 inline-flex items-center justify-center gap-1 rounded-machined bg-signal px-2 py-2 font-display text-xs font-semibold uppercase tracking-wider text-white shadow-sm hover:bg-signal-lift transition-all whitespace-nowrap"
           >
             <span>Order Lot</span>
-            <ArrowRight className="size-3.5" />
+            <ArrowRight className="size-3.5 shrink-0" />
           </Link>
         </div>
       </div>

@@ -14,13 +14,21 @@ export interface WorkshopProfile {
   contact_phone?: string;
 }
 
+interface SignUpOptions {
+  displayName?: string;
+  shopName?: string;
+  address?: string;
+  phone?: string;
+}
+
 interface AuthContextType {
   user: User | null;
   session: Session | null;
   workshop: WorkshopProfile | null;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<{ error: string | null }>;
-  signUp: (email: string, password: string, shopName?: string) => Promise<{ error: string | null }>;
+  signInWithGoogle: (redirectTo?: string) => Promise<{ error: string | null }>;
+  signUp: (email: string, password: string, options?: SignUpOptions | string) => Promise<{ error: string | null }>;
   signOut: () => Promise<void>;
   createWorkshop: (shopName: string, address?: string, phone?: string) => Promise<{ error: string | null; workshop?: WorkshopProfile }>;
   refreshWorkshop: () => Promise<void>;
@@ -101,14 +109,48 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const signUp = async (email: string, password: string, shopName?: string) => {
+  const signInWithGoogle = async (redirectTo?: string) => {
     try {
+      const callbackUrl =
+        redirectTo ||
+        (typeof window !== "undefined"
+          ? `${window.location.origin}/auth/callback`
+          : undefined);
+
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          redirectTo: callbackUrl,
+        },
+      });
+
+      if (error) {
+        return { error: error.message };
+      }
+      return { error: null };
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Failed to initiate Google sign in";
+      return { error: message };
+    }
+  };
+
+  const signUp = async (
+    email: string,
+    password: string,
+    options?: SignUpOptions | string
+  ) => {
+    try {
+      const opts: SignUpOptions = typeof options === "string" ? { shopName: options } : (options || {});
+      const isWorkshop = !!opts.shopName;
+      const displayName = opts.displayName || opts.shopName || "Client Member";
+
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
           data: {
-            shop_name: shopName || "Parts & Hardware Bench",
+            display_name: displayName,
+            role: isWorkshop ? "workshop" : "client",
           },
         },
       });
@@ -117,15 +159,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return { error: error.message };
       }
 
-      if (data.user && shopName) {
-        const slug = shopName.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") + "-" + Date.now().toString().slice(-4);
+      // ONLY create a workshop record if registering as a workshop!
+      if (data.user && opts.shopName) {
+        const slug =
+          opts.shopName
+            .toLowerCase()
+            .replace(/[^a-z0-9]+/g, "-")
+            .replace(/^-|-$/g, "") +
+          "-" +
+          Date.now().toString().slice(-4);
+
         const res = await fetch("/api/auth/workshop", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             userId: data.user.id,
-            shopName,
+            shopName: opts.shopName,
             slug,
+            address: opts.address,
+            contactPhone: opts.phone,
           }),
         });
         const resData = await res.json();
@@ -192,6 +244,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         workshop,
         loading,
         signIn,
+        signInWithGoogle,
         signUp,
         signOut,
         createWorkshop,
