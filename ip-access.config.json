@@ -5,14 +5,14 @@
     "admin.vytron.me": {
       "description": "Restricted admin domain — accessible only by specified whitelist IPs",
       "allowedIps": [
-        "127.0.0.1",
+        "223.233.78.49",
         "::1"
       ]
     },
-    "preview.vytron.me": {
+    "seo.vytron.me": {
       "description": "Internal staging and preview domain",
       "allowedIps": [
-        "127.0.0.1",
+        "223.233.78.49",
         "::1"
       ]
     }
