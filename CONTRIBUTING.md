@@ -138,3 +138,5 @@ Not all contributions require writing backend code! You can help by:
 ## Security Vulnerabilities
 
 If you discover a security vulnerability, **please do not open a public issue**. Refer to our [Security Policy](SECURITY.md) to report it privately and securely.
+
+@atlrishitjindal
