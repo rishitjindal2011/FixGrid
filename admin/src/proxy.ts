@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 
 import { SESSION_COOKIE, verifySessionToken } from "@/lib/auth/session";
+import { enforceIpAccess } from "@/lib/security/ip-access";
 
 /**
  * Route guard.
@@ -23,6 +24,12 @@ import { SESSION_COOKIE, verifySessionToken } from "@/lib/auth/session";
  * a route match.
  */
 export async function proxy(request: NextRequest) {
+  // 0. Domain IP Whitelisting Gate
+  const ipAccessBlocked = enforceIpAccess(request);
+  if (ipAccessBlocked) {
+    return ipAccessBlocked;
+  }
+
   const { pathname, search } = request.nextUrl;
 
   const token = request.cookies.get(SESSION_COOKIE)?.value;

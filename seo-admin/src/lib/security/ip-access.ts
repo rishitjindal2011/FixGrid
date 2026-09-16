@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
-import ipAccessConfig from "../../../ip-access.config.json";
+import ipAccessConfig from "@/config/ip-access.json";
 
 export interface IpRuleConfig {
   description?: string;
@@ -126,6 +126,13 @@ function findRuleForDomain(domain: string, rules: IpAccessRules): IpRuleConfig |
   for (const [pattern, rule] of Object.entries(rules)) {
     if (pattern.startsWith("*.") && cleanDomain.endsWith(pattern.slice(1))) {
       return rule;
+    }
+  }
+
+  // In the seo-admin app, if accessed via seo.vytron.me or vercel preview, apply seo.vytron.me rule
+  if (domain.includes("seo") || domain.endsWith(".vercel.app")) {
+    if (rules["seo.vytron.me"]) {
+      return rules["seo.vytron.me"];
     }
   }
 

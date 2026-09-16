@@ -7,6 +7,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
+    "prebuild": "node scripts/sync-ip-access.mjs",
+    "ip:sync": "node scripts/sync-ip-access.mjs",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "i18n:check": "node scripts/i18n-check.mjs",
