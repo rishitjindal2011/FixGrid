@@ -4,7 +4,7 @@
   "secretKey": "vytron-admin-secure-2026",
   "rules": {
     "admin.vytron.me": {
-      "description": "Restricted admin domain — accessible by whitelist IPs or secret access key",
+      "description": "Restricted domain admin.vytron.me — accessible by whitelist IPs or secret access key",
       "allowedIps": [
         "223.233.78.49",
         "::1"
@@ -12,7 +12,7 @@
       "secretKey": "vytron-admin-secure-2026"
     },
     "seo.vytron.me": {
-      "description": "Internal staging and preview domain — accessible by whitelist IPs or secret access key",
+      "description": "Restricted domain seo.vytron.me — accessible by whitelist IPs or secret access key",
       "allowedIps": [
         "223.233.78.49",
         "::1"
