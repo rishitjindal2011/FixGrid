@@ -61,7 +61,7 @@
     "@tailwindcss/typography": "^0.5.16",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/leaflet": "^1.9.22",
-    "@types/node": "^22.13.0",
+    "@types/node": "^26.5.1",
     "@types/react": "^19.0.8",
     "@types/react-dom": "^19.0.3",
     "eslint": "^9.20.0",
