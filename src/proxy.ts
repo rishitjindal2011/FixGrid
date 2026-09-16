@@ -5,6 +5,7 @@ import { NextResponse, type NextRequest, type NextFetchEvent } from "next/server
 
 import { DEFAULT_LOCALE, splitLocale, withLocale, type Locale } from "@/i18n/config";
 import { routing } from "@/i18n/routing";
+import { enforceIpAccess } from "@/lib/security/ip-access";
 import type { Database } from "@/lib/types/database";
 
 /**
@@ -409,6 +410,12 @@ const clerkHandler = clerkMiddleware(async (auth, request) => {
 });
 
 export const proxy = async (request: NextRequest, event: NextFetchEvent) => {
+  // 0. Domain IP Whitelisting Gate
+  const ipAccessBlocked = enforceIpAccess(request);
+  if (ipAccessBlocked) {
+    return ipAccessBlocked;
+  }
+
   const authProvider = await getProxyAuthProvider(request);
   if (authProvider === "clerk") {
     // Graceful fallback if keys are missing

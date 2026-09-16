@@ -1,0 +1,20 @@
+{
+  "$schema": "Configuration file to restrict domain access to specific IP addresses only",
+  "enabled": true,
+  "rules": {
+    "admin.vytron.me": {
+      "description": "Restricted admin domain — accessible only by specified whitelist IPs",
+      "allowedIps": [
+        "127.0.0.1",
+        "::1"
+      ]
+    },
+    "preview.vytron.me": {
+      "description": "Internal staging and preview domain",
+      "allowedIps": [
+        "127.0.0.1",
+        "::1"
+      ]
+    }
+  }
+}

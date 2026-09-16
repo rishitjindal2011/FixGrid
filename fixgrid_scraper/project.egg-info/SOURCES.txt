@@ -5,6 +5,7 @@ fixgrid_scraper/middlewares.py
 fixgrid_scraper/pipelines.py
 fixgrid_scraper/settings.py
 fixgrid_scraper/spiders/__init__.py
+fixgrid_scraper/spiders/fixgrid_spider.py
 project.egg-info/PKG-INFO
 project.egg-info/SOURCES.txt
 project.egg-info/dependency_links.txt
