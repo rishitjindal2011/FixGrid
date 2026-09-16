@@ -1,0 +1,2 @@
+[scrapy]
+settings = fixgrid_scraper.settings

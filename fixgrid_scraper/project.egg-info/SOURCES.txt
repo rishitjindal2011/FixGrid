@@ -1,0 +1,12 @@
+setup.py
+fixgrid_scraper/__init__.py
+fixgrid_scraper/items.py
+fixgrid_scraper/middlewares.py
+fixgrid_scraper/pipelines.py
+fixgrid_scraper/settings.py
+fixgrid_scraper/spiders/__init__.py
+project.egg-info/PKG-INFO
+project.egg-info/SOURCES.txt
+project.egg-info/dependency_links.txt
+project.egg-info/entry_points.txt
+project.egg-info/top_level.txt
