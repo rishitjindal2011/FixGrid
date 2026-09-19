@@ -14,6 +14,7 @@ import {
   PackageOpen,
   Search,
   FilterX,
+  Barcode,
 } from "lucide-react";
 
 import { EmptyState } from "@/components/dashboard/empty-state";
@@ -275,8 +276,13 @@ function InventoryRow({
             {item.name}
           </span>
           {(item.sku || item.category) && (
-            <div className="flex items-center gap-2 text-xs text-steel-soft">
-              {item.sku && <span className="font-mono">{item.sku}</span>}
+            <div className="flex flex-wrap items-center gap-1.5 text-xs text-steel-soft">
+              {item.sku && (
+                <span className="inline-flex items-center gap-1 font-mono text-[11px] bg-charcoal/5 dark:bg-chalk/10 px-1.5 py-0.5 rounded border border-hairline text-steel font-medium">
+                  <Barcode className="size-3 text-[#ea580c]" />
+                  {item.sku}
+                </span>
+              )}
               {item.sku && item.category && <span>•</span>}
               {item.category && <span>{item.category.name}</span>}
             </div>

@@ -16,6 +16,7 @@ import {
   Store,
   Sparkles,
   Calendar,
+  Smartphone,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -28,6 +29,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { PhoneScannerBridge } from "@/components/dashboard/expert/phone-scanner-bridge";
 import { lookupWarrantyQrCode, type QrLookupResult } from "@/lib/dashboard/qr-actions";
 import { formatDateLong, formatMoney } from "@/lib/format";
 
@@ -37,6 +39,7 @@ interface ShopQrScannerModalProps {
 
 export function ShopQrScannerModal({ trigger }: ShopQrScannerModalProps) {
   const [open, setOpen] = React.useState(false);
+  const [scanTab, setScanTab] = React.useState<"phone" | "camera" | "manual">("phone");
   const [inputVal, setInputVal] = React.useState("");
   const [loading, setLoading] = React.useState(false);
   const [result, setResult] = React.useState<QrLookupResult | null>(null);
@@ -154,62 +157,129 @@ export function ShopQrScannerModal({ trigger }: ShopQrScannerModalProps) {
         </DialogHeader>
 
         <DialogBody className="space-y-4 pt-2">
-          {/* Camera Scanner or Trigger */}
-          {useCamera ? (
-            <div className="relative overflow-hidden rounded-xl border border-hairline bg-black">
-              <video
-                ref={videoRef}
-                autoPlay
-                playsInline
-                muted
-                className="h-56 w-full object-cover"
-              />
-              <div className="absolute inset-0 flex flex-col items-center justify-center p-4">
-                <div className="size-40 rounded-xl border-2 border-dashed border-[#ea580c] bg-transparent" />
-                <span className="mt-2 rounded bg-black/70 px-2.5 py-1 text-xs text-white">
-                  Point camera at device QR sticker
-                </span>
-              </div>
-              <button
-                type="button"
-                onClick={stopCamera}
-                className="absolute right-2.5 top-2.5 rounded bg-black/70 px-2 py-1 text-xs text-white hover:bg-black"
-              >
-                Close Camera
-              </button>
-            </div>
-          ) : (
-            <div className="flex items-center justify-between rounded-xl border border-dashed border-hairline bg-bench p-3.5">
-              <div className="flex items-center gap-3">
-                <div className="flex size-10 items-center justify-center rounded-lg bg-[#ea580c]/10 text-[#ea580c]">
-                  <Camera className="size-5" />
-                </div>
-                <div>
-                  <p className="text-xs font-semibold text-enamel">Scan using Camera</p>
-                  <p className="text-[11px] text-steel">Scan physical sticker on device or customer mobile pass</p>
-                </div>
-              </div>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={startCamera}
-                className="gap-1.5 text-xs"
-              >
-                <Camera className="size-3.5 text-[#ea580c]" />
-                <span>Open Scanner</span>
-              </Button>
-            </div>
-          )}
+          {/* Mode Switcher Tabs */}
+          <div className="flex rounded-xl bg-bench p-1 border border-hairline text-xs">
+            <button
+              type="button"
+              onClick={() => {
+                stopCamera();
+                setScanTab("phone");
+              }}
+              className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg font-semibold transition ${
+                scanTab === "phone"
+                  ? "bg-white dark:bg-charcoal text-[#ea580c] shadow-sm"
+                  : "text-steel hover:text-enamel"
+              }`}
+            >
+              <Smartphone className="size-3.5" />
+              <span>📱 Scan with Phone</span>
+            </button>
 
-          {cameraError ? (
-            <p className="text-xs text-rust">{cameraError}</p>
+            <button
+              type="button"
+              onClick={() => {
+                setScanTab("camera");
+                startCamera();
+              }}
+              className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg font-semibold transition ${
+                scanTab === "camera"
+                  ? "bg-white dark:bg-charcoal text-[#ea580c] shadow-sm"
+                  : "text-steel hover:text-enamel"
+              }`}
+            >
+              <Camera className="size-3.5" />
+              <span>💻 Laptop Webcam</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                stopCamera();
+                setScanTab("manual");
+              }}
+              className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg font-semibold transition ${
+                scanTab === "manual"
+                  ? "bg-white dark:bg-charcoal text-[#ea580c] shadow-sm"
+                  : "text-steel hover:text-enamel"
+              }`}
+            >
+              <Search className="size-3.5" />
+              <span>⌨️ Type Code</span>
+            </button>
+          </div>
+
+          {/* Tab 1: Phone Scanner Bridge */}
+          {scanTab === "phone" ? (
+            <PhoneScannerBridge
+              purpose="warranty_proof"
+              onCodeReceived={(code) => {
+                setInputVal(code);
+                handleLookup(code);
+              }}
+            />
           ) : null}
 
-          {/* Quick Manual Search */}
-          <div>
+          {/* Tab 2: Webcam Scanner */}
+          {scanTab === "camera" ? (
+            <div>
+              {useCamera ? (
+                <div className="relative overflow-hidden rounded-xl border border-hairline bg-black">
+                  <video
+                    ref={videoRef}
+                    autoPlay
+                    playsInline
+                    muted
+                    className="h-56 w-full object-cover"
+                  />
+                  <div className="absolute inset-0 flex flex-col items-center justify-center p-4">
+                    <div className="size-40 rounded-xl border-2 border-dashed border-[#ea580c] bg-transparent" />
+                    <span className="mt-2 rounded bg-black/70 px-2.5 py-1 text-xs text-white">
+                      Point camera at device QR sticker
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={stopCamera}
+                    className="absolute right-2.5 top-2.5 rounded bg-black/70 px-2 py-1 text-xs text-white hover:bg-black"
+                  >
+                    Close Camera
+                  </button>
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-hairline bg-bench p-6 text-center">
+                  <Camera className="size-8 text-[#ea580c]" />
+                  <p className="text-xs font-semibold text-enamel">Laptop Webcam Inactive</p>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={startCamera}
+                    className="gap-1.5 text-xs mt-1"
+                  >
+                    <Camera className="size-3.5 text-[#ea580c]" />
+                    <span>Turn On Webcam</span>
+                  </Button>
+                </div>
+              )}
+
+              {cameraError ? (
+                <div className="mt-2 rounded-lg bg-rose-500/10 border border-rose-500/30 p-2.5 text-xs text-rose-500 flex items-start gap-2">
+                  <AlertTriangle className="size-4 shrink-0 mt-0.5" />
+                  <div>
+                    <p className="font-semibold">{cameraError}</p>
+                    <p className="text-[11px] text-steel mt-0.5">
+                      Laptop cameras can be tricky. Try the <strong>📱 Scan with Phone</strong> tab above!
+                    </p>
+                  </div>
+                </div>
+              ) : null}
+            </div>
+          ) : null}
+
+          {/* Tab 3 / Quick Manual Search */}
+          <div className={scanTab === "manual" ? "block" : "pt-1 border-t border-hairline"}>
             <label htmlFor="qrInput" className="eyebrow mb-1.5 block">
-              Enter Booking Reference or Paste Scanned Code
+              {scanTab === "manual" ? "Enter Booking Reference or Paste Code" : "Or Search / Type Reference Directly"}
             </label>
             <div className="flex gap-2">
               <div className="relative flex-1">

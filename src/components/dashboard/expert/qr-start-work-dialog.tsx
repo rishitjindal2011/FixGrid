@@ -15,6 +15,7 @@ import {
   Sparkles,
   KeyRound,
   RotateCcw,
+  Smartphone,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -27,6 +28,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { PhoneScannerBridge } from "@/components/dashboard/expert/phone-scanner-bridge";
 import { verifyAndStartWorkWithQr } from "@/lib/dashboard/qr-actions";
 import { BOOKING_INITIAL_STATE } from "@/lib/bookings/state";
 import type { DeliveryMode, BookingStatus } from "@/lib/types/marketplace";
@@ -47,6 +49,7 @@ export function QrStartWorkDialog({
   status,
 }: QrStartWorkDialogProps) {
   const [open, setOpen] = React.useState(false);
+  const [scanTab, setScanTab] = React.useState<"phone" | "camera" | "code">("phone");
   const [state, formAction, pending] = useActionState(
     verifyAndStartWorkWithQr,
     BOOKING_INITIAL_STATE,
@@ -195,56 +198,118 @@ export function QrStartWorkDialog({
                 </div>
               ) : null}
 
-              {/* Camera Scanner or Manual Entry */}
-              {useCamera ? (
-                <div className="relative overflow-hidden rounded-xl border border-hairline bg-black">
-                  <video
-                    ref={videoRef}
-                    autoPlay
-                    playsInline
-                    muted
-                    className="h-52 w-full object-cover"
-                  />
-                  <div className="absolute inset-0 flex flex-col items-center justify-center p-4">
-                    <div className="size-36 rounded-lg border-2 border-dashed border-[#ea580c] bg-transparent" />
-                    <span className="mt-2 rounded bg-black/70 px-2 py-1 text-[11px] text-white">
-                      Align customer QR within frame
-                    </span>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={stopCamera}
-                    className="absolute right-2 top-2 rounded bg-black/60 px-2 py-1 text-xs text-white hover:bg-black"
-                  >
-                    Close Camera
-                  </button>
+              {/* Mode Switcher Tabs */}
+              <div className="flex rounded-xl bg-bench p-1 border border-hairline text-xs">
+                <button
+                  type="button"
+                  onClick={() => {
+                    stopCamera();
+                    setScanTab("phone");
+                  }}
+                  className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg font-semibold transition ${
+                    scanTab === "phone"
+                      ? "bg-white dark:bg-charcoal text-[#ea580c] shadow-sm"
+                      : "text-steel hover:text-enamel"
+                  }`}
+                >
+                  <Smartphone className="size-3.5" />
+                  <span>📱 Scan with Phone</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setScanTab("camera");
+                    startCamera();
+                  }}
+                  className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg font-semibold transition ${
+                    scanTab === "camera"
+                      ? "bg-white dark:bg-charcoal text-[#ea580c] shadow-sm"
+                      : "text-steel hover:text-enamel"
+                  }`}
+                >
+                  <Camera className="size-3.5" />
+                  <span>💻 Laptop Webcam</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    stopCamera();
+                    setScanTab("code");
+                  }}
+                  className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg font-semibold transition ${
+                    scanTab === "code"
+                      ? "bg-white dark:bg-charcoal text-[#ea580c] shadow-sm"
+                      : "text-steel hover:text-enamel"
+                  }`}
+                >
+                  <KeyRound className="size-3.5" />
+                  <span>⌨️ Confirm Code</span>
+                </button>
+              </div>
+
+              {/* Tab 1: Phone Scanner Bridge */}
+              {scanTab === "phone" ? (
+                <PhoneScannerBridge
+                  purpose="start_work"
+                  onCodeReceived={(code) => {
+                    setInputCode(code);
+                  }}
+                />
+              ) : null}
+
+              {/* Tab 2: Webcam Scanner */}
+              {scanTab === "camera" ? (
+                <div>
+                  {useCamera ? (
+                    <div className="relative overflow-hidden rounded-xl border border-hairline bg-black">
+                      <video
+                        ref={videoRef}
+                        autoPlay
+                        playsInline
+                        muted
+                        className="h-52 w-full object-cover"
+                      />
+                      <div className="absolute inset-0 flex flex-col items-center justify-center p-4">
+                        <div className="size-36 rounded-lg border-2 border-dashed border-[#ea580c] bg-transparent" />
+                        <span className="mt-2 rounded bg-black/70 px-2 py-1 text-[11px] text-white">
+                          Align customer QR within frame
+                        </span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={stopCamera}
+                        className="absolute right-2 top-2 rounded bg-black/60 px-2 py-1 text-xs text-white hover:bg-black"
+                      >
+                        Close Camera
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-hairline bg-bench p-4 text-center">
+                      <div className="mb-2 flex size-10 items-center justify-center rounded-full bg-[#ea580c]/10 text-[#ea580c]">
+                        <QrCode className="size-5" />
+                      </div>
+                      <p className="font-mono text-xs font-bold text-enamel">
+                        TARGET: {reference}
+                      </p>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={startCamera}
+                        className="mt-3 gap-1.5 text-xs"
+                      >
+                        <Camera className="size-3.5 text-[#ea580c]" />
+                        <span>Open Camera Scanner</span>
+                      </Button>
+                      {cameraError ? (
+                        <p className="mt-2 text-[11px] text-rust">{cameraError}</p>
+                      ) : null}
+                    </div>
+                  )}
                 </div>
-              ) : (
-                <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-hairline bg-bench p-4 text-center">
-                  <div className="mb-2 flex size-10 items-center justify-center rounded-full bg-[#ea580c]/10 text-[#ea580c]">
-                    <QrCode className="size-5" />
-                  </div>
-                  <p className="font-mono text-xs font-bold text-enamel">
-                    TARGET: {reference}
-                  </p>
-                  <p className="mt-0.5 text-[11px] text-steel">
-                    Customer presents their booking pass on phone or printed receipt.
-                  </p>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={startCamera}
-                    className="mt-3 gap-1.5 text-xs"
-                  >
-                    <Camera className="size-3.5 text-[#ea580c]" />
-                    <span>Open Camera Scanner</span>
-                  </Button>
-                  {cameraError ? (
-                    <p className="mt-2 text-[11px] text-rust">{cameraError}</p>
-                  ) : null}
-                </div>
-              )}
+              ) : null}
 
               {/* Verified Code Input (Auto-filled or Scanned) */}
               <div>

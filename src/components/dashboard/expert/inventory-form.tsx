@@ -4,7 +4,7 @@ import * as React from "react";
 import { useActionState } from "react";
 import { useFormStatus } from "react-dom";
 import { useTranslations } from "next-intl";
-import { AlertTriangle, CheckCircle2 } from "lucide-react";
+import { AlertTriangle, CheckCircle2, Barcode, Smartphone } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -22,6 +22,7 @@ import { Input, Select } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
+import { PhoneScannerBridge } from "@/components/dashboard/expert/phone-scanner-bridge";
 import { BOOKING_INITIAL_STATE } from "@/lib/bookings/state";
 import { upsertInventoryItem } from "@/lib/dashboard/expert-actions";
 import { type InventoryCondition } from "@/lib/types/marketplace";
@@ -136,6 +137,9 @@ function InventoryFields({
     BOOKING_INITIAL_STATE,
   );
 
+  const [skuVal, setSkuVal] = React.useState(item?.sku ?? "");
+  const [showBarcodeScanner, setShowBarcodeScanner] = React.useState(false);
+
   const t = useTranslations("expert.inventory");
   const editing = item !== null;
   const fieldId = React.useId();
@@ -177,35 +181,77 @@ function InventoryFields({
           <input type="hidden" name="id" value={item?.id ?? ""} />
 
           <DialogBody className="flex flex-col gap-5">
-            <div className="grid gap-5 sm:grid-cols-[1fr_auto]">
-              <div className="flex flex-col gap-1.5">
-                <Label htmlFor={id("name")}>Item name</Label>
-                <Input
-                  id={id("name")}
-                  name="name"
-                  required
-                  minLength={1}
-                  maxLength={160}
-                  defaultValue={item?.name ?? ""}
-                  placeholder="iPhone 14 Pro OLED screen"
-                />
+            {/* Item Name */}
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor={id("name")}>Item name</Label>
+              <Input
+                id={id("name")}
+                name="name"
+                required
+                minLength={1}
+                maxLength={160}
+                defaultValue={item?.name ?? ""}
+                placeholder="e.g. iPhone 14 Pro OLED Display / USB-C Charging Port"
+              />
+            </div>
+
+            {/* Product Barcode Section (ANY ANY ANY BARCODE) */}
+            <div className="rounded-xl border border-hairline bg-bench/60 p-3.5 flex flex-col gap-2.5">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <div className="flex items-center gap-2">
+                  <div className="flex size-7 items-center justify-center rounded-lg bg-[#ea580c]/10 text-[#ea580c]">
+                    <Barcode className="size-4" />
+                  </div>
+                  <div>
+                    <Label htmlFor={id("sku")} className="text-xs font-bold text-enamel uppercase tracking-wide">
+                      Product Barcode / Item Code
+                    </Label>
+                  </div>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <span className="rounded-full bg-emerald-500/10 px-2 py-0.5 font-mono text-[10px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">
+                    Any Barcode Accepted
+                  </span>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setShowBarcodeScanner(!showBarcodeScanner)}
+                    className="h-7 gap-1 px-2.5 text-xs text-[#ea580c] border-[#ea580c]/30 hover:bg-[#ea580c]/10"
+                  >
+                    <Smartphone className="size-3" />
+                    <span>{showBarcodeScanner ? "Close Scanner" : "Scan Barcode (Phone / PC)"}</span>
+                  </Button>
+                </div>
               </div>
 
-              <div className="flex flex-col gap-1.5">
-                <Label htmlFor={id("sku")}>Item ID — optional</Label>
+              {showBarcodeScanner ? (
+                <div className="my-1">
+                  <PhoneScannerBridge
+                    purpose="inventory_barcode"
+                    onCodeReceived={(code) => {
+                      setSkuVal(code);
+                      setShowBarcodeScanner(false);
+                    }}
+                  />
+                </div>
+              ) : null}
+
+              <div className="flex gap-2">
                 <Input
                   id={id("sku")}
                   name="sku"
+                  value={skuVal}
+                  onChange={(e) => setSkuVal(e.target.value)}
                   maxLength={64}
-                  defaultValue={item?.sku ?? ""}
-                  placeholder="SCR-14P"
-                  className="font-mono uppercase sm:w-44"
+                  placeholder="Scan or enter ANY barcode (e.g. 8901030865432, EAN, UPC, Code 128, QR, Serial #)"
+                  className="font-mono uppercase text-sm"
                   aria-describedby={id("skuHint")}
                 />
-                <p id={id("skuHint")} className="text-xs text-steel-soft sm:max-w-44">
-                  Your own code. Must be unique in your shop.
-                </p>
               </div>
+              <p id={id("skuHint")} className="text-[11px] text-steel leading-relaxed">
+                Scan or enter <strong>any product barcode</strong> (EAN-13, UPC, Code 128, Code 39, QR code, Serial #, or custom SKU). Enables fast barcode lookup during billing, repairs, and stock check.
+              </p>
             </div>
 
             <div className="flex flex-col gap-1.5">

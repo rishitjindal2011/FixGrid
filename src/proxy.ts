@@ -209,6 +209,10 @@ async function customProxy(request: NextRequest) {
     return NextResponse.redirect(callback);
   }
 
+  if (pathname.startsWith("/api") || pathname === "/auth/callback") {
+    return NextResponse.next();
+  }
+
   /* ── 1. Locale ────────────────────────────────────────────────────────── */
 
   const intlResponse = handleI18nRouting(request);
