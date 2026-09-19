@@ -4,23 +4,11 @@ import { revalidatePath } from "next/cache";
 import { getCurrentUser } from "@/lib/auth/session";
 import { getMyShop } from "@/lib/dashboard/claims";
 import { subscribeToShopProCore } from "@/lib/plans/shop-pro";
+import type { ShopProActionState } from "@/lib/plans/shop-pro-state";
 
-export interface ShopProActionState {
-  success: boolean;
-  error: string | null;
-  message?: string | null;
-}
-
-export const SHOP_PRO_INITIAL_STATE: ShopProActionState = {
-  success: false,
-  error: null,
-  message: null,
-};
-
-export async function purchaseShopProAction(
-  _prev: ShopProActionState,
-  _formData: FormData,
-): Promise<ShopProActionState> {
+export async function purchaseShopProDirect(
+  _formData?: FormData,
+): Promise<{ success: boolean; error: string | null; message?: string }> {
   const user = await getCurrentUser();
   if (!user) {
     return { success: false, error: "Please sign in to manage your shop subscription." };
@@ -47,4 +35,11 @@ export async function purchaseShopProAction(
     error: null,
     message: result.data.message,
   };
+}
+
+export async function purchaseShopProAction(
+  _prev: ShopProActionState,
+  formData: FormData,
+): Promise<ShopProActionState> {
+  return purchaseShopProDirect(formData);
 }

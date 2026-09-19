@@ -31,11 +31,6 @@ export function ExpertMapCanvas({
   lng: number;
   shopName: string;
 }) {
-  const cartoApiKey = process.env.NEXT_PUBLIC_CARTO_API_KEY;
-  const tileUrl = cartoApiKey
-    ? `https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png?key=${cartoApiKey}`
-    : `https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png`;
-
   return (
     <div className="aspect-[16/10] overflow-hidden rounded-machined border border-hairline">
       <MapContainer

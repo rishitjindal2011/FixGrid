@@ -8,6 +8,9 @@ import {
   ConfirmedRow,
   QuotedRow,
   RequestCard,
+  InProgressRow,
+  CompletedReviewRow,
+  RevisionRequestRow,
   buildPricingIndex,
 } from "@/components/dashboard/expert/request-card";
 import { PageHeader, SectionHeader } from "@/components/dashboard/page-header";
@@ -23,48 +26,24 @@ import {
 
 export const metadata: Metadata = {
   title: "Requests",
-
 };
 
-/**
- * The queue of requests nobody has answered.
- *
- * The most valuable screen in the shop dashboard, because it is the only one
- * where the shop is the bottleneck. Everything on it serves one question — which
- * of these is costing me a customer right now — which is why the order is oldest
- * first and why the waiting time is the loudest thing on each card.
- *
- * Three reads, in parallel:
- *   • the queue itself, already sorted oldest-first by `listPendingRequests`;
- *   • the quotes sent but not yet accepted, which is where an answered request
- *     goes to be forgotten about;
- *   • the catalogue, because a request carries no price until somebody sets one
- *     and the Accept button behaves differently for a fixed price than for one
- *     quoted on inspection.
- *
- * `now` is captured once and threaded down so the waiting times, the expiry
- * countdowns and the action gating cannot disagree about the instant.
- */
 export default async function ExpertRequestsPage() {
   const user = await getCurrentUser();
   if (!user) redirect("/login?next=/dashboard/expert/requests");
 
-  // Already read by the layout's ownership gate and memoised for the request,
-  // so this narrows rather than re-queries. A null shop cannot reach here — the
-  // gate renders the claim screen in place of these children.
   const shop = await getMyShop(user.id);
   if (!shop) redirect("/join");
 
   const now = new Date();
 
-  const [requests, quoted, confirmed, services] = await Promise.all([
+  const [requests, inProgress, confirmed, completed, disputed, quoted, services] = await Promise.all([
     listPendingRequests(shop.id),
-    listExpertBookings(shop.id, { statuses: ["accepted"], limit: 20 }),
-    // Accepted by the customer and not yet started. These used to vanish from
-    // this screen the moment they were confirmed, which meant the queue could
-    // show a request and a quote and then nothing — the work had to be started
-    // from another page. Now the job stays here until it is on the bench.
+    listExpertBookings(shop.id, { statuses: ["in_progress"], limit: 30 }),
     listExpertBookings(shop.id, { statuses: ["confirmed"], limit: 20 }),
+    listExpertBookings(shop.id, { statuses: ["completed"], limit: 20 }),
+    listExpertBookings(shop.id, { statuses: ["disputed"], limit: 20 }),
+    listExpertBookings(shop.id, { statuses: ["accepted"], limit: 20 }),
     listShopServices(shop.id),
   ]);
 
@@ -90,6 +69,60 @@ export default async function ExpertRequestsPage() {
         }
       />
 
+      {/* 1. Action Needed: Customer Revision / Dispute */}
+      {disputed.length > 0 ? (
+        <section>
+          <SectionHeader
+            title="Action required: Customer revision / Dispute"
+            action={
+              <Badge variant="signal" className="bg-rose-500 text-white">
+                <span className="font-mono tabular-nums">{disputed.length}</span>
+                attention
+              </Badge>
+            }
+          />
+          <ul className="flex flex-col gap-3">
+            {disputed.map((booking) => (
+              <RevisionRequestRow
+                key={booking.id}
+                booking={booking}
+                timezone={shop.timezone}
+                now={now}
+              />
+            ))}
+          </ul>
+        </section>
+      ) : null}
+
+      {/* 2. On the Bench (In Progress) */}
+      {inProgress.length > 0 ? (
+        <section>
+          <SectionHeader
+            title="On the bench (In Progress)"
+            action={
+              <Badge variant="signal" className="bg-[#ea580c] text-white">
+                <span className="font-mono tabular-nums">{inProgress.length}</span>
+                active on bench
+              </Badge>
+            }
+          />
+          <ul className="flex flex-col gap-3">
+            {inProgress.map((booking) => (
+              <InProgressRow
+                key={booking.id}
+                booking={booking}
+                timezone={shop.timezone}
+                now={now}
+              />
+            ))}
+          </ul>
+          <p className="pt-3 text-xs leading-relaxed text-steel">
+            Work underway. When finished, click <strong>Complete Work</strong> to verify the final bill and send it to the customer for review and payment.
+          </p>
+        </section>
+      ) : null}
+
+      {/* 3. Needs your answer (New Requests) */}
       <section>
         <SectionHeader
           title="Needs your answer"
@@ -134,11 +167,7 @@ export default async function ExpertRequestsPage() {
         )}
       </section>
 
-      {/*
-        Placed above the quoted list on purpose. These are jobs the customer has
-        already agreed to and paid a fee towards — they are worth more than a
-        quote still waiting on an answer, so they sit nearer the top.
-      */}
+      {/* 4. Ready to start */}
       {confirmed.length > 0 ? (
         <section>
           <SectionHeader
@@ -161,12 +190,40 @@ export default async function ExpertRequestsPage() {
             ))}
           </ul>
           <p className="pt-3 text-xs leading-relaxed text-steel">
-            The customer has accepted your price and the slot is yours. You can start
-            any of these now — you do not have to wait for the booked time.
+            The customer has accepted your price and the slot is yours. Click <strong>Start work</strong> when the device is placed on the bench.
           </p>
         </section>
       ) : null}
 
+      {/* 5. Work completed — Awaiting customer review & payment */}
+      {completed.length > 0 ? (
+        <section>
+          <SectionHeader
+            title="Work completed — Awaiting customer review & payment"
+            action={
+              <Badge variant="verified">
+                <span className="font-mono tabular-nums">{completed.length}</span>
+                completed
+              </Badge>
+            }
+          />
+          <ul className="flex flex-col gap-2">
+            {completed.map((booking) => (
+              <CompletedReviewRow
+                key={booking.id}
+                booking={booking}
+                timezone={shop.timezone}
+                now={now}
+              />
+            ))}
+          </ul>
+          <p className="pt-3 text-xs leading-relaxed text-steel">
+            Customer has received the completion notice. Once they review and pay, your workshop wallet balance will be credited directly with your 5% Shop Pro cashback rebate.
+          </p>
+        </section>
+      ) : null}
+
+      {/* 6. Waiting on the customer */}
       {quoted.length > 0 ? (
         <section>
           <SectionHeader

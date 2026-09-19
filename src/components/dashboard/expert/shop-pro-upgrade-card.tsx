@@ -1,14 +1,14 @@
 "use client";
 
 import * as React from "react";
-import { useActionState } from "react";
-import Link from "next/link";
-import { Sparkles, CheckCircle2, Wallet, ArrowRight, ShieldCheck, Zap } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { Sparkles, CheckCircle2, Wallet } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { formatMoney } from "@/lib/format";
-import { purchaseShopProAction, SHOP_PRO_INITIAL_STATE } from "@/lib/plans/shop-pro-actions";
+import { PaymentSheet } from "@/components/dashboard/payment-sheet";
+import { purchaseShopProDirect } from "@/lib/plans/shop-pro-actions";
 import type { ShopProStatus } from "@/lib/plans/shop-pro";
 
 interface ShopProUpgradeCardProps {
@@ -22,23 +22,25 @@ export function ShopProUpgradeCard({
   balanceMinor,
   shopName,
 }: ShopProUpgradeCardProps) {
-  const [state, formAction, isPending] = useActionState(purchaseShopProAction, SHOP_PRO_INITIAL_STATE);
-  const canAfford = balanceMinor >= proStatus.priceMinor;
+  const router = useRouter();
+  const [isPaymentOpen, setIsPaymentOpen] = React.useState(false);
 
   return (
     <div className="flex flex-col gap-6">
-      {/* Alert states */}
-      {state.error && (
-        <div className="rounded-xl border border-rose-500/30 bg-rose-500/10 p-4 text-sm text-rose-600 dark:text-rose-400">
-          <p className="font-semibold">{state.error}</p>
-        </div>
-      )}
-
-      {state.success && state.message && (
+      {/* If pro is active, show banner */}
+      {proStatus.isPro && proStatus.expiresAt && (
         <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-4 text-sm text-emerald-600 dark:text-emerald-400">
           <div className="flex items-center gap-2 font-semibold">
-            <CheckCircle2 className="size-4" />
-            <span>{state.message}</span>
+            <CheckCircle2 className="size-4 shrink-0" />
+            <span>
+              Shop Pro is active until{" "}
+              {new Date(proStatus.expiresAt).toLocaleDateString("en-IN", {
+                day: "numeric",
+                month: "short",
+                year: "numeric",
+              })}
+              . All Pro benefits are unlocked!
+            </span>
           </div>
         </div>
       )}
@@ -111,37 +113,41 @@ export function ShopProUpgradeCard({
             </div>
           </div>
 
-          {/* Action Button */}
+          {/* Action Button: Opens PaymentSheet for full confirmation and method choice */}
           <div className="flex items-center gap-3">
-            {!canAfford ? (
-              <Button asChild className="gap-2 bg-[#ea580c] hover:bg-[#c2410c] text-white">
-                <Link href="/dashboard/wallet">
-                  <Wallet className="size-4" />
-                  <span>Top Up {formatMoney(proStatus.priceMinor - balanceMinor)} to Activate</span>
-                </Link>
-              </Button>
-            ) : (
-              <form action={formAction}>
-                <Button
-                  type="submit"
-                  disabled={isPending}
-                  className="gap-2 bg-[#ea580c] hover:bg-[#c2410c] px-6 text-white shadow-lg shadow-orange-500/20"
-                >
-                  <Sparkles className="size-4" />
-                  <span>
-                    {isPending
-                      ? "Processing…"
-                      : proStatus.isPro
-                        ? "Extend Shop Pro (+30 Days for ₹999)"
-                        : "Activate Shop Pro (₹999 / mo)"}
-                  </span>
-                </Button>
-              </form>
-            )}
+            <Button
+              type="button"
+              onClick={() => setIsPaymentOpen(true)}
+              className="gap-2 bg-[#ea580c] hover:bg-[#c2410c] px-6 text-white shadow-lg shadow-orange-500/20"
+            >
+              <Sparkles className="size-4" />
+              <span>
+                {proStatus.isPro
+                  ? "Extend Shop Pro (+30 Days for ₹999)"
+                  : "Activate Shop Pro (₹999 / mo)"}
+              </span>
+            </Button>
           </div>
         </div>
 
       </div>
+
+      {isPaymentOpen && (
+        <PaymentSheet
+          open
+          onClose={() => {
+            setIsPaymentOpen(false);
+            router.refresh();
+          }}
+          amountMinor={proStatus.priceMinor}
+          balanceMinor={balanceMinor}
+          title="FixGrid Shop Pro SaaS Subscription"
+          description="30-day Pro workshop tier: priority map discovery, 5% cashback rebate, automated SMS/WhatsApp alerts, smart inventory ERP, and unlimited QR warranties."
+          purchaseFields={{}}
+          purchaseAction={purchaseShopProDirect}
+          confirmLabel="Done"
+        />
+      )}
     </div>
   );
 }

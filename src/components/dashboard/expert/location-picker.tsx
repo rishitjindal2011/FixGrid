@@ -9,16 +9,18 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Search } from "lucide-react";
 
-// Fix Leaflet's default icon path issues in Next.js
-const defaultIcon = L.icon({
-  iconUrl: "/images/marker-icon.png",
-  iconRetinaUrl: "/images/marker-icon-2x.png",
-  shadowUrl: "/images/marker-shadow.png",
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
+// FixGrid styled pin icon matching the rest of the application
+const pinIcon = L.divIcon({
+  className: "",
+  html: `
+    <span style="
+      display:block;width:24px;height:24px;border-radius:50% 50% 50% 0;
+      transform:rotate(-45deg);background:#e8590c;
+      border:2px solid #ffffff;box-shadow:0 2px 6px rgba(18,59,74,.35);
+    "></span>`,
+  iconSize: [24, 24],
+  iconAnchor: [12, 24],
 });
-
-L.Marker.prototype.options.icon = defaultIcon;
 
 interface LocationPickerProps {
   defaultLat?: number | null;
@@ -40,7 +42,7 @@ export function LocationPicker({ defaultLat, defaultLng, onChange }: LocationPic
   const [isSearching, setIsSearching] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
 
-  const mapCenter: [number, number] = position || [51.505, -0.09]; // Default to London if empty
+  const mapCenter: [number, number] = position || [28.6139, 77.209]; // Default to India if empty
 
   async function handleSearch() {
     if (!searchQuery.trim() || isSearching) return;
@@ -122,16 +124,12 @@ export function LocationPicker({ defaultLat, defaultLng, onChange }: LocationPic
       <div className="flex-1 relative rounded-machined overflow-hidden border border-hairline z-0">
         <MapContainer center={mapCenter} zoom={position ? 15 : 10} className="h-full w-full">
           <TileLayer
-            attribution='&copy; <a href="https://carto.com/" target="_blank" rel="noopener noreferrer">CARTO</a> &copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap</a> contributors'
-            url={
-              process.env.NEXT_PUBLIC_CARTO_API_KEY
-                ? `https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png?api_key=${process.env.NEXT_PUBLIC_CARTO_API_KEY}`
-                : `https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png`
-            }
-            maxZoom={19}
-            subdomains="abcd"
+            url="https://mt{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}"
+            subdomains="0123"
+            attribution='&copy; Google Maps'
+            maxZoom={20}
           />
-          {position && <Marker position={position} />}
+          {position && <Marker position={position} icon={pinIcon} />}
           <MapEvents
             onPick={(lat, lng) => {
               setPosition([lat, lng]);

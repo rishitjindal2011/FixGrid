@@ -41,6 +41,9 @@ import {
   formatDuration,
   formatSlot,
 } from "@/lib/format";
+import { CustomerReviewCard } from "@/components/dashboard/customer-review-card";
+import { createClient } from "@/lib/supabase/server";
+import { getWallet } from "@/lib/wallet/server";
 import {
   type AttachmentKind,
   type DeliveryMode,
@@ -269,6 +272,22 @@ export default async function BookingDetailPage({
   const tDelivery = await getTranslations("deliveryModes");
   const title = booking.service?.name ?? booking.device_details ?? t("repairFallback");
 
+  const [wallet, disputeResult] = await Promise.all([
+    getWallet("user", user.id),
+    (async () => {
+      const supabase = await createClient();
+      return supabase
+        .from("disputes")
+        .select("id, status, reason, desired_outcome, resolution, resolution_note, resolved_at")
+        .eq("booking_id", booking.id)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+    })(),
+  ]);
+
+  const dispute = disputeResult?.data ?? null;
+
   return (
     <div className="flex flex-col gap-6">
       <div>
@@ -322,6 +341,12 @@ export default async function BookingDetailPage({
           ) : null}
         </div>
       </header>
+
+      <CustomerReviewCard
+        booking={booking}
+        balanceMinor={wallet.balanceMinor}
+        dispute={dispute}
+      />
 
       <div className="grid gap-6 lg:grid-cols-5">
         <div className="flex flex-col gap-6 lg:col-span-3">

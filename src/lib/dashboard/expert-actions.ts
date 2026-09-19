@@ -2067,6 +2067,221 @@ export async function submitBill(
   );
 }
 
+const CompleteWorkSchema = z.object({
+  bookingId: z.string().uuid("That booking could not be found."),
+  finalAmount: z.string().trim().optional(),
+  completionNotes: z.string().trim().max(2000).optional(),
+});
+
+/**
+ * Mark a repair in progress as completed on the bench.
+ * Transitions to `completed`, records final amount/notes, opens customer review.
+ */
+export async function completeBookingWork(
+  _prev: BookingActionState,
+  formData: FormData,
+): Promise<BookingActionState> {
+  const parsed = CompleteWorkSchema.safeParse({
+    bookingId: formData.get("bookingId"),
+    finalAmount: formData.get("finalAmount") ?? undefined,
+    completionNotes: formData.get("completionNotes") ?? undefined,
+  });
+
+  if (!parsed.success) {
+    return FAILED(parsed.error.issues[0]?.message ?? "Check the details and try again.");
+  }
+
+  const { supabase, user } = await currentUser();
+  if (!user) return FAILED("Sign in to complete work on this booking.");
+
+  const { data: booking, error: readError } = await supabase
+    .from("bookings")
+    .select("id, reference, status, fixer_id, customer_id, warranty_days, quoted_amount, currency")
+    .eq("id", parsed.data.bookingId)
+    .maybeSingle<{
+      id: string;
+      reference: string;
+      status: BookingStatus;
+      fixer_id: string;
+      customer_id: string;
+      warranty_days: number;
+      quoted_amount: number | null;
+      currency: string;
+    }>();
+
+  if (readError) return FAILED(explain(readError.code, "That booking could not be loaded."));
+  if (!booking) return FAILED("That booking could not be found.");
+
+  const denied = await assertOwnership(supabase, user.id, booking.fixer_id);
+  if (denied) return FAILED(denied);
+
+  if (booking.status !== "in_progress") {
+    return FAILED("Only jobs currently on the bench can be marked complete.");
+  }
+
+  const now = new Date().toISOString();
+  const days = booking.warranty_days ?? 30;
+  const warrantyExpires = new Date(Date.now() + days * 24 * 60 * 60 * 1000).toISOString();
+
+  let finalAmountMinor = booking.quoted_amount;
+  if (parsed.data.finalAmount) {
+    const minor = rupeesToPaise(parsed.data.finalAmount);
+    if (minor !== null && minor > 0) {
+      finalAmountMinor = minor;
+    }
+  }
+
+  const patch: AppDatabase["public"]["Tables"]["bookings"]["Update"] = {
+    status: "completed",
+    completed_at: now,
+    warranty_expires_at: warrantyExpires,
+  };
+  if (finalAmountMinor !== null) {
+    patch.final_amount = finalAmountMinor;
+  }
+
+  const { error: updateError } = await supabase
+    .from("bookings")
+    .update(patch)
+    .eq("id", booking.id);
+
+  if (updateError) {
+    return FAILED(explain(updateError.code, "That completion could not be saved."));
+  }
+
+  // Audit event
+  await supabase.from("booking_events").insert({
+    booking_id: booking.id,
+    actor_id: user.id,
+    actor_role: "shop",
+    from_status: "in_progress",
+    to_status: "completed",
+    note: parsed.data.completionNotes ?? "Work completed on bench. Sent to customer for review and payment.",
+  });
+
+  revalidatePath("/dashboard/expert/requests");
+  revalidatePath(`/dashboard/expert/requests/${booking.reference}`);
+  revalidatePath("/dashboard/bookings");
+  revalidatePath(`/dashboard/bookings/${booking.reference}`);
+  revalidatePath("/dashboard");
+
+  return OK("Repair work marked complete! Sent to the customer for review and payment.");
+}
+
+/**
+ * Shopkeeper accepts customer's revision request and places job back on bench.
+ */
+export async function acceptRework(
+  _prev: BookingActionState,
+  formData: FormData,
+): Promise<BookingActionState> {
+  const bookingId = String(formData.get("bookingId") ?? "");
+  const note = String(formData.get("note") ?? "").trim();
+  if (!bookingId) return FAILED("That booking could not be found.");
+
+  const { supabase, user } = await currentUser();
+  if (!user) return FAILED("Sign in first.");
+
+  const { data: booking } = await supabase
+    .from("bookings")
+    .select("id, reference, status, fixer_id")
+    .eq("id", bookingId)
+    .maybeSingle<{ id: string; reference: string; status: BookingStatus; fixer_id: string }>();
+
+  if (!booking) return FAILED("That booking could not be found.");
+  const denied = await assertOwnership(supabase, user.id, booking.fixer_id);
+  if (denied) return FAILED(denied);
+
+  const now = new Date().toISOString();
+  await supabase.from("bookings").update({
+    status: "in_progress",
+    started_at: now,
+  }).eq("id", booking.id);
+
+  await supabase.from("booking_events").insert({
+    booking_id: booking.id,
+    actor_id: user.id,
+    actor_role: "shop",
+    from_status: booking.status,
+    to_status: "in_progress",
+    note: note || "Workshop accepted customer change request. Device back on the bench for rework.",
+  });
+
+  revalidatePath("/dashboard/expert/requests");
+  revalidatePath(`/dashboard/expert/requests/${booking.reference}`);
+  revalidatePath("/dashboard/bookings");
+  revalidatePath(`/dashboard/bookings/${booking.reference}`);
+
+  return OK("Rework accepted. The job is back on the bench in progress.");
+}
+
+/**
+ * Shopkeeper denies rework request and escalates to FixGrid Admin disputes.
+ */
+export async function denyRework(
+  _prev: BookingActionState,
+  formData: FormData,
+): Promise<BookingActionState> {
+  const bookingId = String(formData.get("bookingId") ?? "");
+  const reason = String(formData.get("reason") ?? "").trim();
+  if (!bookingId) return FAILED("That booking could not be found.");
+
+  const { supabase, user } = await currentUser();
+  if (!user) return FAILED("Sign in first.");
+
+  const { data: booking } = await supabase
+    .from("bookings")
+    .select("id, reference, status, fixer_id")
+    .eq("id", bookingId)
+    .maybeSingle<{ id: string; reference: string; status: BookingStatus; fixer_id: string }>();
+
+  if (!booking) return FAILED("That booking could not be found.");
+  const denied = await assertOwnership(supabase, user.id, booking.fixer_id);
+  if (denied) return FAILED(denied);
+
+  await supabase.from("bookings").update({
+    status: "disputed",
+  }).eq("id", booking.id);
+
+  const { data: existingDispute } = await supabase
+    .from("disputes")
+    .select("id")
+    .eq("booking_id", booking.id)
+    .maybeSingle();
+
+  if (!existingDispute) {
+    await supabase.from("disputes").insert({
+      booking_id: booking.id,
+      raised_by: user.id,
+      status: "under_review",
+      reason: reason || "Workshop disputed revision request. Escalated to FixGrid Admin.",
+      desired_outcome: "Admin mediation",
+    });
+  } else {
+    await supabase.from("disputes").update({
+      status: "under_review",
+      resolution_note: reason || "Workshop disputed revision request.",
+    }).eq("id", existingDispute.id);
+  }
+
+  await supabase.from("booking_events").insert({
+    booking_id: booking.id,
+    actor_id: user.id,
+    actor_role: "shop",
+    from_status: booking.status,
+    to_status: "disputed",
+    note: reason || "Workshop denied change request. Escalated to FixGrid Admin Disputes.",
+  });
+
+  revalidatePath("/dashboard/expert/requests");
+  revalidatePath(`/dashboard/expert/requests/${booking.reference}`);
+  revalidatePath("/dashboard/bookings");
+  revalidatePath(`/dashboard/bookings/${booking.reference}`);
+  revalidatePath("/dashboard/expert/disputes");
+
+  return OK("Escalated to FixGrid Admin Disputes. Our team will review the case.");
+}
+
 /* ── Jobs & Hiring ────────────────────────────────────────────────────────── */
 
 const jobItemSchema = z.object({

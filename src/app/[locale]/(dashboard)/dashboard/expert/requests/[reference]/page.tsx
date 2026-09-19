@@ -24,6 +24,8 @@ import {
   PrivateNoteEditor,
   RequestActions,
 } from "@/components/dashboard/expert/request-actions";
+import { CompleteWorkDialog } from "@/components/dashboard/expert/complete-work-dialog";
+import { RevisionActions } from "@/components/dashboard/expert/revision-actions";
 import {
   RequestExpiry,
   WaitingTime,
@@ -460,6 +462,38 @@ export default async function ExpertRequestDetailPage({
           ) : null}
 
           <Panel title="Your answer">
+            {booking.status === "in_progress" ? (
+              <div className="mb-4 rounded-machined border border-[#ea580c]/40 bg-[#ea580c]/10 p-3.5">
+                <div className="flex flex-col gap-2.5">
+                  <span className="font-semibold text-xs uppercase tracking-wider text-[#ea580c]">
+                    Device on bench (In progress)
+                  </span>
+                  <CompleteWorkDialog
+                    bookingId={booking.id}
+                    reference={booking.reference}
+                    customerName={customerName}
+                    quotedAmountMinor={booking.final_amount ?? booking.quoted_amount}
+                    currency={booking.currency}
+                  />
+                </div>
+              </div>
+            ) : null}
+
+            {booking.status === "disputed" ? (
+              <div className="mb-4 rounded-machined border border-rose-500/40 bg-rose-500/10 p-3.5">
+                <div className="flex flex-col gap-2.5">
+                  <span className="font-semibold text-xs uppercase tracking-wider text-rose-600 dark:text-rose-400">
+                    Customer requested changes
+                  </span>
+                  <RevisionActions
+                    bookingId={booking.id}
+                    reference={booking.reference}
+                    customerName={customerName}
+                  />
+                </div>
+              </div>
+            ) : null}
+
             <RequestActions
               bookingId={booking.id}
               status={booking.status}

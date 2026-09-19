@@ -3,6 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import type { Metadata } from "next";
 import { ArrowLeft, Paperclip } from "lucide-react";
 
+import { DisputeMediationCard } from "@/components/dashboard/admin/dispute-mediation-card";
 import { DisputeThread } from "@/components/dashboard/dispute-thread";
 import { PageHeader } from "@/components/dashboard/page-header";
 import { Badge } from "@/components/ui/badge";
@@ -13,17 +14,10 @@ import { formatDateTime, formatMoney } from "@/lib/format";
 
 export const metadata: Metadata = {
   title: "Claim",
-
 };
 
 /**
  * One warranty claim, from the shop's side.
- *
- * Deliberately a separate route from the customer's `/dashboard/warranty/[id]`
- * rather than one page branching on who is looking. The two need different
- * authorisation (shop-on-the-booking versus customer-on-the-booking), different
- * wording, and different actions — and a single page carrying both is one `if`
- * away from showing a claimant the shop's view of their own claim.
  */
 export default async function ExpertDisputePage({
   params,
@@ -38,9 +32,6 @@ export default async function ExpertDisputePage({
   const shop = await getMyShop(user.id);
   if (!shop) redirect("/join");
 
-  // Null covers "no such claim", "not against this shop" and "RLS refused it".
-  // All three are a 404 — distinguishing them would let someone probe which
-  // claim ids exist.
   const dispute = await getShopDispute(shop.id, user.id, id);
   if (!dispute) notFound();
 
@@ -122,6 +113,12 @@ export default async function ExpertDisputePage({
           </div>
         ) : null}
       </section>
+
+      <DisputeMediationCard
+        disputeId={dispute.id}
+        reference={dispute.reference}
+        open={dispute.open}
+      />
 
       {/* The same component the customer uses. One transcript, one set of
           wording rules — a second implementation would drift on who is "you". */}

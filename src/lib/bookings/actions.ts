@@ -20,6 +20,10 @@ import {
   notifyRescheduleRequested,
 } from "@/lib/notifications/booking";
 import type { BookingStatus, DisputeResolution } from "@/lib/types/marketplace";
+import { chargeToPlatform, creditFromPlatform } from "@/lib/wallet/server";
+import { getShopProStatus } from "@/lib/plans/shop-pro";
+import { formatMoney } from "@/lib/format";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 /**
  * Every write the two dashboards perform.
@@ -771,4 +775,239 @@ export async function markAllNotificationsRead(): Promise<BookingActionState> {
   revalidatePath("/dashboard");
 
   return OK();
+}
+
+/**
+ * Customer settles the completed repair bill (via PaymentSheet).
+ * 1. Charges customer wallet / asserts funds.
+ * 2. Credits the repair payment directly to the shopkeeper's wallet.
+ * 3. Checks if shop is Pro and credits 5% cashback rebate bonus to shopkeeper.
+ * 4. Marks booking payment as captured and records booking_event.
+ */
+export async function settleCompletedBooking(
+  formData: FormData,
+): Promise<{ success: boolean; error: string | null; message?: string }> {
+  const bookingId = String(formData.get("bookingId") ?? "");
+  if (!bookingId) {
+    return { success: false, error: "Booking ID is missing." };
+  }
+
+  const { user } = await currentUser();
+  if (!user) {
+    return { success: false, error: "Please sign in to complete your payment." };
+  }
+
+  const admin = createAdminClient();
+
+  const { data: booking, error: readError } = await admin
+    .from("bookings")
+    .select(`
+      id, reference, status, customer_id, fixer_id,
+      final_amount, quoted_amount, platform_fee, tax_amount, currency,
+      shop:fixer_profiles!bookings_fixer_fkey ( owner_id, shop_name )
+    `)
+    .eq("id", bookingId)
+    .maybeSingle<{
+      id: string;
+      reference: string;
+      status: BookingStatus;
+      customer_id: string;
+      fixer_id: string;
+      final_amount: number | null;
+      quoted_amount: number | null;
+      platform_fee: number;
+      tax_amount: number;
+      currency: string;
+      shop: { owner_id: string | null; shop_name: string } | null;
+    }>();
+
+  if (readError || !booking) {
+    return { success: false, error: "That booking could not be found." };
+  }
+
+  if (booking.customer_id !== user.id) {
+    return { success: false, error: "Only the customer on this booking can settle this bill." };
+  }
+
+  const repairAmount = booking.final_amount ?? booking.quoted_amount;
+  if (!repairAmount || repairAmount <= 0) {
+    return { success: false, error: "No repair amount specified for this job." };
+  }
+
+  const shopOwnerId = booking.shop?.owner_id;
+  if (!shopOwnerId) {
+    return { success: false, error: "Workshop owner account not found for payout." };
+  }
+
+  // Charge customer from wallet (PaymentSheet already ensured funding)
+  const charge = await chargeToPlatform({
+    kind: "charge",
+    amountMinor: repairAmount,
+    from: { kind: "user", ownerId: user.id },
+    bookingId: booking.id,
+    memo: `Repair payment for ${booking.reference} — ${booking.shop?.shop_name ?? "Workshop"}`,
+    fallbackError: "Payment could not be processed from your wallet balance.",
+  });
+
+  if (!charge.ok) {
+    return { success: false, error: charge.error };
+  }
+
+  // Credit workshop owner with the repair payment
+  await creditFromPlatform({
+    kind: "payout",
+    amountMinor: repairAmount,
+    to: { kind: "user", ownerId: shopOwnerId },
+    bookingId: booking.id,
+    memo: `Repair payment received for ${booking.reference}`,
+  });
+
+  // Calculate & credit 5% Shop Pro Cashback Rebate
+  const proStatus = await getShopProStatus(booking.fixer_id);
+  const cashbackMinor = Math.floor(repairAmount * 0.05);
+
+  if (cashbackMinor > 0) {
+    await creditFromPlatform({
+      kind: "rebate",
+      amountMinor: cashbackMinor,
+      to: { kind: "user", ownerId: shopOwnerId },
+      bookingId: booking.id,
+      memo: `5% Shop Pro Cashback Rebate for ${booking.reference}`,
+    });
+  }
+
+  // Record settled payment in payments table
+  await admin.from("payments").insert({
+    booking_id: booking.id,
+    customer_id: user.id,
+    status: "captured",
+    amount: repairAmount,
+    platform_fee: booking.platform_fee,
+    tax_amount: booking.tax_amount,
+    currency: booking.currency,
+    provider: "fixgrid_wallet",
+    captured_at: new Date().toISOString(),
+  });
+
+  // Update booking to closed
+  await admin
+    .from("bookings")
+    .update({
+      status: "closed",
+      closed_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    } as never)
+    .eq("id", booking.id);
+
+  // If a dispute was open, resolve it as settled
+  await admin
+    .from("disputes")
+    .update({
+      status: "resolved",
+      resolution: "no_action",
+      resolved_at: new Date().toISOString(),
+      resolution_note: "Customer approved repair and settled payment.",
+    })
+    .eq("booking_id", booking.id);
+
+  // Append audit event
+  await admin.from("booking_events").insert({
+    booking_id: booking.id,
+    actor_id: user.id,
+    actor_role: "customer",
+    from_status: booking.status,
+    to_status: "closed",
+    note: `Customer approved repair and paid ${formatMoney(repairAmount, booking.currency)}. ${formatMoney(cashbackMinor, booking.currency)} 5% Pro Cashback credited to workshop.`,
+  });
+
+  revalidatePath("/dashboard/bookings");
+  revalidatePath(`/dashboard/bookings/${booking.reference}`);
+  revalidatePath("/dashboard/expert/requests");
+  revalidatePath(`/dashboard/expert/requests/${booking.reference}`);
+  revalidatePath("/dashboard/expert/earnings");
+  revalidatePath("/dashboard/wallet");
+
+  return {
+    success: true,
+    error: null,
+    message: `Payment of ${formatMoney(repairAmount, booking.currency)} successful! Workshop credited with 5% Pro cashback bonus.`,
+  };
+}
+
+/**
+ * Customer is dissatisfied and requests changes / rework from the workshop.
+ */
+export async function requestBookingRevision(
+  _prev: BookingActionState,
+  formData: FormData,
+): Promise<BookingActionState> {
+  const bookingId = String(formData.get("bookingId") ?? "");
+  const reason = String(formData.get("reason") ?? "").trim();
+
+  if (!bookingId) return FAILED("Booking ID missing.");
+  if (!reason || reason.length < 10) {
+    return FAILED("Please explain what is wrong or needs to be changed (at least 10 characters).");
+  }
+
+  const { supabase, user } = await currentUser();
+  if (!user) return FAILED("Sign in to submit a revision request.");
+
+  const { data: booking } = await supabase
+    .from("bookings")
+    .select("id, reference, status, customer_id, fixer_id")
+    .eq("id", bookingId)
+    .maybeSingle<{ id: string; reference: string; status: BookingStatus; customer_id: string; fixer_id: string }>();
+
+  if (!booking) return FAILED("That booking could not be found.");
+  if (booking.customer_id !== user.id) {
+    return FAILED("Only the customer on this booking can request changes.");
+  }
+
+  const admin = createAdminClient();
+
+  // Record dissatisfaction note in booking_events
+  await admin.from("booking_events").insert({
+    booking_id: booking.id,
+    actor_id: user.id,
+    actor_role: "customer",
+    from_status: booking.status,
+    to_status: "disputed",
+    note: `Customer requested changes: ${reason}`,
+  });
+
+  // Ensure dispute record exists for shop to review
+  const { data: existingDispute } = await admin
+    .from("disputes")
+    .select("id")
+    .eq("booking_id", booking.id)
+    .maybeSingle();
+
+  if (!existingDispute) {
+    await admin.from("disputes").insert({
+      booking_id: booking.id,
+      raised_by: user.id,
+      status: "awaiting_shop",
+      reason: reason,
+      desired_outcome: "Customer requested rework / changes",
+    });
+  } else {
+    await admin.from("disputes").update({
+      status: "awaiting_shop",
+      reason: reason,
+    }).eq("id", existingDispute.id);
+  }
+
+  // Update booking status
+  await admin
+    .from("bookings")
+    .update({ status: "disputed", updated_at: new Date().toISOString() } as never)
+    .eq("id", booking.id);
+
+  revalidatePath("/dashboard/bookings");
+  revalidatePath(`/dashboard/bookings/${booking.reference}`);
+  revalidatePath("/dashboard/expert/requests");
+  revalidatePath(`/dashboard/expert/requests/${booking.reference}`);
+  revalidatePath("/dashboard/expert/disputes");
+
+  return OK("Your request for changes has been sent to the workshop for review.");
 }

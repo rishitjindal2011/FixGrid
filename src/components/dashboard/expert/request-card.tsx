@@ -14,6 +14,8 @@ import {
 } from "lucide-react";
 
 import { BookingActions } from "@/components/dashboard/booking-actions";
+import { CompleteWorkDialog } from "@/components/dashboard/expert/complete-work-dialog";
+import { RevisionActions } from "@/components/dashboard/expert/revision-actions";
 import { RequestActions } from "@/components/dashboard/expert/request-actions";
 import type { RequestPricing } from "@/components/dashboard/expert/quote-form";
 import { UserAvatar } from "@/components/ui/avatar";
@@ -501,6 +503,154 @@ export function QuotedRow({
             : "Quoted"}
         </Badge>
       </div>
+    </li>
+  );
+}
+
+export function InProgressRow({
+  booking,
+  timezone,
+  now,
+}: {
+  booking: ExpertBooking;
+  timezone: string;
+  now: Date;
+}) {
+  const start = slotStart(booking.slot);
+  const end = slotEnd(booking.slot);
+
+  return (
+    <li className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3 rounded-machined border-2 border-[#ea580c]/40 bg-chalk p-4 shadow-bench transition-all hover:border-[#ea580c]">
+      <div className="min-w-0">
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+          <Link
+            href={`/dashboard/expert/requests/${encodeURIComponent(booking.reference)}`}
+            className="truncate font-semibold text-sm text-enamel hover:text-signal"
+          >
+            {booking.customer?.display_name ?? "Customer"}
+          </Link>
+          <span className="font-mono text-eyebrow uppercase tracking-[0.14em] text-steel-soft">
+            {booking.reference}
+          </span>
+          <Badge variant="signal" className="animate-pulse bg-[#ea580c] text-white">
+            On the Bench
+          </Badge>
+        </div>
+        <p className="pt-1 text-xs text-steel">
+          <strong className="text-enamel">{booking.service?.name ?? "Repair"}</strong>
+          {booking.device_details ? ` · ${booking.device_details}` : ""}
+          {start && end ? (
+            <span className="pl-2 font-mono tabular-nums text-steel-soft">
+              ({formatSlot(start, end, timezone)})
+            </span>
+          ) : null}
+        </p>
+      </div>
+
+      <div className="flex flex-wrap items-center gap-3">
+        {booking.quoted_amount !== null ? (
+          <span className="font-mono text-sm font-semibold tabular-nums text-enamel">
+            {formatMoney(booking.final_amount ?? booking.quoted_amount, booking.currency)}
+          </span>
+        ) : null}
+
+        <CompleteWorkDialog
+          bookingId={booking.id}
+          reference={booking.reference}
+          customerName={booking.customer?.display_name ?? "Customer"}
+          quotedAmountMinor={booking.final_amount ?? booking.quoted_amount}
+          currency={booking.currency}
+        />
+      </div>
+    </li>
+  );
+}
+
+export function CompletedReviewRow({
+  booking,
+  timezone,
+  now,
+}: {
+  booking: ExpertBooking;
+  timezone: string;
+  now: Date;
+}) {
+  return (
+    <li className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 rounded-machined border border-emerald-500/30 bg-emerald-500/5 px-4 py-3 shadow-bench">
+      <div className="min-w-0">
+        <p className="flex flex-wrap items-center gap-x-3 gap-y-1">
+          <Link
+            href={`/dashboard/expert/requests/${encodeURIComponent(booking.reference)}`}
+            className="truncate text-sm font-medium text-enamel hover:text-signal"
+          >
+            {booking.customer?.display_name ?? "Customer"}
+          </Link>
+          <span className="font-mono text-eyebrow uppercase tracking-[0.14em] text-steel-soft">
+            {booking.reference}
+          </span>
+          <Badge variant="verified">
+            Work Completed
+          </Badge>
+        </p>
+        <p className="pt-1 text-xs text-steel">
+          {booking.service?.name ?? "Repair"}
+          {booking.completed_at ? ` · Completed ${formatRelative(booking.completed_at, now)}` : ""}
+        </p>
+      </div>
+
+      <div className="flex items-center gap-3">
+        {booking.final_amount !== null || booking.quoted_amount !== null ? (
+          <span className="font-mono text-sm font-bold tabular-nums text-emerald-600 dark:text-emerald-400">
+            {formatMoney(booking.final_amount ?? booking.quoted_amount ?? 0, booking.currency)}
+          </span>
+        ) : null}
+        <span className="text-xs text-steel-soft italic">
+          Waiting for customer review & payment
+        </span>
+      </div>
+    </li>
+  );
+}
+
+export function RevisionRequestRow({
+  booking,
+  timezone,
+  now,
+}: {
+  booking: ExpertBooking;
+  timezone: string;
+  now: Date;
+}) {
+  return (
+    <li className="flex flex-col gap-3 rounded-machined border-2 border-rose-500/40 bg-rose-500/5 p-4 shadow-bench">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+          <Link
+            href={`/dashboard/expert/requests/${encodeURIComponent(booking.reference)}`}
+            className="truncate text-sm font-bold text-rose-700 dark:text-rose-300 hover:underline"
+          >
+            {booking.customer?.display_name ?? "Customer"}
+          </Link>
+          <span className="font-mono text-eyebrow uppercase tracking-[0.14em] text-steel-soft">
+            {booking.reference}
+          </span>
+          <Badge variant="signal" className="bg-rose-500 text-white">
+            Action Needed: Customer Requested Changes
+          </Badge>
+        </div>
+
+        <RevisionActions
+          bookingId={booking.id}
+          reference={booking.reference}
+          customerName={booking.customer?.display_name ?? "Customer"}
+        />
+      </div>
+
+      <p className="text-xs text-steel">
+        Customer reported dissatisfaction or requested rework on{" "}
+        <strong className="text-enamel">{booking.service?.name ?? "Device Repair"}</strong>.
+        You can accept to rework the device on the bench, or escalate to FixGrid Admin Disputes for adjudication.
+      </p>
     </li>
   );
 }

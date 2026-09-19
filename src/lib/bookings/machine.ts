@@ -68,12 +68,13 @@ const TRANSITIONS: Record<
   },
 
   completed: {
-    // Warranty ran out with no claim. Cron closes it, and an admin can close
-    // early when both sides agree.
-    closed: ["system", "admin"],
+    // Warranty ran out with no claim, or customer pays and closes booking.
+    closed: ["customer", "system", "admin"],
     // A claim inside the window. Customer-raised, or admin on their behalf
     // after a phone call.
     disputed: ["customer", "admin"],
+    // Shop accepts customer changes / rework request.
+    in_progress: ["shop", "admin"],
   },
 
   disputed: {
@@ -81,7 +82,9 @@ const TRANSITIONS: Record<
     // withdrawn or rejected, so the warranty clock resumes rather than the
     // booking being stranded in a dispute state for ever.
     completed: ["admin"],
-    closed: ["admin"],
+    closed: ["customer", "admin"],
+    // Shop accepts rework or admin orders rework.
+    in_progress: ["shop", "admin"],
   },
 
   // Terminal. No transitions out — a cancelled booking is re-booked as a new
