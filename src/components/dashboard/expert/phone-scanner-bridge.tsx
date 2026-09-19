@@ -60,7 +60,10 @@ export function PhoneScannerBridge({
       const sid = data.sessionId;
       setSessionId(sid);
 
-      const origin = typeof window !== "undefined" ? window.location.origin : "https://fixgrid.vytron.me";
+      let origin = typeof window !== "undefined" ? window.location.origin : "https://fixgrid.vytron.me";
+      if (origin.includes("vytron.me") && origin.startsWith("http://")) {
+        origin = origin.replace("http://", "https://");
+      }
       const targetUrl = `${origin}/scan-bridge/${sid}`;
       setMobileUrl(targetUrl);
 
