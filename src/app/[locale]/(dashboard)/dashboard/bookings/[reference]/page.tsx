@@ -22,6 +22,7 @@ import {
 import { AddToCalendar } from "@/components/dashboard/add-to-calendar";
 import { BookingActions } from "@/components/dashboard/booking-actions";
 import { BookingTimeline } from "@/components/dashboard/booking-timeline";
+import { CustomerQrPass } from "@/components/dashboard/customer-qr-pass";
 import { CostBreakdown } from "@/components/dashboard/cost-breakdown";
 import { RescheduleDialog } from "@/components/dashboard/reschedule-dialog";
 import { StatusBadge } from "@/components/dashboard/status-badge";
@@ -346,6 +347,15 @@ export default async function BookingDetailPage({
         booking={booking}
         balanceMinor={wallet.balanceMinor}
         dispute={dispute}
+      />
+
+      <CustomerQrPass
+        reference={booking.reference}
+        deliveryMode={booking.delivery_mode}
+        status={booking.status}
+        shopName={booking.shop?.shop_name ?? "FixGrid Workshop"}
+        serviceName={booking.service?.name}
+        warrantyDays={booking.warranty_days ?? 30}
       />
 
       <div className="grid gap-6 lg:grid-cols-5">

@@ -141,9 +141,35 @@ export function CustomerReviewCard({
     }
   };
 
-  // Case 1: Status is disputed
-  if (booking.status === "disputed" || dispute) {
-    const isUpheld = dispute?.resolution === "no_action";
+  // Case 1: Closed (Repair is paid and settled) - Check this FIRST!
+  if (booking.status === "closed") {
+    return (
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-machined border border-verdigris/30 bg-verdigris/5 p-4 text-sm shadow-bench">
+        <div className="flex items-start sm:items-center gap-3">
+          <CheckCircle className="size-5 shrink-0 text-verdigris mt-0.5 sm:mt-0" />
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="font-semibold text-enamel">Repair Settled & Completed</span>
+              <span className="rounded-full bg-verdigris/15 px-2 py-0.5 font-mono text-[10px] font-semibold text-verdigris uppercase tracking-wider">
+                Paid
+              </span>
+            </div>
+            <p className="text-xs text-steel mt-0.5">
+              Bill settled for {formatMoney(totalPayable, booking.currency)}. Workshop credited with 5% Pro Cashback. Warranty coverage is in effect.
+            </p>
+            {dispute?.resolution_note ? (
+              <p className="mt-1 text-xs text-steel-soft">
+                <span className="font-medium text-steel">Mediation resolution:</span> {dispute.resolution_note}
+              </p>
+            ) : null}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Case 2: Status is actively disputed / in revision
+  if (booking.status === "disputed") {
     const isReworkOrdered = dispute?.resolution === "redo_service";
     const isRefunded =
       dispute?.resolution === "refund_full" || dispute?.resolution === "refund_partial";
@@ -165,13 +191,11 @@ export function CustomerReviewCard({
             </div>
 
             <h3 className="mt-1 font-display text-lg uppercase tracking-wide text-enamel">
-              {isUpheld
-                ? "FixGrid Mediation Concluded: Upheld in Favor of Workshop"
-                : isReworkOrdered
-                  ? "Admin Ordered Workshop Rework"
-                  : isRefunded
-                    ? "Dispute Settled: Refund / Bill Waived"
-                    : "Workmanship Dissatisfaction Under Review"}
+              {isReworkOrdered
+                ? "Admin Ordered Workshop Rework"
+                : isRefunded
+                  ? "Dispute Settled: Refund / Bill Waived"
+                  : "Workmanship Dissatisfaction Under Review"}
             </h3>
 
             {dispute?.reason ? (
@@ -188,58 +212,28 @@ export function CustomerReviewCard({
               </div>
             ) : null}
 
-            {isUpheld ? (
-              <div className="mt-5 flex flex-wrap items-center gap-4 rounded-machined border border-signal/30 bg-signal/10 p-4">
-                <div className="flex-1">
-                  <p className="text-sm font-medium text-enamel">
-                    Please approve and settle the outstanding repair bill of{" "}
-                    <span className="font-bold text-signal">
-                      {formatMoney(totalPayable, booking.currency)}
-                    </span>
-                    .
-                  </p>
-                  <p className="text-xs text-steel">
-                    Funds are credited securely to the workshop wallet with 5% Pro Cashback.
-                  </p>
-                </div>
-                <Button
-                  onClick={() => setPaymentOpen(true)}
-                  className="bg-signal text-charcoal hover:bg-signal/90"
-                >
-                  <Coins className="size-4" />
-                  Approve & Settle Now
-                </Button>
-              </div>
-            ) : (
-              <p className="mt-4 text-xs leading-relaxed text-steel">
-                {isReworkOrdered
-                  ? "The workshop is currently re-working your device on their bench. You will be notified as soon as work is completed."
-                  : "FixGrid admin is mediating between both parties. If the workshop denies your rework request, our dispute mediator steps in to review evidence."}
-              </p>
-            )}
+            <p className="mt-4 text-xs leading-relaxed text-steel">
+              {isReworkOrdered
+                ? "The workshop is currently re-working your device on their bench. You will be notified as soon as work is completed."
+                : "FixGrid admin is mediating between both parties. If the workshop denies your rework request, our dispute mediator steps in to review evidence."}
+            </p>
           </div>
         </div>
-
-        {/* Payment Sheet */}
-        <PaymentSheet
-          open={paymentOpen}
-          onClose={() => setPaymentOpen(false)}
-          amountMinor={totalPayable}
-          balanceMinor={balanceMinor}
-          title={`Settle ${booking.reference} Repair Bill`}
-          description={`Payment for ${booking.device_details ?? "device repair"} at ${booking.shop?.shop_name ?? "Workshop"}.`}
-          purchaseFields={{ bookingId: booking.id }}
-          purchaseAction={settleCompletedBooking}
-          confirmLabel="Pay Now"
-        />
       </div>
     );
   }
 
-  // Case 2: Status is completed (Expert finished work, awaiting customer review & payment)
+  // Case 3: Status is completed (Expert finished work, awaiting customer review & payment)
   if (booking.status === "completed") {
     return (
       <div className="relative overflow-hidden rounded-machined border-2 border-signal bg-chalk p-6 shadow-bench ring-4 ring-signal/10">
+        {dispute?.resolution === "no_action" && dispute.resolution_note ? (
+          <div className="mb-5 rounded-machined border border-signal/40 bg-signal/10 p-3.5 text-xs text-signal">
+            <span className="font-bold">FixGrid Admin Mediation Ruling: </span>
+            {dispute.resolution_note}
+          </div>
+        ) : null}
+
         <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
           <div className="flex items-start gap-3.5">
             <div className="flex size-11 shrink-0 items-center justify-center rounded-machined bg-signal/15 text-signal ring-1 ring-signal/30">
@@ -436,23 +430,6 @@ export function CustomerReviewCard({
             </form>
           </DialogContent>
         </Dialog>
-      </div>
-    );
-  }
-
-  // Case 3: Closed (Repair paid and settled)
-  if (booking.status === "closed") {
-    return (
-      <div className="flex items-center justify-between rounded-machined border border-verdigris/30 bg-verdigris/5 p-4 text-sm text-verdigris shadow-bench">
-        <div className="flex items-center gap-3">
-          <CheckCircle className="size-5 shrink-0 text-verdigris" />
-          <div>
-            <span className="font-semibold text-enamel">Repair Settled & Completed</span>
-            <p className="text-xs text-steel">
-              Bill paid. Workshop credited with 5% Pro Cashback. Warranty coverage is in effect.
-            </p>
-          </div>
-        </div>
       </div>
     );
   }

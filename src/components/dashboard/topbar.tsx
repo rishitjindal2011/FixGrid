@@ -4,6 +4,7 @@ import { Bell, Search, Settings, Store, UserRound } from "lucide-react";
 
 import { DashboardSidebarSheet } from "@/components/dashboard/sidebar";
 import { RoleToggle } from "@/components/dashboard/role-toggle";
+import { ShopQrScannerModal } from "@/components/dashboard/expert/shop-qr-scanner-modal";
 import { SignOutMenuItem } from "@/components/dashboard/sign-out-menu-item";
 import { UserAvatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -69,6 +70,12 @@ export async function DashboardTopbar({
           {t("findExpert")}
         </Link>
       </Button>
+
+      {shop !== null ? (
+        <div className="hidden sm:block">
+          <ShopQrScannerModal />
+        </div>
+      ) : null}
 
       <div className="ml-auto flex items-center gap-1 sm:gap-2">
         <Button asChild variant="ghost" size="icon" className="relative">

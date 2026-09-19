@@ -9,6 +9,7 @@ import { getExpertStats } from "@/lib/dashboard/expert";
 import { formatMoney } from "@/lib/format";
 import { notifyQuoteSent } from "@/lib/notifications/booking";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { WEEKDAYS, WEEKDAY_LABELS, type Weekday } from "@/lib/types/database";
 import type {
   BookingStatus,
@@ -2071,11 +2072,14 @@ const CompleteWorkSchema = z.object({
   bookingId: z.string().uuid("That booking could not be found."),
   finalAmount: z.string().trim().optional(),
   completionNotes: z.string().trim().max(2000).optional(),
+  paymentMethod: z.enum(["online", "cash"]).default("online"),
 });
 
 /**
  * Mark a repair in progress as completed on the bench.
- * Transitions to `completed`, records final amount/notes, opens customer review.
+ * If paymentMethod is "online": transitions to `completed`, opens customer review & online payment.
+ * If paymentMethod is "cash": transitions to `closed`, records cash payment, and prompts shopkeeper
+ * to upload bill in Cashback tab for 5% admin-reviewed rebate.
  */
 export async function completeBookingWork(
   _prev: BookingActionState,
@@ -2085,6 +2089,7 @@ export async function completeBookingWork(
     bookingId: formData.get("bookingId"),
     finalAmount: formData.get("finalAmount") ?? undefined,
     completionNotes: formData.get("completionNotes") ?? undefined,
+    paymentMethod: formData.get("paymentMethod") ?? "online",
   });
 
   if (!parsed.success) {
@@ -2131,11 +2136,17 @@ export async function completeBookingWork(
     }
   }
 
+  const isCash = parsed.data.paymentMethod === "cash";
+  const toStatus: BookingStatus = isCash ? "closed" : "completed";
+
   const patch: AppDatabase["public"]["Tables"]["bookings"]["Update"] = {
-    status: "completed",
+    status: toStatus,
     completed_at: now,
     warranty_expires_at: warrantyExpires,
   };
+  if (isCash) {
+    patch.closed_at = now;
+  }
   if (finalAmountMinor !== null) {
     patch.final_amount = finalAmountMinor;
   }
@@ -2149,21 +2160,46 @@ export async function completeBookingWork(
     return FAILED(explain(updateError.code, "That completion could not be saved."));
   }
 
+  // Record cash payment in payments table if cash was selected
+  if (isCash && finalAmountMinor !== null && finalAmountMinor > 0) {
+    const admin = createAdminClient();
+    await admin.from("payments").insert({
+      booking_id: booking.id,
+      customer_id: booking.customer_id,
+      status: "captured",
+      amount: finalAmountMinor,
+      platform_fee: 0,
+      tax_amount: 0,
+      currency: booking.currency || "INR",
+      provider: "cash",
+      captured_at: now,
+    });
+  }
+
   // Audit event
   await supabase.from("booking_events").insert({
     booking_id: booking.id,
     actor_id: user.id,
     actor_role: "shop",
     from_status: "in_progress",
-    to_status: "completed",
-    note: parsed.data.completionNotes ?? "Work completed on bench. Sent to customer for review and payment.",
+    to_status: toStatus,
+    note: isCash
+      ? `Repair completed and settled in cash at workshop (${parsed.data.completionNotes || "Cash received at shop"}).`
+      : (parsed.data.completionNotes ?? "Work completed on bench. Sent to customer for review and payment."),
   });
 
   revalidatePath("/dashboard/expert/requests");
   revalidatePath(`/dashboard/expert/requests/${booking.reference}`);
+  revalidatePath("/dashboard/expert/cashback");
   revalidatePath("/dashboard/bookings");
   revalidatePath(`/dashboard/bookings/${booking.reference}`);
   revalidatePath("/dashboard");
+
+  if (isCash) {
+    return OK(
+      "Repair marked complete and settled in cash! You can upload your bill receipt in the Cashback tab to claim your 5% cashback.",
+    );
+  }
 
   return OK("Repair work marked complete! Sent to the customer for review and payment.");
 }

@@ -25,6 +25,8 @@ import {
   RequestActions,
 } from "@/components/dashboard/expert/request-actions";
 import { CompleteWorkDialog } from "@/components/dashboard/expert/complete-work-dialog";
+import { QrStartWorkDialog } from "@/components/dashboard/expert/qr-start-work-dialog";
+import { MarkPaidCashDialog } from "@/components/dashboard/expert/mark-paid-cash-dialog";
 import { RevisionActions } from "@/components/dashboard/expert/revision-actions";
 import {
   RequestExpiry,
@@ -462,17 +464,64 @@ export default async function ExpertRequestDetailPage({
           ) : null}
 
           <Panel title="Your answer">
+            {booking.status === "confirmed" ? (
+              <div className="mb-4 rounded-machined border border-[#ea580c]/40 bg-[#ea580c]/10 p-3.5">
+                <div className="flex flex-col gap-2.5">
+                  <div className="flex items-center justify-between">
+                    <span className="font-semibold text-xs uppercase tracking-wider text-[#ea580c]">
+                      Ready to start work
+                    </span>
+                    <span className="font-mono text-[10px] text-steel">
+                      QR Handover Verification
+                    </span>
+                  </div>
+                  <p className="text-xs text-steel">
+                    Scan the customer&apos;s booking QR pass upon device handover to verify and place on bench.
+                  </p>
+                  <QrStartWorkDialog
+                    bookingId={booking.id}
+                    reference={booking.reference}
+                    customerName={customerName}
+                    deliveryMode={booking.delivery_mode}
+                    status={booking.status}
+                  />
+                </div>
+              </div>
+            ) : null}
+
             {booking.status === "in_progress" ? (
               <div className="mb-4 rounded-machined border border-[#ea580c]/40 bg-[#ea580c]/10 p-3.5">
                 <div className="flex flex-col gap-2.5">
                   <span className="font-semibold text-xs uppercase tracking-wider text-[#ea580c]">
                     Device on bench (In progress)
                   </span>
+                  <p className="text-xs text-steel">
+                    You can finish and bill this repair at any time without needing a QR code.
+                  </p>
                   <CompleteWorkDialog
                     bookingId={booking.id}
                     reference={booking.reference}
                     customerName={customerName}
                     quotedAmountMinor={booking.final_amount ?? booking.quoted_amount}
+                    currency={booking.currency}
+                  />
+                </div>
+              </div>
+            ) : null}
+
+            {booking.status === "completed" ? (
+              <div className="mb-4 rounded-machined border border-emerald-500/40 bg-emerald-500/10 p-3.5">
+                <div className="flex flex-col gap-2.5">
+                  <span className="font-semibold text-xs uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
+                    Repair Complete — Awaiting Settlement
+                  </span>
+                  <p className="text-xs text-steel">
+                    If customer chooses to pay at the shop in cash upon pickup, record it below to close the job and claim your 5% cashback.
+                  </p>
+                  <MarkPaidCashDialog
+                    bookingId={booking.id}
+                    reference={booking.reference}
+                    finalAmountMinor={booking.final_amount ?? booking.quoted_amount ?? 0}
                     currency={booking.currency}
                   />
                 </div>
@@ -485,11 +534,23 @@ export default async function ExpertRequestDetailPage({
                   <span className="font-semibold text-xs uppercase tracking-wider text-rose-600 dark:text-rose-400">
                     Customer requested changes
                   </span>
-                  <RevisionActions
+                  <p className="text-xs text-steel">
+                    Customer returned product under warranty. Scan their Warranty QR Pass to accept handover and begin rework.
+                  </p>
+                  <QrStartWorkDialog
                     bookingId={booking.id}
                     reference={booking.reference}
                     customerName={customerName}
+                    deliveryMode={booking.delivery_mode}
+                    status={booking.status}
                   />
+                  <div className="pt-2 border-t border-hairline">
+                    <RevisionActions
+                      bookingId={booking.id}
+                      reference={booking.reference}
+                      customerName={customerName}
+                    />
+                  </div>
                 </div>
               </div>
             ) : null}

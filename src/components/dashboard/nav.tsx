@@ -9,6 +9,7 @@ import {
   CalendarClock,
   Heart,
   CalendarDays,
+  Coins,
   CreditCard,
   Inbox,
   LayoutDashboard,
@@ -163,6 +164,12 @@ export const EXPERT_NAV_SECTION: NavSection = {
       labelKey: "earnings",
       icon: Wallet,
       match: "/dashboard/expert/earnings",
+    },
+    {
+      href: "/dashboard/expert/cashback",
+      labelKey: "cashback",
+      icon: Coins,
+      match: "/dashboard/expert/cashback",
     },
     {
       href: "/dashboard/expert/plan",

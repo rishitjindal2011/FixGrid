@@ -13,6 +13,7 @@ import {
   RevisionRequestRow,
   buildPricingIndex,
 } from "@/components/dashboard/expert/request-card";
+import { ShopQrScannerModal } from "@/components/dashboard/expert/shop-qr-scanner-modal";
 import { PageHeader, SectionHeader } from "@/components/dashboard/page-header";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -60,12 +61,15 @@ export default async function ExpertRequestsPage() {
             : "Every booking request lands here first, oldest at the top, and waits for you to accept, quote or decline it."
         }
         actions={
-          <Button asChild variant="outline" size="sm">
-            <Link href="/dashboard/expert/schedule">
-              <CalendarClock aria-hidden />
-              Schedule
-            </Link>
-          </Button>
+          <div className="flex items-center gap-2">
+            <ShopQrScannerModal />
+            <Button asChild variant="outline" size="sm">
+              <Link href="/dashboard/expert/schedule">
+                <CalendarClock aria-hidden />
+                Schedule
+              </Link>
+            </Button>
+          </div>
         }
       />
 

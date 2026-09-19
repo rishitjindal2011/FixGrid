@@ -5,6 +5,7 @@ import { ScaleIcon, ShieldCheck } from "lucide-react";
 
 import { EmptyState } from "@/components/dashboard/empty-state";
 import { PageHeader } from "@/components/dashboard/page-header";
+import { ShopQrScannerModal } from "@/components/dashboard/expert/shop-qr-scanner-modal";
 import { StatTile } from "@/components/dashboard/stat-tile";
 import { Badge } from "@/components/ui/badge";
 import { getCurrentUser } from "@/lib/auth/session";
@@ -14,19 +15,10 @@ import { formatMoney, formatRelative } from "@/lib/format";
 
 export const metadata: Metadata = {
   title: "Warranty claims",
-
 };
 
 /**
  * Claims filed against this shop.
- *
- * The customer has had `/dashboard/warranty` since the marketplace shipped; the
- * shop had no equivalent, so the first a repairer knew of a claim was a
- * notification with nowhere to go. This is the other half of that conversation.
- *
- * Open claims first, then resolved — not newest-first overall. A claim awaiting
- * a reply is work; a settled one is history, and burying the former under the
- * latter is how a claim goes unanswered for a week.
  */
 export default async function ExpertDisputesPage() {
   const user = await getCurrentUser();
@@ -51,6 +43,7 @@ export default async function ExpertDisputesPage() {
         eyebrow="Your shop"
         title="Warranty claims"
         description="When a customer says a repair did not hold, it lands here. Reply with what you found — the record is what an adjudicator reads if it goes further."
+        actions={<ShopQrScannerModal />}
       />
 
       <div className="grid gap-3 sm:grid-cols-3">
@@ -58,7 +51,6 @@ export default async function ExpertDisputesPage() {
           label="Open claims"
           value={open.length}
           hint={open.length > 0 ? "Waiting on your reply" : "Nothing outstanding"}
-          // The only number here that means somebody has to act.
           emphasis={open.length > 0}
         />
         <StatTile label="Settled" value={settled.length} hint="Closed or withdrawn" />

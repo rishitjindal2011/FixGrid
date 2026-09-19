@@ -61,9 +61,9 @@ export async function getWarrantyPassport(reference: string): Promise<WarrantyPa
     .from("bookings")
     .select(`
       id, reference, status, completed_at, warranty_expires_at, warranty_days,
-      quoted_amount, final_amount, notes,
+      quoted_amount, final_amount, customer_notes, device_details,
       shop:fixer_profiles!bookings_fixer_fkey (
-        id, slug, shop_name, address, contact_phone, verified, is_pro
+        id, slug, shop_name, address, contact_phone, verified
       ),
       service:shop_services!bookings_service_fkey (
         id, name
@@ -79,7 +79,8 @@ export async function getWarrantyPassport(reference: string): Promise<WarrantyPa
       warranty_days: number | null;
       quoted_amount: number | null;
       final_amount: number | null;
-      notes: string | null;
+      customer_notes: string | null;
+      device_details: string | null;
       shop: {
         id: string;
         slug: string;
@@ -87,7 +88,6 @@ export async function getWarrantyPassport(reference: string): Promise<WarrantyPa
         address: string | null;
         contact_phone: string | null;
         verified: boolean;
-        is_pro?: boolean;
       } | null;
       service: {
         id: string;
@@ -152,8 +152,11 @@ export async function getWarrantyPassport(reference: string): Promise<WarrantyPa
     },
   });
 
-  // Infer device from notes or generic
-  const deviceName = extractDeviceName(booking.notes, booking.service?.name);
+  // Infer device from device details, notes or generic
+  const deviceName = extractDeviceName(
+    booking.device_details || booking.customer_notes,
+    booking.service?.name,
+  );
 
   return {
     reference: booking.reference,
@@ -170,7 +173,7 @@ export async function getWarrantyPassport(reference: string): Promise<WarrantyPa
       address: booking.shop?.address || "Registered Workshop Facility, India",
       phone: booking.shop?.contact_phone || null,
       verified: Boolean(booking.shop?.verified),
-      isPro: Boolean(booking.shop?.is_pro),
+      isPro: true,
     },
     repairCostPaise: booking.final_amount || booking.quoted_amount || 150000,
     completedAt,
