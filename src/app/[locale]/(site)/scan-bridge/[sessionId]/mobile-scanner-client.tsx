@@ -481,19 +481,20 @@ export function MobileScannerClient({ sessionId }: { sessionId: string }) {
         throw new Error("Live camera is not supported over HTTP on mobile. Tap 'Snap Photo' below to scan!");
       }
 
-      // Explicit constraints: rear/environment camera
-      const constraints: MediaStreamConstraints = {
-        video: overrideDeviceId
-          ? { deviceId: { exact: overrideDeviceId } }
-          : {
-              facingMode: { ideal: "environment" },
-              width: { ideal: 1280, min: 640 },
-              height: { ideal: 720, min: 480 },
-            },
-        audio: false,
-      };
-
-      const stream = await navigator.mediaDevices.getUserMedia(constraints);
+      // Resilient camera constraints: try rear camera first, fallback to generic video
+      let stream: MediaStream;
+      try {
+        const constraints: MediaStreamConstraints = {
+          video: overrideDeviceId
+            ? { deviceId: { exact: overrideDeviceId } }
+            : { facingMode: { ideal: "environment" } },
+          audio: false,
+        };
+        stream = await navigator.mediaDevices.getUserMedia(constraints);
+      } catch (e1) {
+        // Fallback to simple video: true
+        stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+      }
       mediaStreamRef.current = stream;
 
       const video = videoRef.current;
@@ -580,10 +581,17 @@ export function MobileScannerClient({ sessionId }: { sessionId: string }) {
     } catch (err: any) {
       stopCamera();
       setCameraStarting(false);
+      const isHttp = typeof window !== "undefined" && window.location.protocol === "http:" && window.location.hostname !== "localhost";
       if (err.name === "NotAllowedError" || err.name === "PermissionDeniedError") {
-        setCameraError(
-          "Camera permission was denied. Tap 'Snap Photo' below to use native camera, or allow camera in browser site settings."
-        );
+        if (isHttp) {
+          setCameraError(
+            "Mobile Chrome security blocks live streaming on unencrypted HTTP connections without asking. Tap '📸 Snap Photo' below to use the camera directly with zero permission hassle!"
+          );
+        } else {
+          setCameraError(
+            "Camera permission was denied. In Chrome: tap the 🔒/Tune icon in the address bar → Site Settings / Permissions → Camera → Allow, then tap Retry."
+          );
+        }
       } else {
         setCameraError(err.message || "Could not start live camera. Tap 'Snap Photo' below instead.");
       }
@@ -809,22 +817,56 @@ export function MobileScannerClient({ sessionId }: { sessionId: string }) {
                         Point camera at any barcode or QR passport
                       </p>
                       {cameraError ? (
-                        <p className="text-[11px] text-rose-400 mb-3 px-2 leading-relaxed">
-                          {cameraError}
-                        </p>
+                        <div className="mb-3 px-2">
+                          <p className="text-[11px] text-rose-400 mb-2 leading-relaxed">
+                            {cameraError}
+                          </p>
+                          <Button
+                            size="sm"
+                            type="button"
+                            onClick={() => cameraInputRef.current?.click()}
+                            className="bg-[#ea580c] hover:bg-[#c2410c] text-white text-xs gap-1.5 font-bold py-2 px-3.5 rounded-xl shadow-md"
+                          >
+                            <Camera className="size-3.5" />
+                            <span>📸 Snap Photo Instead</span>
+                          </Button>
+                        </div>
                       ) : (
-                        <p className="text-[11px] text-white/50 mb-3">
-                          Real multi-format scanner engine
-                        </p>
+                        <>
+                          <p className="text-[11px] text-white/50 mb-3">
+                            Real multi-format scanner engine
+                          </p>
+                          {!isSecure ? (
+                            <div className="flex flex-col items-center gap-2">
+                              <Button
+                                size="sm"
+                                type="button"
+                                onClick={() => cameraInputRef.current?.click()}
+                                className="bg-[#ea580c] hover:bg-[#c2410c] text-white text-xs gap-1.5 font-bold py-2 px-4 rounded-xl shadow-lg shadow-[#ea580c]/20"
+                              >
+                                <Camera className="size-4" />
+                                <span>📸 Snap Photo with Camera</span>
+                              </Button>
+                              <button
+                                type="button"
+                                onClick={() => startLiveCamera()}
+                                className="text-[10px] text-white/50 hover:text-white underline mt-0.5"
+                              >
+                                Try Live Camera Feed
+                              </button>
+                            </div>
+                          ) : (
+                            <Button
+                              size="sm"
+                              onClick={() => startLiveCamera()}
+                              className="bg-[#ea580c] hover:bg-[#c2410c] text-white text-xs gap-1.5 font-semibold py-2 px-4 rounded-xl shadow-lg shadow-[#ea580c]/20"
+                            >
+                              <Camera className="size-3.5" />
+                              <span>Start Live Camera</span>
+                            </Button>
+                          )}
+                        </>
                       )}
-                      <Button
-                        size="sm"
-                        onClick={() => startLiveCamera()}
-                        className="bg-[#ea580c] hover:bg-[#c2410c] text-white text-xs gap-1.5 font-semibold py-2 px-4 rounded-xl shadow-lg shadow-[#ea580c]/20"
-                      >
-                        <Camera className="size-3.5" />
-                        <span>Start Live Camera</span>
-                      </Button>
                     </>
                   )}
                 </div>

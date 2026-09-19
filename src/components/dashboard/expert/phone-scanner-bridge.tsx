@@ -61,6 +61,13 @@ export function PhoneScannerBridge({
       setSessionId(sid);
 
       let origin = typeof window !== "undefined" ? window.location.origin : "https://fixgrid.vytron.me";
+      if (typeof window !== "undefined") {
+        const isLocal = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
+        if (isLocal && data.localIp && data.localIp !== "localhost") {
+          const port = window.location.port ? `:${window.location.port}` : ":3000";
+          origin = `${window.location.protocol}//${data.localIp}${port}`;
+        }
+      }
       if (origin.includes("vytron.me") && origin.startsWith("http://")) {
         origin = origin.replace("http://", "https://");
       }

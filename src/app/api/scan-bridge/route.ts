@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import os from "os";
 import {
   createScanSession,
   getScanSession,
@@ -7,6 +8,22 @@ import {
 } from "@/lib/scan-bridge/store";
 
 export const dynamic = "force-dynamic";
+
+function getLocalNetworkIp(): string {
+  try {
+    const interfaces = os.networkInterfaces();
+    for (const name of Object.keys(interfaces)) {
+      for (const net of interfaces[name] || []) {
+        if (net.family === "IPv4" && !net.internal) {
+          return net.address;
+        }
+      }
+    }
+  } catch (e) {
+    // Non-fatal
+  }
+  return "localhost";
+}
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -45,6 +62,7 @@ export async function POST(request: Request) {
         success: true,
         sessionId: session.id,
         status: session.status,
+        localIp: getLocalNetworkIp(),
       });
     }
 
@@ -56,13 +74,8 @@ export async function POST(request: Request) {
         );
       }
 
-      const ok = submitScannedCode(sessionId, code, format);
-      if (!ok) {
-        return NextResponse.json(
-          { error: "Session expired or invalid. Please refresh the QR on laptop." },
-          { status: 404 },
-        );
-      }
+      // submitScannedCode auto-creates or updates the session persistently
+      submitScannedCode(sessionId, code, format);
 
       return NextResponse.json({
         success: true,
