@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { BrowserMultiFormatReader, BarcodeFormat } from "@zxing/library";
 import jsQR from "jsqr";
 import {
   Camera,
@@ -15,8 +16,8 @@ import {
   Barcode,
   Laptop,
   Image as ImageIcon,
+  SwitchCamera,
   Check,
-  Upload,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -31,7 +32,7 @@ function playBeep() {
     const gain = ctx.createGain();
     osc.type = "sine";
     osc.frequency.setValueAtTime(880, ctx.currentTime);
-    gain.gain.setValueAtTime(0.15, ctx.currentTime);
+    gain.gain.setValueAtTime(0.2, ctx.currentTime);
     gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.15);
     osc.connect(gain);
     gain.connect(ctx.destination);
@@ -40,6 +41,47 @@ function playBeep() {
   } catch (e) {
     // Ignore audio error
   }
+}
+
+// Downscale an image file to max dimension for fast, lag-free scanning
+async function downscaleImage(file: File, maxDim = 1000): Promise<{ img: HTMLImageElement; canvas: HTMLCanvasElement; ctx: CanvasRenderingContext2D }> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const img = new Image();
+      img.onload = () => {
+        let width = img.naturalWidth || img.width;
+        let height = img.naturalHeight || img.height;
+
+        if (width > maxDim || height > maxDim) {
+          if (width > height) {
+            height = Math.round((height * maxDim) / width);
+            width = maxDim;
+          } else {
+            width = Math.round((width * maxDim) / height);
+            height = maxDim;
+          }
+        }
+
+        const canvas = document.createElement("canvas");
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext("2d", { willReadFrequently: true });
+        if (!ctx) return reject(new Error("Could not create canvas context"));
+
+        ctx.drawImage(img, 0, 0, width, height);
+
+        const scaledImg = new Image();
+        scaledImg.onload = () => resolve({ img: scaledImg, canvas, ctx });
+        scaledImg.onerror = reject;
+        scaledImg.src = canvas.toDataURL("image/jpeg", 0.85);
+      };
+      img.onerror = reject;
+      img.src = event.target?.result as string;
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
 }
 
 export function MobileScannerClient({ sessionId }: { sessionId: string }) {
@@ -53,157 +95,122 @@ export function MobileScannerClient({ sessionId }: { sessionId: string }) {
   const [isSecure, setIsSecure] = React.useState(true);
   const [manualCode, setManualCode] = React.useState("");
   const [processingPhoto, setProcessingPhoto] = React.useState(false);
+  const [videoDevices, setVideoDevices] = React.useState<MediaDeviceInfo[]>([]);
+  const [currentDeviceId, setCurrentDeviceId] = React.useState<string | undefined>(undefined);
 
   const videoRef = React.useRef<HTMLVideoElement | null>(null);
-  const streamRef = React.useRef<MediaStream | null>(null);
-  const canvasRef = React.useRef<HTMLCanvasElement | null>(null);
-  const scanningRef = React.useRef(false);
+  const zxingReaderRef = React.useRef<BrowserMultiFormatReader | null>(null);
   const fileInputRef = React.useRef<HTMLInputElement | null>(null);
 
-  // Check secure context on mount
   React.useEffect(() => {
     if (typeof window !== "undefined") {
-      setIsSecure(window.isSecureContext ?? (window.location.protocol === "https:" || window.location.hostname === "localhost"));
+      setIsSecure(
+        window.isSecureContext ??
+          (window.location.protocol === "https:" || window.location.hostname === "localhost")
+      );
     }
   }, []);
 
-  // Safe camera stream acquire with fallback cascade
-  const acquireCameraStream = async (): Promise<MediaStream> => {
-    if (!navigator?.mediaDevices?.getUserMedia) {
-      throw new Error("Camera API not supported in this browser. Please use 'Snap Photo' below.");
+  // Initialize ZXing reader instance
+  const getZxingReader = () => {
+    if (!zxingReaderRef.current) {
+      zxingReaderRef.current = new BrowserMultiFormatReader();
     }
-
-    // Attempt 1: Back camera ideal
-    try {
-      return await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: { ideal: "environment" } },
-      });
-    } catch (e1) {
-      // Attempt 2: Direct environment
-      try {
-        return await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: "environment" },
-        });
-      } catch (e2) {
-        // Attempt 3: Any available camera
-        return await navigator.mediaDevices.getUserMedia({
-          video: true,
-        });
-      }
-    }
-  };
-
-  const startCamera = async () => {
-    setCameraError(null);
-    setCameraStarting(true);
-    scanningRef.current = true;
-
-    try {
-      const stream = await acquireCameraStream();
-      streamRef.current = stream;
-
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        videoRef.current.setAttribute("playsinline", "true");
-        await videoRef.current.play();
-      }
-
-      setCameraActive(true);
-      setCameraStarting(false);
-      startScanLoop();
-    } catch (err: any) {
-      setCameraStarting(false);
-      setCameraActive(false);
-
-      if (err.name === "NotAllowedError" || err.name === "PermissionDeniedError") {
-        setCameraError("Camera permission was denied. Tap 'Snap Photo' below to use the native camera, or allow camera in browser site settings.");
-      } else {
-        setCameraError(err.message || "Could not start live camera. Use 'Snap Photo' below instead.");
-      }
-    }
+    return zxingReaderRef.current;
   };
 
   const stopCamera = React.useCallback(() => {
-    scanningRef.current = false;
-    setCameraActive(false);
-    if (streamRef.current) {
-      streamRef.current.getTracks().forEach((t) => t.stop());
-      streamRef.current = null;
+    if (zxingReaderRef.current) {
+      try {
+        zxingReaderRef.current.reset();
+      } catch (e) {
+        // Ignore
+      }
     }
+    setCameraActive(false);
+    setCameraStarting(false);
   }, []);
 
-  // Frame detection using both jsQR and BarcodeDetector
-  const startScanLoop = () => {
-    const canvas = canvasRef.current || document.createElement("canvas");
-    canvasRef.current = canvas;
-    const ctx = canvas.getContext("2d", { willReadFrequently: true });
+  const startLiveCamera = async (overrideDeviceId?: string) => {
+    setCameraError(null);
+    setCameraStarting(true);
+    stopCamera();
 
-    let barcodeDetector: any = null;
-    if ("BarcodeDetector" in window) {
+    const reader = getZxingReader();
+
+    try {
+      if (!navigator?.mediaDevices?.getUserMedia) {
+        throw new Error("Live camera is not supported on this browser connection. Please use 'Snap Photo' below.");
+      }
+
+      // Discover camera devices
+      let devices: MediaDeviceInfo[] = [];
       try {
-        const formats = ["qr_code", "ean_13", "ean_8", "upc_a", "upc_e", "code_128", "code_39", "itf", "data_matrix"];
-        barcodeDetector = new (window as any).BarcodeDetector({ formats });
+        devices = await reader.listVideoInputDevices();
+        setVideoDevices(devices);
       } catch (e) {
-        barcodeDetector = null;
+        // Continue
+      }
+
+      // Pick preferred camera (rear/environment if available)
+      let targetDeviceId = overrideDeviceId;
+      if (!targetDeviceId && devices.length > 0) {
+        const back = devices.find((d) => /back|rear|environment/i.test(d.label));
+        targetDeviceId = back ? back.deviceId : devices[devices.length - 1]?.deviceId;
+      }
+      setCurrentDeviceId(targetDeviceId);
+
+      if (!videoRef.current) {
+        throw new Error("Video display element not ready");
+      }
+
+      videoRef.current.setAttribute("playsinline", "true");
+      videoRef.current.setAttribute("autoplay", "true");
+      videoRef.current.muted = true;
+
+      // Start continuous stream decoding with ZXing
+      reader.decodeFromVideoDevice(
+        targetDeviceId || null,
+        videoRef.current,
+        (result, err) => {
+          if (result) {
+            stopCamera();
+            handleCodeScanned(result.getText(), result.getBarcodeFormat()?.toString() || "barcode");
+          }
+        }
+      );
+
+      setCameraActive(true);
+      setCameraStarting(false);
+    } catch (err: any) {
+      stopCamera();
+      setCameraStarting(false);
+      if (err.name === "NotAllowedError" || err.name === "PermissionDeniedError") {
+        setCameraError("Camera permission was denied. Tap 'Snap Photo' below to use the native camera, or allow camera in browser site settings.");
+      } else {
+        setCameraError(err.message || "Could not start camera. Use 'Snap Photo' below instead.");
       }
     }
-
-    const checkFrame = async () => {
-      if (!scanningRef.current || !videoRef.current || !streamRef.current) return;
-
-      const video = videoRef.current;
-      if (video.readyState === video.HAVE_ENOUGH_DATA && video.videoWidth > 0) {
-        // 1. Check BarcodeDetector on video element first if supported
-        if (barcodeDetector) {
-          try {
-            const barcodes = await barcodeDetector.detect(video);
-            if (barcodes.length > 0 && barcodes[0]?.rawValue) {
-              handleCodeScanned(barcodes[0].rawValue, barcodes[0].format || "barcode");
-              return;
-            }
-          } catch (e) {
-            // Frame detector pass
-          }
-        }
-
-        // 2. jsQR software fallback on Canvas
-        if (ctx) {
-          canvas.width = Math.min(video.videoWidth, 640);
-          canvas.height = Math.min(video.videoHeight, 640);
-          ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-          const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-          const qr = jsQR(imageData.data, imageData.width, imageData.height, {
-            inversionAttempts: "dontInvert",
-          });
-          if (qr && qr.data) {
-            handleCodeScanned(qr.data, "qr_code");
-            return;
-          }
-        }
-      }
-
-      if (scanningRef.current) {
-        requestAnimationFrame(checkFrame);
-      }
-    };
-
-    requestAnimationFrame(checkFrame);
   };
 
-  // Try graceful start on mount (some browsers allow it if site was previously approved)
-  React.useEffect(() => {
-    // Only attempt silent auto-start if in secure context
-    if (window.isSecureContext) {
-      startCamera();
+  // Flip between available cameras
+  const switchCamera = () => {
+    if (videoDevices.length <= 1) return;
+    const currentIndex = videoDevices.findIndex((d) => d.deviceId === currentDeviceId);
+    const nextIndex = (currentIndex + 1) % videoDevices.length;
+    const nextDevice = videoDevices[nextIndex];
+    if (nextDevice) {
+      startLiveCamera(nextDevice.deviceId);
     }
+  };
+
+  React.useEffect(() => {
     return () => {
       stopCamera();
     };
-  }, []);
+  }, [stopCamera]);
 
   const handleCodeScanned = async (code: string, format?: string) => {
-    if (!scanningRef.current && synced) return;
-    scanningRef.current = false;
     stopCamera();
 
     playBeep();
@@ -240,63 +247,62 @@ export function MobileScannerClient({ sessionId }: { sessionId: string }) {
     }
   };
 
-  // Native Camera Photo Snap Handler (100% Reliable, No WebRTC Permissions Needed)
+  // Ultra-Fast Photo Snap & Barcode Decode
   const handlePhotoCapture = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
     setProcessingPhoto(true);
     try {
-      const img = new Image();
-      const objectUrl = URL.createObjectURL(file);
-      img.src = objectUrl;
+      // 1. Downscale image to max 1000px so it decodes in ~30ms without freezing
+      const { img, canvas, ctx } = await downscaleImage(file, 1000);
 
-      await new Promise((resolve, reject) => {
-        img.onload = resolve;
-        img.onerror = reject;
-      });
+      // 2. Decode using ZXing (handles ALL 1D and 2D barcodes)
+      const reader = getZxingReader();
+      try {
+        const zxingResult = await reader.decodeFromImageElement(img);
+        if (zxingResult && zxingResult.getText()) {
+          setProcessingPhoto(false);
+          handleCodeScanned(zxingResult.getText(), zxingResult.getBarcodeFormat()?.toString() || "barcode");
+          return;
+        }
+      } catch (zxingErr) {
+        // Fall through to jsQR and BarcodeDetector
+      }
 
-      // 1. Try BarcodeDetector on image
+      // 3. Fallback: jsQR for QR codes
+      const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      const qr = jsQR(imgData.data, canvas.width, canvas.height);
+      if (qr && qr.data) {
+        setProcessingPhoto(false);
+        handleCodeScanned(qr.data, "qr_code");
+        return;
+      }
+
+      // 4. Fallback: native BarcodeDetector if supported
       if ("BarcodeDetector" in window) {
         try {
-          const detector = new (window as any).BarcodeDetector({
-            formats: ["qr_code", "ean_13", "ean_8", "upc_a", "upc_e", "code_128", "code_39", "data_matrix"],
-          });
+          const detector = new (window as any).BarcodeDetector();
           const barcodes = await detector.detect(img);
           if (barcodes.length > 0 && barcodes[0]?.rawValue) {
-            URL.revokeObjectURL(objectUrl);
             setProcessingPhoto(false);
             handleCodeScanned(barcodes[0].rawValue, barcodes[0].format || "barcode");
             return;
           }
-        } catch (e) {
-          // Continue to jsQR
+        } catch (detectorErr) {
+          // Pass
         }
       }
 
-      // 2. Try jsQR on canvas
-      const canvas = document.createElement("canvas");
-      const ctx = canvas.getContext("2d", { willReadFrequently: true });
-      if (ctx) {
-        canvas.width = img.naturalWidth || img.width;
-        canvas.height = img.naturalHeight || img.height;
-        ctx.drawImage(img, 0, 0);
-        const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-        const qr = jsQR(imgData.data, imgData.width, imgData.height);
-        if (qr && qr.data) {
-          URL.revokeObjectURL(objectUrl);
-          setProcessingPhoto(false);
-          handleCodeScanned(qr.data, "qr_code");
-          return;
-        }
+      setProcessingPhoto(false);
+      alert("No clear barcode or QR detected in that photo. Please take a closer photo with good lighting, or type the code below.");
+    } catch (err: any) {
+      setProcessingPhoto(false);
+      alert("Could not process photo. Please enter code manually below.");
+    } finally {
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
       }
-
-      URL.revokeObjectURL(objectUrl);
-      setProcessingPhoto(false);
-      alert("Could not detect a clear barcode or QR in that photo. Please try taking a closer photo or enter the code manually.");
-    } catch (err) {
-      setProcessingPhoto(false);
-      alert("Failed to read photo. Please enter code manually below.");
     }
   };
 
@@ -321,13 +327,11 @@ export function MobileScannerClient({ sessionId }: { sessionId: string }) {
     } catch (e) {
       // Ignore
     }
-
-    startCamera();
   };
 
   return (
     <div className="min-h-screen bg-[#0d1117] text-white flex flex-col justify-between p-4 max-w-md mx-auto">
-      {/* Hidden file input for native camera capture */}
+      {/* Hidden file input for native camera snap */}
       <input
         ref={fileInputRef}
         type="file"
@@ -344,7 +348,7 @@ export function MobileScannerClient({ sessionId }: { sessionId: string }) {
             <ShieldCheck className="size-5" />
           </div>
           <div>
-            <h1 className="text-sm font-bold tracking-tight">FixGrid Mobile Scanner</h1>
+            <h1 className="text-sm font-bold tracking-tight">FixGrid Real Scanner</h1>
             <p className="text-[11px] text-white/60 flex items-center gap-1">
               <Laptop className="size-3 text-emerald-400" />
               Connected to Laptop
@@ -364,13 +368,13 @@ export function MobileScannerClient({ sessionId }: { sessionId: string }) {
             HTTP Connection Detected
           </p>
           <p className="mt-1 text-[11px] text-white/70">
-            Mobile browsers disable live video streaming on HTTP. Tap <strong>&quot;📸 Snap Photo&quot;</strong> below to use your phone&apos;s camera without any permission issues!
+            Live video streaming requires HTTPS. Tap <strong>&quot;📸 Snap Photo to Scan&quot;</strong> below to use your native phone camera without any permission issues!
           </p>
         </div>
       ) : null}
 
       {/* Main Content Area */}
-      <main className="my-auto py-4 flex flex-col items-center">
+      <main className="my-auto py-3 flex flex-col items-center">
         {synced && scannedCode ? (
           <div className="w-full bg-white/5 border border-emerald-500/40 rounded-2xl p-6 text-center shadow-xl backdrop-blur">
             <div className="mx-auto flex size-16 items-center justify-center rounded-full bg-emerald-500/20 text-emerald-400 mb-4 ring-8 ring-emerald-500/10">
@@ -378,10 +382,10 @@ export function MobileScannerClient({ sessionId }: { sessionId: string }) {
             </div>
 
             <h2 className="text-xl font-bold text-white mb-1">
-              Scanned & Synced!
+              Verified &amp; Synced!
             </h2>
             <p className="text-xs text-white/70 mb-4">
-              Code successfully transmitted to your laptop screen in real time.
+              Real barcode decoded and transmitted to your laptop screen.
             </p>
 
             <div className="bg-black/50 border border-white/10 rounded-xl p-3.5 mb-5 text-left">
@@ -410,27 +414,48 @@ export function MobileScannerClient({ sessionId }: { sessionId: string }) {
                 ref={videoRef}
                 playsInline
                 muted
+                autoPlay
                 className={`w-full h-full object-cover ${cameraActive ? "block" : "hidden"}`}
               />
 
               {cameraActive ? (
-                /* Viewfinder Target Guides */
-                <div className="pointer-events-none absolute inset-4 border border-white/20 rounded-xl">
-                  <div className="absolute -top-1 -left-1 size-6 border-t-4 border-l-4 border-[#ea580c] rounded-tl" />
-                  <div className="absolute -top-1 -right-1 size-6 border-t-4 border-r-4 border-[#ea580c] rounded-tr" />
-                  <div className="absolute -bottom-1 -left-1 size-6 border-b-4 border-l-4 border-[#ea580c] rounded-bl" />
-                  <div className="absolute -bottom-1 -right-1 size-6 border-b-4 border-r-4 border-[#ea580c] rounded-br" />
+                /* Active Viewfinder */
+                <>
+                  <div className="pointer-events-none absolute inset-4 border border-white/20 rounded-xl">
+                    <div className="absolute -top-1 -left-1 size-6 border-t-4 border-l-4 border-[#ea580c] rounded-tl" />
+                    <div className="absolute -top-1 -right-1 size-6 border-t-4 border-r-4 border-[#ea580c] rounded-tr" />
+                    <div className="absolute -bottom-1 -left-1 size-6 border-b-4 border-l-4 border-[#ea580c] rounded-bl" />
+                    <div className="absolute -bottom-1 -right-1 size-6 border-b-4 border-r-4 border-[#ea580c] rounded-br" />
+                    <div className="absolute inset-x-0 h-0.5 bg-gradient-to-r from-transparent via-[#ea580c] to-transparent shadow-[0_0_8px_#ea580c] animate-pulse top-1/2 -translate-y-1/2" />
+                  </div>
 
-                  {/* Laser scan line animation */}
-                  <div className="absolute inset-x-0 h-0.5 bg-gradient-to-r from-transparent via-[#ea580c] to-transparent shadow-[0_0_8px_#ea580c] animate-pulse top-1/2 -translate-y-1/2" />
-                </div>
+                  <div className="absolute top-2 right-2 flex items-center gap-1.5 z-10">
+                    {videoDevices.length > 1 ? (
+                      <button
+                        type="button"
+                        onClick={switchCamera}
+                        className="rounded-lg bg-black/60 p-1.5 text-white hover:bg-black"
+                        title="Switch Camera"
+                      >
+                        <SwitchCamera className="size-4" />
+                      </button>
+                    ) : null}
+                    <button
+                      type="button"
+                      onClick={stopCamera}
+                      className="rounded-lg bg-black/60 px-2 py-1 text-xs text-white hover:bg-black"
+                    >
+                      Close
+                    </button>
+                  </div>
+                </>
               ) : (
-                /* Inactive / Prompt Overlay */
+                /* Inactive / Start View */
                 <div className="p-6 text-center flex flex-col items-center">
                   {cameraStarting ? (
                     <>
                       <Loader2 className="size-10 text-[#ea580c] animate-spin mb-3" />
-                      <p className="text-xs text-white/80 font-medium">Starting camera…</p>
+                      <p className="text-xs text-white/80 font-medium">Starting live camera…</p>
                     </>
                   ) : (
                     <>
@@ -438,15 +463,15 @@ export function MobileScannerClient({ sessionId }: { sessionId: string }) {
                         <Camera className="size-7" />
                       </div>
                       <p className="text-xs text-white/80 font-medium mb-3">
-                        {cameraError || "Tap below to activate camera or take a photo"}
+                        {cameraError || "Point camera at any barcode or QR passport to scan"}
                       </p>
                       <Button
                         size="sm"
-                        onClick={startCamera}
+                        onClick={() => startLiveCamera()}
                         className="bg-[#ea580c] hover:bg-[#c2410c] text-white text-xs gap-1.5 font-semibold"
                       >
                         <Camera className="size-3.5" />
-                        <span>Enable Live Camera</span>
+                        <span>Start Live Camera</span>
                       </Button>
                     </>
                   )}
@@ -454,17 +479,17 @@ export function MobileScannerClient({ sessionId }: { sessionId: string }) {
               )}
 
               {syncing || processingPhoto ? (
-                <div className="absolute inset-0 bg-black/85 flex flex-col items-center justify-center">
+                <div className="absolute inset-0 bg-black/85 flex flex-col items-center justify-center z-20">
                   <Loader2 className="size-8 text-[#ea580c] animate-spin mb-2" />
                   <p className="text-xs font-semibold text-white">
-                    {processingPhoto ? "Analyzing photo for barcode…" : "Syncing to Laptop…"}
+                    {processingPhoto ? "Decoding barcode from photo…" : "Syncing to Laptop…"}
                   </p>
                 </div>
               ) : null}
             </div>
 
-            {/* Failsafe Photo Snap Button (Native Camera - Always Works Everywhere) */}
-            <div className="w-full max-w-[320px] mt-4 flex flex-col gap-2">
+            {/* Failsafe Instant Snap Button (Native Camera - Ultra Fast) */}
+            <div className="w-full max-w-[320px] mt-3.5">
               <Button
                 type="button"
                 variant="outline"
@@ -473,19 +498,19 @@ export function MobileScannerClient({ sessionId }: { sessionId: string }) {
                 className="w-full bg-white/10 hover:bg-white/15 border-white/20 text-white font-semibold py-2.5 rounded-xl flex items-center justify-center gap-2 text-xs"
               >
                 <Camera className="size-4 text-[#ea580c]" />
-                <span>📸 Snap Photo of Barcode / QR (No Permission Needed)</span>
+                <span>📸 Snap Photo of Barcode / QR (Instant Scan)</span>
               </Button>
             </div>
 
-            <p className="mt-2.5 text-[11px] text-white/60 text-center flex items-center gap-1.5">
+            <p className="mt-2 text-[11px] text-white/60 text-center flex items-center gap-1.5">
               <Sparkles className="size-3 text-[#ea580c]" />
-              Works with ANY Barcode (EAN, UPC, Code 128) &amp; FixGrid QR Pass
+              Real Multi-Format Engine &bull; QR, EAN-13, UPC, Code 128
             </p>
 
             {/* Manual Code Input Option */}
-            <form onSubmit={handleManualSubmit} className="w-full max-w-[320px] mt-5 pt-4 border-t border-white/10">
+            <form onSubmit={handleManualSubmit} className="w-full max-w-[320px] mt-4 pt-3 border-t border-white/10">
               <label className="text-[11px] font-semibold text-white/60 mb-1.5 block uppercase tracking-wider">
-                Or Type / Paste Code Directly
+                Or Enter / Paste Code
               </label>
               <div className="flex gap-2">
                 <Input
@@ -508,9 +533,9 @@ export function MobileScannerClient({ sessionId }: { sessionId: string }) {
         )}
       </main>
 
-      {/* Footer Instructions */}
-      <footer className="py-2.5 border-t border-white/10 text-center text-[10px] text-white/40">
-        FixGrid Shield Live Device Verification &bull; Mobile-to-Laptop Sync Bridge
+      {/* Footer */}
+      <footer className="py-2 border-t border-white/10 text-center text-[10px] text-white/40">
+        FixGrid Real Barcode &amp; Passport Scanner &bull; ZXing Engine
       </footer>
     </div>
   );
