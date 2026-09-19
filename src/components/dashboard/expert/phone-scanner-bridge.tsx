@@ -11,17 +11,20 @@ import {
   ExternalLink,
   Globe,
   Wifi,
+  AlertTriangle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface PhoneScannerBridgeProps {
   purpose?: string;
+  expectedCode?: string;
   onCodeReceived: (code: string, format?: string) => void;
   className?: string;
 }
 
 export function PhoneScannerBridge({
   purpose = "general",
+  expectedCode,
   onCodeReceived,
   className = "",
 }: PhoneScannerBridgeProps) {
@@ -33,6 +36,7 @@ export function PhoneScannerBridge({
   const [loading, setLoading] = React.useState(true);
   const [scannedCode, setScannedCode] = React.useState<string | null>(null);
   const [scannedFormat, setScannedFormat] = React.useState<string | null>(null);
+  const [scanWarning, setScanWarning] = React.useState<string | null>(null);
   const [error, setError] = React.useState<string | null>(null);
 
   const pollRef = React.useRef<NodeJS.Timeout | null>(null);
@@ -108,7 +112,7 @@ export function PhoneScannerBridge({
       const res = await fetch("/api/scan-bridge", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "create", purpose }),
+        body: JSON.stringify({ action: "create", purpose, expectedCode }),
       });
 
       if (!res.ok) throw new Error("Could not initialize scan session.");
@@ -130,11 +134,16 @@ export function PhoneScannerBridge({
           try {
             const { data: dbData } = await supabaseClient
               .from("scan_bridge_sessions")
-              .select("status, code, format")
+              .select("status, code, format, error")
               .eq("id", sid)
               .maybeSingle();
 
-            if (dbData?.status === "scanned" && dbData?.code) {
+            if (dbData?.status === "invalid") {
+              setScanWarning(dbData.error || "Phone scanned an invalid or mismatched code.");
+            } else if (dbData?.status === "waiting") {
+              setScanWarning(null);
+            } else if (dbData?.status === "scanned" && dbData?.code) {
+              setScanWarning(null);
               triggerReceived(dbData.code, dbData.format);
               return;
             }
@@ -146,7 +155,12 @@ export function PhoneScannerBridge({
           const pollRes = await fetch(`/api/scan-bridge?sessionId=${sid}`);
           if (pollRes.ok) {
             const pollData = await pollRes.json();
-            if (pollData?.session?.status === "scanned" && pollData?.session?.code) {
+            if (pollData?.session?.status === "invalid") {
+              setScanWarning(pollData.session.error || "Phone scanned an invalid or mismatched code.");
+            } else if (pollData?.session?.status === "waiting") {
+              setScanWarning(null);
+            } else if (pollData?.session?.status === "scanned" && pollData?.session?.code) {
+              setScanWarning(null);
               triggerReceived(pollData.session.code, pollData.session.format);
               return;
             }
@@ -158,7 +172,7 @@ export function PhoneScannerBridge({
     } finally {
       setLoading(false);
     }
-  }, [purpose, urlMode, renderQr, supabaseClient, triggerReceived]);
+  }, [purpose, expectedCode, urlMode, renderQr, supabaseClient, triggerReceived]);
 
   const toggleUrlMode = async (newMode: "cloud" | "local") => {
     setUrlMode(newMode);
@@ -286,6 +300,16 @@ export function PhoneScannerBridge({
                 <span>Local LAN</span>
               </button>
             </div>
+
+            {scanWarning ? (
+              <div className="mt-2.5 rounded-lg border border-rose-500/30 bg-rose-500/10 p-2 text-xs text-rose-600 dark:text-rose-400 flex items-start gap-1.5">
+                <AlertTriangle className="size-3.5 shrink-0 mt-0.5" />
+                <div className="text-[11px] leading-tight">
+                  <span className="font-bold">Phone Scan Warning: </span>
+                  <span>{scanWarning}</span>
+                </div>
+              </div>
+            ) : null}
 
             <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-hairline/60 pt-2.5">
               <div className="flex items-center gap-2">

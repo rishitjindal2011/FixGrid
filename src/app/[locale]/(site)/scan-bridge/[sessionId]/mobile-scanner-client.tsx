@@ -51,6 +51,27 @@ function playBeep() {
   } catch (e) {}
 }
 
+// Synthesize low buzz tone for rejected/false barcodes
+function playErrorBuzz() {
+  try {
+    const AudioContextClass =
+      window.AudioContext || (window as any).webkitAudioContext;
+    if (!AudioContextClass) return;
+    const ctx = new AudioContextClass();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = "sawtooth";
+    osc.frequency.setValueAtTime(160, ctx.currentTime);
+    osc.frequency.linearRampToValueAtTime(100, ctx.currentTime + 0.32);
+    gain.gain.setValueAtTime(0.35, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.32);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start();
+    osc.stop(ctx.currentTime + 0.32);
+  } catch (e) {}
+}
+
 // Common retail, inventory, and warranty barcode formats
 const FAST_BARCODE_FORMATS: BarcodeFormat[] = [
   BarcodeFormat.QR_CODE,
@@ -427,6 +448,9 @@ export function MobileScannerClient({ sessionId }: { sessionId: string }) {
   const [scannedFormat, setScannedFormat] = React.useState<string | null>(null);
   const [syncing, setSyncing] = React.useState(false);
   const [synced, setSynced] = React.useState(false);
+  const [codeError, setCodeError] = React.useState<string | null>(null);
+  const [expectedCode, setExpectedCode] = React.useState<string | null>(null);
+  const [sessionPurpose, setSessionPurpose] = React.useState<string | null>(null);
   const [cameraActive, setCameraActive] = React.useState(false);
   const [cameraStarting, setCameraStarting] = React.useState(false);
   const [cameraError, setCameraError] = React.useState<string | null>(null);
@@ -465,6 +489,37 @@ export function MobileScannerClient({ sessionId }: { sessionId: string }) {
     }
   }, []);
 
+  // Fetch session details on mount to know expectedCode and purpose
+  React.useEffect(() => {
+    async function loadSession() {
+      if (supabaseClient) {
+        try {
+          const { data } = await supabaseClient
+            .from("scan_bridge_sessions")
+            .select("purpose, expected_code")
+            .eq("id", sessionId)
+            .maybeSingle();
+          if (data) {
+            setExpectedCode(data.expected_code || null);
+            setSessionPurpose(data.purpose || null);
+            return;
+          }
+        } catch (e) {}
+      }
+      try {
+        const res = await fetch(`/api/scan-bridge?sessionId=${sessionId}`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data?.session) {
+            setExpectedCode(data.session.expectedCode || null);
+            setSessionPurpose(data.session.purpose || null);
+          }
+        }
+      } catch (e) {}
+    }
+    loadSession();
+  }, [sessionId, supabaseClient]);
+
   const getZxingReader = () => {
     if (!zxingReaderRef.current) {
       zxingReaderRef.current = createConfiguredReader();
@@ -496,35 +551,16 @@ export function MobileScannerClient({ sessionId }: { sessionId: string }) {
     async (code: string, format?: string) => {
       stopCamera();
 
-      playBeep();
-      if (navigator.vibrate) {
-        navigator.vibrate([60, 40, 60]);
-      }
-
       const trimmedCode = code.trim();
       const detectedFormat = format || "barcode";
 
       setScannedCode(trimmedCode);
       setScannedFormat(detectedFormat);
       setSyncing(true);
-      setDebugStatus(`Syncing code: ${trimmedCode}`);
+      setCodeError(null);
+      setScanFailed(false);
+      setDebugStatus(`Verifying code: ${trimmedCode}…`);
 
-      // 1. Direct cloud sync to Supabase (bypasses any domain or localhost barrier!)
-      if (supabaseClient) {
-        try {
-          await supabaseClient.from("scan_bridge_sessions").upsert({
-            id: sessionId,
-            status: "scanned",
-            code: trimmedCode,
-            format: detectedFormat,
-            updated_at: new Date().toISOString(),
-          });
-        } catch (dbErr) {
-          console.warn("Direct Supabase update note:", dbErr);
-        }
-      }
-
-      // 2. Also notify the API route
       try {
         const res = await fetch("/api/scan-bridge", {
           method: "POST",
@@ -537,15 +573,51 @@ export function MobileScannerClient({ sessionId }: { sessionId: string }) {
           }),
         });
 
-        if (res.ok) {
-          setSynced(true);
-        } else {
-          // Even if local API fails, Supabase was already updated!
-          setSynced(true);
+        const data = await res.json();
+
+        if (!res.ok || data.valid === false || data.success === false) {
+          // Verification Failed: False or mismatched barcode!
+          playErrorBuzz();
+          if (typeof navigator !== "undefined" && navigator.vibrate) {
+            navigator.vibrate([250, 100, 250]);
+          }
+          const errMsg = data.error || "Verification failed: Invalid or false code.";
+          setCodeError(errMsg);
+          setSynced(false);
+          setDebugStatus(`Rejected: ${errMsg}`);
+          return;
         }
-      } catch (e) {
-        // Even if offline/network fetch threw, mark synced if Supabase reached
+
+        // Verification Passed: Genuine barcode / booking QR!
+        playBeep();
+        if (typeof navigator !== "undefined" && navigator.vibrate) {
+          navigator.vibrate([60, 40, 60]);
+        }
+
+        // Direct cloud sync to Supabase for instant cross-domain sync
+        if (supabaseClient) {
+          try {
+            await supabaseClient.from("scan_bridge_sessions").upsert({
+              id: sessionId,
+              status: "scanned",
+              code: data.code || trimmedCode,
+              format: detectedFormat,
+              error: null,
+              updated_at: new Date().toISOString(),
+            });
+          } catch (dbErr) {
+            console.warn("Direct Supabase update note:", dbErr);
+          }
+        }
+
+        setCodeError(null);
+        setScannedCode(data.code || trimmedCode);
         setSynced(true);
+        setDebugStatus(`Verified & synced: ${data.code || trimmedCode}`);
+      } catch (err: any) {
+        playErrorBuzz();
+        setCodeError(err.message || "Network error while verifying code.");
+        setSynced(false);
       } finally {
         setSyncing(false);
       }
@@ -770,7 +842,18 @@ export function MobileScannerClient({ sessionId }: { sessionId: string }) {
     handleCodeScanned(manualCode.trim(), "manual");
   };
 
+  const handleRetryScan = () => {
+    setCodeError(null);
+    setScannedCode(null);
+    setScannedFormat(null);
+    setSynced(false);
+    setScanFailed(false);
+    setDebugStatus(null);
+    startLiveCamera();
+  };
+
   const handleScanAnother = async () => {
+    setCodeError(null);
     setScannedCode(null);
     setScannedFormat(null);
     setSynced(false);
@@ -787,6 +870,7 @@ export function MobileScannerClient({ sessionId }: { sessionId: string }) {
           status: "waiting",
           code: null,
           format: null,
+          error: null,
           updated_at: new Date().toISOString(),
         });
       } catch (e) {}
@@ -799,6 +883,8 @@ export function MobileScannerClient({ sessionId }: { sessionId: string }) {
         body: JSON.stringify({ action: "reset", sessionId }),
       });
     } catch (e) {}
+
+    startLiveCamera();
   };
 
   return (
@@ -837,7 +923,77 @@ export function MobileScannerClient({ sessionId }: { sessionId: string }) {
 
       {/* Main Content Area */}
       <main className="my-auto py-3 flex flex-col items-center">
-        {synced && scannedCode ? (
+        {codeError ? (
+          /* High-Contrast Verification Failed / False Code Screen */
+          <div className="w-full bg-gradient-to-b from-rose-950/60 via-black to-black border-2 border-rose-500/60 rounded-2xl p-6 text-center shadow-2xl backdrop-blur animate-in fade-in zoom-in-95 duration-200">
+            <div className="mx-auto flex size-16 items-center justify-center rounded-full bg-rose-500/20 text-rose-400 mb-4 ring-8 ring-rose-500/10">
+              <AlertTriangle className="size-9" />
+            </div>
+
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-rose-500/20 text-rose-300 text-xs font-bold uppercase tracking-wider mb-2 border border-rose-500/30">
+              <span>Verification Failed</span>
+            </div>
+
+            <h2 className="text-xl font-bold text-white mb-1.5">Invalid / False Code</h2>
+            
+            <div className="bg-rose-950/70 p-3.5 rounded-xl border border-rose-500/40 text-left mb-4">
+              <p className="text-xs text-rose-200 leading-relaxed font-medium">
+                {codeError}
+              </p>
+            </div>
+
+            <div className="space-y-2.5 mb-5 text-left text-xs">
+              {expectedCode ? (
+                <div className="bg-white/5 border border-white/10 rounded-xl p-3">
+                  <div className="flex items-center justify-between text-[10px] text-steel uppercase font-semibold mb-1">
+                    <span>Expected Booking Pass</span>
+                    <span className="text-emerald-400 font-bold">REQUIRED</span>
+                  </div>
+                  <p className="font-mono text-sm font-bold text-white break-all">
+                    {expectedCode}
+                  </p>
+                </div>
+              ) : null}
+
+              <div className="bg-rose-950/30 border border-rose-500/30 rounded-xl p-3">
+                <div className="flex items-center justify-between text-[10px] text-rose-300/80 uppercase font-semibold mb-1">
+                  <span>Scanned Code</span>
+                  <span className="text-rose-400 font-bold">REJECTED</span>
+                </div>
+                <p className="font-mono text-sm font-bold text-rose-300 break-all">
+                  {scannedCode}
+                </p>
+                {scannedFormat ? (
+                  <p className="text-[10px] text-white/50 font-mono mt-1">
+                    Format: {scannedFormat}
+                  </p>
+                ) : null}
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Button
+                onClick={handleRetryScan}
+                className="w-full bg-[#ea580c] hover:bg-[#c2410c] text-white font-bold py-3 rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-[#ea580c]/30 text-sm"
+              >
+                <RotateCcw className="size-4" />
+                <span>Scan Again</span>
+              </Button>
+
+              <Button
+                onClick={() => {
+                  setCodeError(null);
+                  setScannedCode(null);
+                  setScanFailed(false);
+                }}
+                variant="outline"
+                className="w-full border-white/20 text-white/80 hover:text-white hover:bg-white/10 text-xs py-2 rounded-xl"
+              >
+                <span>Change Input Method</span>
+              </Button>
+            </div>
+          </div>
+        ) : synced && scannedCode ? (
           <div className="w-full bg-white/5 border border-emerald-500/40 rounded-2xl p-6 text-center shadow-xl backdrop-blur">
             <div className="mx-auto flex size-16 items-center justify-center rounded-full bg-emerald-500/20 text-emerald-400 mb-4 ring-8 ring-emerald-500/10">
               <CheckCircle2 className="size-9" />

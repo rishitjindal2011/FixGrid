@@ -16,22 +16,15 @@ import { BOOKING_STATUS_LABELS } from "@/lib/types/marketplace";
 
 export const metadata: Metadata = {
   title: "Raise a warranty claim",
-
 };
 
 /**
  * Why this booking cannot be claimed on, in the customer's words.
  *
- * The three tests mirror `openDispute` exactly — status `completed`, a warranty
- * stamp present, and the window still open — because that action is what will
- * reject the submission otherwise. `disputed` is deliberately *not* treated as
- * eligible here even though a claim already exists against it: `openDispute`
- * only accepts `completed`, so rendering a form for a booking already in
- * dispute would produce a form that always fails. The caller turns that case
- * into a link to the claim instead.
+ * Eligible repairs are completed or closed (paid/settled) with an active warranty window.
  */
 function ineligibleReason(booking: CustomerBooking, now: Date): string | null {
-  if (booking.status !== "completed") {
+  if (booking.status !== "completed" && booking.status !== "closed") {
     return `This booking is ${BOOKING_STATUS_LABELS[booking.status].toLowerCase()}. A warranty claim can only be raised once the shop has marked the repair complete.`;
   }
 
@@ -82,12 +75,6 @@ function Refusal({
 
 /**
  * The claim form, reached from a warranty card as `?booking=FIX-XXXXXX`.
- *
- * Keyed on the human reference rather than the id: it is what appears on the
- * card, in the confirmation email and on the shop's paperwork, so a customer
- * who types the URL by hand has a chance of getting it right. Nothing is
- * granted by knowing one — the lookup runs inside the customer's own booking
- * list, so a reference belonging to somebody else simply is not found.
  */
 export default async function NewClaimPage({
   searchParams,
@@ -120,16 +107,11 @@ export default async function NewClaimPage({
   // No reference: offer the repairs that are actually claimable rather than a
   // form with nothing to attach to.
   if (!reference) {
-    // `listWarranties` counts a disputed booking as covered — it is, the window
-    // is still open — so the claims are read alongside to tell "you can claim on
-    // this" apart from "you already did". Settled claims count too: they leave
-    // the booking in `disputed`, which `openDispute` refuses.
     const [covered, claims] = await Promise.all([
       listWarranties(user.id, now),
       listDisputes(user.id),
     ]);
 
-    // Newest-first from `listDisputes`, so the first write per booking wins.
     const claimByBooking = new Map<string, DisputeEntry>();
     for (const claim of claims) {
       if (!claimByBooking.has(claim.bookingId)) claimByBooking.set(claim.bookingId, claim);
@@ -205,8 +187,7 @@ export default async function NewClaimPage({
     );
   }
 
-  // Scoped to the caller's own bookings by `listCustomerBookings`, so "not
-  // found" and "not yours" collapse into the same answer — as they should.
+  // Scoped to the caller's own bookings by `listCustomerBookings`
   const bookings = await listCustomerBookings(user.id, { limit: 200 });
   const booking = bookings.find((row) => row.reference === reference);
 
@@ -225,10 +206,6 @@ export default async function NewClaimPage({
   const refusal = ineligibleReason(booking, now);
 
   if (refusal || !booking.warranty_expires_at) {
-    // A booking in dispute has a claim to point at, and naming it beats the
-    // generic refusal. The lookup only runs on this branch, so the happy path
-    // pays nothing for it. `listDisputes` is newest-first, so `find` returns
-    // the most recent claim on this booking.
     const existing =
       booking.status === "disputed"
         ? (await listDisputes(user.id)).find((claim) => claim.bookingId === booking.id)

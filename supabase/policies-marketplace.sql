@@ -656,8 +656,8 @@ create policy "customer raises dispute in warranty"
        where b.id = disputes.booking_id
          and b.customer_id = (select auth.uid())
          -- 'disputed' is allowed so a second claim can be filed on a job
-         -- already under review; 'closed' is not — the window has shut.
-         and b.status in ('completed', 'disputed')
+         -- already under review; 'completed' and 'closed' (paid) are covered while warranty is active.
+         and b.status in ('completed', 'closed', 'disputed')
          and b.warranty_expires_at is not null
          and b.warranty_expires_at > now()
     )

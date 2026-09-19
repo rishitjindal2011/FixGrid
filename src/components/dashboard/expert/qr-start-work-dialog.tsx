@@ -253,6 +253,7 @@ export function QrStartWorkDialog({
               {scanTab === "phone" ? (
                 <PhoneScannerBridge
                   purpose="start_work"
+                  expectedCode={reference}
                   onCodeReceived={(code) => {
                     setInputCode(code);
                   }}

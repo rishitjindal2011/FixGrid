@@ -5,6 +5,7 @@ import {
   getScanSession,
   submitScannedCode,
   resetScanSession,
+  validateScannedCode,
 } from "@/lib/scan-bridge/store";
 
 export const dynamic = "force-dynamic";
@@ -46,6 +47,8 @@ export async function GET(request: Request) {
       code: session.code,
       format: session.format,
       purpose: session.purpose,
+      expectedCode: session.expectedCode,
+      error: session.error,
       updatedAt: session.updatedAt,
     },
   });
@@ -54,14 +57,15 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { action, sessionId, code, format, purpose } = body;
+    const { action, sessionId, code, format, purpose, expectedCode } = body;
 
     if (action === "create") {
-      const session = await createScanSession(purpose);
+      const session = await createScanSession(purpose, expectedCode);
       return NextResponse.json({
         success: true,
         sessionId: session.id,
         status: session.status,
+        expectedCode: session.expectedCode,
         localIp: getLocalNetworkIp(),
       });
     }
@@ -74,12 +78,27 @@ export async function POST(request: Request) {
         );
       }
 
-      // submitScannedCode auto-creates or updates the session persistently
-      await submitScannedCode(sessionId, code, format);
+      // Validate code: detect if it is a genuine pass or false/mismatched code
+      const validation = await validateScannedCode(sessionId, code);
+
+      if (!validation.valid) {
+        await submitScannedCode(sessionId, code, format, false, validation.error);
+        return NextResponse.json({
+          success: false,
+          valid: false,
+          error: validation.error || "Invalid or mismatched code.",
+          code: validation.cleanCode,
+        });
+      }
+
+      // Valid code
+      await submitScannedCode(sessionId, validation.cleanCode, format, true);
 
       return NextResponse.json({
         success: true,
-        message: "Code synced to laptop successfully.",
+        valid: true,
+        code: validation.cleanCode,
+        message: "Code verified and synced to laptop successfully.",
       });
     }
 

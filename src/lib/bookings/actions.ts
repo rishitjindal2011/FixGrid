@@ -448,8 +448,8 @@ export async function openDispute(
   if (booking.customer_id !== user.id) {
     return FAILED("Only the customer on a booking can raise a claim.");
   }
-  if (booking.status !== "completed") {
-    return FAILED("A claim can only be raised on a completed repair.");
+  if (booking.status !== "completed" && booking.status !== "closed") {
+    return FAILED("A claim can only be raised on a completed or closed repair.");
   }
   if (
     booking.warranty_expires_at &&
@@ -470,7 +470,8 @@ export async function openDispute(
     return FAILED(explain(disputeError.code, "That claim could not be opened."));
   }
 
-  const { error: statusError } = await supabase
+  const admin = createAdminClient();
+  const { error: statusError } = await admin
     .from("bookings")
     .update({ status: "disputed" })
     .eq("id", bookingId);
@@ -479,7 +480,7 @@ export async function openDispute(
     console.error("[disputes] booking status update failed", statusError.message);
   }
 
-  await supabase.from("booking_events").insert({
+  await admin.from("booking_events").insert({
     booking_id: bookingId,
     actor_id: user.id,
     actor_role: "customer",
