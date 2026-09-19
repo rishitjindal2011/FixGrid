@@ -94,13 +94,36 @@ export function JoinForm({
    */
   const t = useTranslations("join.form");
   const formRef = React.useRef<HTMLFormElement>(null);
-  const [paying, setPaying] = React.useState(false);
+  const [held, setHeld] = React.useState<FormData | null>(null);
   const [state, action, pending] = useActionState(submitShop, JOIN_INITIAL_STATE);
   const [files, setFiles] = useState<Attachment[]>([]);
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
   // Bumped to remount the file input — the only way to clear a file control.
   const [inputKey, setInputKey] = useState(0);
+
+  function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setUploadError(null);
+
+    if (uploading || pending) return;
+
+    if (files.length === 0) {
+      setUploadError("Attach at least one photo — a licence, your storefront or a business card.");
+      const fileInput = document.getElementById("evidence");
+      fileInput?.scrollIntoView({ behavior: "smooth", block: "center" });
+      fileInput?.focus();
+      return;
+    }
+
+    if (!event.currentTarget.checkValidity()) {
+      event.currentTarget.reportValidity();
+      return;
+    }
+
+    const formData = new FormData(event.currentTarget);
+    setHeld(formData);
+  }
 
   async function addFiles(incoming: FileList | null) {
     if (!incoming || incoming.length === 0) return;
@@ -167,7 +190,8 @@ export function JoinForm({
   const busy = pending || uploading;
 
   return (
-    <form ref={formRef} action={action} className="flex flex-col gap-5">
+    <>
+      <form ref={formRef} onSubmit={handleSubmit} className="flex flex-col gap-5">
       {/* Paths, not files — this is what keeps the action body a few hundred
           bytes instead of twenty megabytes. */}
       {files.map((file) => (
@@ -207,6 +231,8 @@ export function JoinForm({
           type="tel"
           required
           inputMode="tel"
+          pattern="^[0-9+][0-9 ()+-]{5,24}$"
+          title="Use digits, spaces and + ( ) - only, at least 6 characters."
           placeholder="+44 20 7946 0100"
           className="font-mono"
         />
@@ -292,31 +318,37 @@ export function JoinForm({
         </p>
       ) : null}
 
-      <Button type="button" size="lg" disabled={busy} onClick={() => setPaying(true)}>
+      <Button type="submit" size="lg" disabled={busy}>
         {pending ? t("submitting") : uploading ? t("waitingUploads") : t("submit")}
       </Button>
 
       <p className="text-xs text-steel">
         {t("afterSubmit")}
       </p>
-
-      {paying ? (
-        <PaymentSheet
-          open
-          onClose={() => setPaying(false)}
-          amountMinor={enrollmentFeeMinor}
-          balanceMinor={balanceMinor}
-          title={t("listingFee")}
-          description={t("listingFeeDesc")}
-          purchaseFields={{}}
-          /* The purchase here is the whole submission, which this form already
-             owns — so the sheet only assures the funds and hands back. */
-          onFunded={() => {
-            setPaying(false);
-            formRef.current?.requestSubmit();
-          }}
-        />
-      ) : null}
     </form>
-  );
+
+    {held ? (
+      <PaymentSheet
+        open
+        onClose={() => setHeld(null)}
+        amountMinor={enrollmentFeeMinor}
+        balanceMinor={balanceMinor}
+        title={t("listingFee")}
+        description={t("listingFeeDesc")}
+        purchaseFields={{}}
+        /* The purchase here is the whole submission, which this form already
+           owns — so the sheet only assures the funds and hands back. */
+        onFunded={() => {
+          const submission = held;
+          setHeld(null);
+          if (submission) {
+            React.startTransition(() => {
+              action(submission);
+            });
+          }
+        }}
+      />
+    ) : null}
+  </>
+);
 }

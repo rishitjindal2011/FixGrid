@@ -315,7 +315,8 @@ export function BookingForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+    <>
+      <form onSubmit={handleSubmit} className="flex flex-col gap-4">
       <input type="hidden" name="fixerId" value={fixerId} />
       <input type="hidden" name="serviceId" value={service?.id ?? ""} />
       <input type="hidden" name="deliveryMode" value={deliveryMode} />
@@ -665,6 +666,7 @@ export function BookingForm({
               : t("hintNoTimes")}
         </p>
       </div>
+    </form>
 
       {held ? (
         <PaymentSheet
@@ -685,8 +687,8 @@ export function BookingForm({
           }}
         />
       ) : null}
-    </form>
-  );
+  </>
+);
 }
 
 /* ── Pieces ───────────────────────────────────────────────────────────────── */

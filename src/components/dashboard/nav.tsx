@@ -165,6 +165,12 @@ export const EXPERT_NAV_SECTION: NavSection = {
       match: "/dashboard/expert/earnings",
     },
     {
+      href: "/dashboard/expert/plan",
+      labelKey: "shopPro",
+      icon: Sparkles,
+      match: "/dashboard/expert/plan",
+    },
+    {
       href: "/dashboard/expert/services",
       labelKey: "services",
       icon: Wrench,

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ChevronRight, ShieldCheck, ShieldOff } from "lucide-react";
+import { ChevronRight, QrCode, ShieldCheck, ShieldOff } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
@@ -264,6 +264,19 @@ export function WarrantyCard({
             Raise a claim
           </Link>
         )}
+
+        <Link
+          href={`/passport/${encodeURIComponent(entry.reference)}`}
+          target="_blank"
+          className={cn(
+            "inline-flex h-8 items-center justify-center gap-1.5 rounded-machined px-3",
+            "border border-hairline bg-bench font-display text-sm uppercase tracking-wide",
+            "text-enamel transition-colors hover:border-[#ea580c] hover:text-[#ea580c]",
+          )}
+        >
+          <QrCode aria-hidden className="size-3.5 text-[#ea580c]" />
+          QR Passport
+        </Link>
 
         <Link
           href={`/dashboard/bookings/${entry.reference}`}

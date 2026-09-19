@@ -156,6 +156,7 @@ export function PaymentSheet({
      * be a tick over a submission that might still be refused.
      */
     if (!purchaseAction) {
+      setStep("working");
       onFunded?.();
       return;
     }
@@ -203,6 +204,20 @@ export function PaymentSheet({
 
     // The balance now covers the amount, so the purchase settles against it.
     await runPurchase();
+  }
+
+  function startMethod(chosenMethod: TopUpMethod) {
+    const newKey = randomKey();
+    setKey(newKey);
+    setMethod(chosenMethod);
+    setStep("gateway");
+    const formData = new FormData();
+    formData.set("idempotencyKey", newKey);
+    formData.set("method", chosenMethod);
+    formData.set("amount", (amountMinor / 100).toFixed(2));
+    React.startTransition(() => {
+      startIntent(formData);
+    });
   }
 
   function reset() {
@@ -299,7 +314,7 @@ export function PaymentSheet({
 
             <button
               type="button"
-              onClick={() => setStep("gateway")}
+              onClick={() => startMethod("card")}
               className="flex items-center gap-2 rounded-machined border border-hairline bg-chalk px-3 py-3 text-left transition-colors hover:border-signal"
             >
               <CreditCard aria-hidden className="size-4 shrink-0 text-steel-soft" />
@@ -315,12 +330,8 @@ export function PaymentSheet({
           </div>
         ) : null}
 
-        {step === "gateway" && !intent ? (
-          <form key="method" action={startIntent} className="flex flex-col gap-4 pt-4">
-            <input type="hidden" name="idempotencyKey" value={key} />
-            <input type="hidden" name="method" value={method} />
-            <input type="hidden" name="amount" value={(amountMinor / 100).toFixed(2)} />
-
+        {step === "gateway" ? (
+          <div className="flex flex-col gap-4 pt-4">
             <div className="flex flex-col gap-1.5">
               <span className="eyebrow">{t("sheet.payWith")}</span>
               <div className="grid gap-2 sm:grid-cols-3">
@@ -328,16 +339,21 @@ export function PaymentSheet({
                   <button
                     key={value}
                     type="button"
-                    onClick={() => setMethod(value)}
+                    onClick={() => startMethod(value)}
+                    disabled={starting}
                     aria-pressed={method === value}
                     className={cn(
-                      "flex items-center gap-2 rounded-machined border px-3 py-2.5 text-sm transition-colors",
+                      "flex items-center justify-center gap-2 rounded-machined border px-3 py-2.5 text-sm transition-colors",
                       method === value
-                        ? "border-signal bg-signal-wash text-enamel"
+                        ? "border-signal bg-signal-wash text-enamel font-medium"
                         : "border-hairline bg-bench text-steel hover:border-steel-soft",
                     )}
                   >
-                    <Icon aria-hidden className="size-4 shrink-0" />
+                    {starting && method === value ? (
+                      <Loader2 aria-hidden className="size-4 shrink-0 animate-spin text-signal" />
+                    ) : (
+                      <Icon aria-hidden className="size-4 shrink-0" />
+                    )}
                     {t(METHOD_MSG[value])}
                   </button>
                 ))}
@@ -350,46 +366,77 @@ export function PaymentSheet({
               </p>
             ) : null}
 
-            <Button type="submit" size="sm" disabled={starting}>
-              {starting ? t("sheet.starting") : t("sheet.continue")}
-            </Button>
-          </form>
-        ) : null}
-
-        {step === "gateway" && intent ? (
-          <form key="credential" action={confirmAndBuy} className="flex flex-col gap-4 pt-4">
-            <input type="hidden" name="reference" value={intent.reference} />
-
-            {field ? (
-              <div className="flex flex-col gap-1.5">
-                <label htmlFor="sheet-credential" className="eyebrow">
-                  {field.label}
-                </label>
-                <Input
-                  id="sheet-credential"
-                  name="credential"
-                  required
-                  autoComplete="off"
-                  inputMode={intent.method === "card" ? "numeric" : "text"}
-                  placeholder={field.placeholder}
-                  className="font-mono tabular-nums"
-                />
-                <p className="text-xs leading-relaxed text-steel">{field.hint}</p>
+            {starting ? (
+              <div className="flex flex-col items-center justify-center gap-2 py-8">
+                <Loader2 aria-hidden className="size-6 animate-spin text-signal" />
+                <p className="text-xs text-steel">{t("sheet.starting")}</p>
               </div>
+            ) : intent && intent.method === method ? (
+              <form
+                key={intent.reference}
+                action={confirmAndBuy}
+                onSubmit={(e) => {
+                  e.stopPropagation();
+                }}
+                className="flex flex-col gap-4"
+              >
+                <input type="hidden" name="reference" value={intent.reference} />
+
+                {intent.method === "upi" && intent.qrSvg ? (
+                  <div className="flex flex-col items-center gap-2 rounded-machined border border-hairline bg-bench p-3">
+                    <div
+                      className="size-36 [&>svg]:h-auto [&>svg]:w-full"
+                      dangerouslySetInnerHTML={{ __html: intent.qrSvg }}
+                    />
+                    <p className="text-center text-xs text-steel">
+                      Scan with any UPI app or enter UPI ID below
+                    </p>
+                  </div>
+                ) : null}
+
+                {field ? (
+                  <div className="flex flex-col gap-1.5">
+                    <label htmlFor="sheet-credential" className="eyebrow">
+                      {field.label}
+                    </label>
+                    <Input
+                      id="sheet-credential"
+                      name="credential"
+                      required
+                      autoComplete="off"
+                      inputMode={intent.method === "card" ? "numeric" : "text"}
+                      placeholder={field.placeholder}
+                      className="font-mono tabular-nums"
+                    />
+                    <p className="text-xs leading-relaxed text-steel">{field.hint}</p>
+                  </div>
+                ) : (
+                  <p className="text-sm leading-relaxed text-steel">
+                    {t("sheet.netbankingNote")}
+                  </p>
+                )}
+
+                <p className="font-mono text-eyebrow uppercase tracking-[0.14em] text-steel-soft">
+                  {intent.reference}
+                </p>
+
+                <Button type="submit" size="sm">
+                  {t("sheet.pay", { amount: formatMoney(amountMinor) })}
+                </Button>
+              </form>
             ) : (
-              <p className="text-sm leading-relaxed text-steel">
-                {t("sheet.netbankingNote")}
-              </p>
+              <div className="flex flex-col gap-3 py-2">
+                <Button
+                  type="button"
+                  size="sm"
+                  disabled={starting}
+                  onClick={() => startMethod(method)}
+                >
+                  {starting ? t("sheet.starting") : t("sheet.continue")}
+                </Button>
+              </div>
             )}
-
-            <p className="font-mono text-eyebrow uppercase tracking-[0.14em] text-steel-soft">
-              {intent.reference}
-            </p>
-
-            <Button type="submit" size="sm">
-              {t("sheet.pay", { amount: formatMoney(amountMinor) })}
-            </Button>
-          </form>
+          </div>
         ) : null}
       </DialogBody>
 
@@ -405,6 +452,27 @@ export function PaymentSheet({
             </Button>
             <Button type="button" onClick={reset}>
               {t("sheet.tryAgain")}
+            </Button>
+          </>
+        ) : step === "gateway" ? (
+          <>
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() => {
+                setStep("choose");
+              }}
+              disabled={starting}
+            >
+              Back
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={close}
+              disabled={starting}
+            >
+              {t("sheet.cancel")}
             </Button>
           </>
         ) : (
