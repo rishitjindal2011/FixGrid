@@ -1,13 +1,15 @@
 /**
  * FixGrid Laptop-to-Phone Scanner Bridge Store
  *
- * Persistent store across all Next.js worker threads and server reloads.
- * Uses both an in-memory Map and a cross-process JSON file in os.tmpdir().
+ * Cloud-synchronized via Supabase with in-memory & file fallback.
+ * Allows instant pairing and real-time barcode syncing between any laptop
+ * and mobile phone regardless of network, domain, or IP boundaries.
  */
 
 import fs from "fs";
 import path from "path";
 import os from "os";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 export interface ScanBridgeSession {
   id: string;
@@ -35,7 +37,7 @@ function readFromFile(): Map<string, ScanBridgeSession> {
       }
     }
   } catch (e) {
-    // Non-fatal
+    // Non-fatal fallback
   }
   return map;
 }
@@ -48,7 +50,7 @@ function writeToFile(map: Map<string, ScanBridgeSession>) {
     }
     fs.writeFileSync(SESSIONS_FILE, JSON.stringify(obj), "utf8");
   } catch (e) {
-    // Non-fatal
+    // Non-fatal fallback
   }
 }
 
@@ -61,9 +63,8 @@ if (!globalStore.__fixgridScanBridge) {
   globalStore.__fixgridScanBridge = readFromFile();
 }
 
-function getStore(): Map<string, ScanBridgeSession> {
+function getLocalStore(): Map<string, ScanBridgeSession> {
   const fileStore = readFromFile();
-  // Merge fileStore with memory cache
   if (globalStore.__fixgridScanBridge) {
     for (const [k, v] of globalStore.__fixgridScanBridge.entries()) {
       if (!fileStore.has(k) || (v.updatedAt > (fileStore.get(k)?.updatedAt || 0))) {
@@ -75,95 +76,147 @@ function getStore(): Map<string, ScanBridgeSession> {
   return fileStore;
 }
 
-function persistStore(store: Map<string, ScanBridgeSession>) {
+function persistLocalStore(store: Map<string, ScanBridgeSession>) {
   globalStore.__fixgridScanBridge = store;
   writeToFile(store);
 }
 
-function cleanupExpired(store: Map<string, ScanBridgeSession>) {
-  const now = Date.now();
-  let changed = false;
-  for (const [id, session] of store.entries()) {
-    if (now - session.createdAt > SESSION_TTL_MS) {
-      store.delete(id);
-      changed = true;
-    }
-  }
-  if (changed) {
-    persistStore(store);
-  }
-}
-
-export function createScanSession(purpose?: string): ScanBridgeSession {
-  const store = getStore();
-  cleanupExpired(store);
-
+export async function createScanSession(purpose?: string): Promise<ScanBridgeSession> {
   const id = `fx_${Math.random().toString(36).slice(2, 8)}_${Date.now().toString(36).slice(-4)}`;
+  const now = Date.now();
   const session: ScanBridgeSession = {
     id,
     status: "waiting",
     code: null,
     format: null,
     purpose: purpose || "general",
-    createdAt: Date.now(),
-    updatedAt: Date.now(),
+    createdAt: now,
+    updatedAt: now,
   };
 
-  store.set(id, session);
-  persistStore(store);
+  // 1. Write to local store
+  const local = getLocalStore();
+  local.set(id, session);
+  persistLocalStore(local);
+
+  // 2. Write to Supabase database (Global Cloud Source of Truth)
+  try {
+    const supabase = createAdminClient() as any;
+    await supabase.from("scan_bridge_sessions").upsert({
+      id,
+      status: "waiting",
+      code: null,
+      format: null,
+      purpose: purpose || "general",
+      created_at: new Date(now).toISOString(),
+      updated_at: new Date(now).toISOString(),
+    });
+  } catch (e) {
+    console.warn("[scan-bridge/store] Supabase upsert error (using local store):", e);
+  }
+
   return session;
 }
 
-export function getScanSession(id: string): ScanBridgeSession | null {
-  const store = getStore();
-  const session = store.get(id);
+export async function getScanSession(id: string): Promise<ScanBridgeSession | null> {
+  // 1. Check Supabase first for real-time global sync
+  try {
+    const supabase = createAdminClient() as any;
+    const { data, error } = await supabase
+      .from("scan_bridge_sessions")
+      .select("*")
+      .eq("id", id)
+      .maybeSingle();
+
+    if (!error && data) {
+      const dbSession: ScanBridgeSession = {
+        id: data.id,
+        status: data.status as "waiting" | "scanned" | "expired",
+        code: data.code,
+        format: data.format,
+        purpose: data.purpose,
+        createdAt: new Date(data.created_at).getTime(),
+        updatedAt: new Date(data.updated_at).getTime(),
+      };
+
+      // Sync local cache
+      const local = getLocalStore();
+      local.set(id, dbSession);
+      persistLocalStore(local);
+
+      return dbSession;
+    }
+  } catch (e) {
+    // Fall back to local store on network error
+  }
+
+  // 2. Fallback to local memory/file store
+  const local = getLocalStore();
+  const session = local.get(id);
   if (!session) return null;
 
   if (Date.now() - session.createdAt > SESSION_TTL_MS) {
-    store.delete(id);
-    persistStore(store);
+    local.delete(id);
+    persistLocalStore(local);
     return null;
   }
 
   return session;
 }
 
-/**
- * Submits a code from phone scanner.
- * IMPORTANT: If the session does not exist in store, auto-creates it so
- * phone submissions NEVER fail due to worker thread or restart boundaries!
- */
-export function submitScannedCode(id: string, code: string, format?: string): boolean {
-  const store = getStore();
-  let session = store.get(id);
+export async function submitScannedCode(
+  id: string,
+  code: string,
+  format?: string
+): Promise<boolean> {
+  const trimmedCode = code.trim();
+  const now = Date.now();
 
+  // 1. Update local store
+  const local = getLocalStore();
+  let session = local.get(id);
   if (!session) {
-    // Auto-revive / create session
     session = {
       id,
       status: "scanned",
-      code: code.trim(),
+      code: trimmedCode,
       format: format || "auto",
       purpose: "general",
-      createdAt: Date.now(),
-      updatedAt: Date.now(),
+      createdAt: now,
+      updatedAt: now,
     };
   } else {
     session.status = "scanned";
-    session.code = code.trim();
+    session.code = trimmedCode;
     session.format = format || "auto";
-    session.updatedAt = Date.now();
+    session.updatedAt = now;
+  }
+  local.set(id, session);
+  persistLocalStore(local);
+
+  // 2. Update Supabase database
+  try {
+    const supabase = createAdminClient() as any;
+    await supabase.from("scan_bridge_sessions").upsert({
+      id,
+      status: "scanned",
+      code: trimmedCode,
+      format: format || "auto",
+      updated_at: new Date(now).toISOString(),
+    });
+  } catch (e) {
+    console.warn("[scan-bridge/store] Supabase submit error:", e);
   }
 
-  store.set(id, session);
-  persistStore(store);
   return true;
 }
 
-export function resetScanSession(id: string): boolean {
-  const store = getStore();
-  let session = store.get(id);
+export async function resetScanSession(id: string): Promise<boolean> {
+  const now = Date.now();
 
+  // 1. Update local store
+  const local = getLocalStore();
+  let session = local.get(id);
   if (!session) {
     session = {
       id,
@@ -171,17 +224,31 @@ export function resetScanSession(id: string): boolean {
       code: null,
       format: null,
       purpose: "general",
-      createdAt: Date.now(),
-      updatedAt: Date.now(),
+      createdAt: now,
+      updatedAt: now,
     };
   } else {
     session.status = "waiting";
     session.code = null;
     session.format = null;
-    session.updatedAt = Date.now();
+    session.updatedAt = now;
+  }
+  local.set(id, session);
+  persistLocalStore(local);
+
+  // 2. Update Supabase database
+  try {
+    const supabase = createAdminClient() as any;
+    await supabase.from("scan_bridge_sessions").upsert({
+      id,
+      status: "waiting",
+      code: null,
+      format: null,
+      updated_at: new Date(now).toISOString(),
+    });
+  } catch (e) {
+    console.warn("[scan-bridge/store] Supabase reset error:", e);
   }
 
-  store.set(id, session);
-  persistStore(store);
   return true;
 }

@@ -33,7 +33,7 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "sessionId is required" }, { status: 400 });
   }
 
-  const session = getScanSession(sessionId);
+  const session = await getScanSession(sessionId);
   if (!session) {
     return NextResponse.json({ error: "Session expired or not found", status: "expired" }, { status: 404 });
   }
@@ -57,7 +57,7 @@ export async function POST(request: Request) {
     const { action, sessionId, code, format, purpose } = body;
 
     if (action === "create") {
-      const session = createScanSession(purpose);
+      const session = await createScanSession(purpose);
       return NextResponse.json({
         success: true,
         sessionId: session.id,
@@ -75,7 +75,7 @@ export async function POST(request: Request) {
       }
 
       // submitScannedCode auto-creates or updates the session persistently
-      submitScannedCode(sessionId, code, format);
+      await submitScannedCode(sessionId, code, format);
 
       return NextResponse.json({
         success: true,
@@ -87,7 +87,7 @@ export async function POST(request: Request) {
       if (!sessionId) {
         return NextResponse.json({ error: "sessionId is required" }, { status: 400 });
       }
-      resetScanSession(sessionId);
+      await resetScanSession(sessionId);
       return NextResponse.json({ success: true, status: "waiting" });
     }
 
