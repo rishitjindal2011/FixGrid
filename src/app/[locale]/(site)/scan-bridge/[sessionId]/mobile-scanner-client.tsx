@@ -23,9 +23,9 @@ import {
   Laptop,
   Image as ImageIcon,
   SwitchCamera,
-  UploadCloud,
-  Check,
   X,
+  AlertTriangle,
+  RotateCcw,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -33,7 +33,8 @@ import { Input } from "@/components/ui/input";
 // Synthesize pleasant scanner beep via Web Audio API
 function playBeep() {
   try {
-    const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+    const AudioContextClass =
+      window.AudioContext || (window as any).webkitAudioContext;
     if (!AudioContextClass) return;
     const ctx = new AudioContextClass();
     const osc = ctx.createOscillator();
@@ -51,40 +52,96 @@ function playBeep() {
   }
 }
 
-// All major 1D & 2D barcode formats
-const ALL_BARCODE_FORMATS: BarcodeFormat[] = [
+// Common retail, inventory, and warranty barcode formats
+const FAST_BARCODE_FORMATS: BarcodeFormat[] = [
   BarcodeFormat.QR_CODE,
-  BarcodeFormat.EAN_13,
-  BarcodeFormat.EAN_8,
-  BarcodeFormat.UPC_A,
-  BarcodeFormat.UPC_E,
   BarcodeFormat.CODE_128,
+  BarcodeFormat.EAN_13,
+  BarcodeFormat.UPC_A,
   BarcodeFormat.CODE_39,
+  BarcodeFormat.EAN_8,
+  BarcodeFormat.UPC_E,
   BarcodeFormat.CODE_93,
   BarcodeFormat.ITF,
-  BarcodeFormat.DATA_MATRIX,
-  BarcodeFormat.AZTEC,
-  BarcodeFormat.PDF_417,
-  BarcodeFormat.CODABAR,
 ];
 
 function createConfiguredReader(): MultiFormatReader {
   const hints = new Map();
-  hints.set(DecodeHintType.POSSIBLE_FORMATS, ALL_BARCODE_FORMATS);
-  hints.set(DecodeHintType.TRY_HARDER, true);
+  hints.set(DecodeHintType.POSSIBLE_FORMATS, FAST_BARCODE_FORMATS);
   const reader = new MultiFormatReader();
   reader.setHints(hints);
   return reader;
 }
 
-// Decode a canvas using ZXing with both Hybrid & GlobalHistogram binarizers
+// Loads an image from an object URL or Data URL with guaranteed timeout (never hangs)
+function loadImageWithTimeout(
+  src: string,
+  timeoutMs = 6000
+): Promise<HTMLImageElement> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    let settled = false;
+
+    const timer = setTimeout(() => {
+      if (!settled) {
+        settled = true;
+        reject(new Error("Image loading timed out"));
+      }
+    }, timeoutMs);
+
+    img.onload = () => {
+      if (!settled) {
+        settled = true;
+        clearTimeout(timer);
+        resolve(img);
+      }
+    };
+
+    img.onerror = () => {
+      if (!settled) {
+        settled = true;
+        clearTimeout(timer);
+        reject(new Error("Failed to load image"));
+      }
+    };
+
+    img.src = src;
+
+    if (img.complete && img.naturalWidth > 0) {
+      if (!settled) {
+        settled = true;
+        clearTimeout(timer);
+        resolve(img);
+      }
+    }
+  });
+}
+
+// Fast QR detection using jsQR
+function decodeCanvasWithJsQr(canvas: HTMLCanvasElement): string | null {
+  try {
+    const ctx = canvas.getContext("2d", { willReadFrequently: true });
+    if (!ctx) return null;
+    const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    const qr = jsQR(imgData.data, canvas.width, canvas.height);
+    if (qr && qr.data && qr.data.trim()) {
+      return qr.data.trim();
+    }
+  } catch (e) {
+    // Ignore
+  }
+  return null;
+}
+
+// ZXing multi-format detection (Hybrid & GlobalHistogram binarizers)
 function decodeCanvasWithZxing(
   reader: MultiFormatReader,
   canvas: HTMLCanvasElement
 ): { text: string; format: string } | null {
   try {
     const lumSource = new HTMLCanvasElementLuminanceSource(canvas);
-    // 1. Try HybridBinarizer (standard high-contrast)
+
+    // 1. Hybrid binarizer
     try {
       const binarizer = new HybridBinarizer(lumSource);
       const bitmap = new BinaryBitmap(binarizer);
@@ -97,10 +154,10 @@ function decodeCanvasWithZxing(
         };
       }
     } catch (e) {
-      // Ignore and try fallback
+      // Ignore
     }
 
-    // 2. Try GlobalHistogramBinarizer (better for soft contrast, shadows, reflections)
+    // 2. Global histogram binarizer (for glare, low contrast, shadows)
     try {
       const binarizer = new GlobalHistogramBinarizer(lumSource);
       const bitmap = new BinaryBitmap(binarizer);
@@ -121,23 +178,7 @@ function decodeCanvasWithZxing(
   return null;
 }
 
-// Decode a canvas using jsQR (dedicated ultra-fast QR engine)
-function decodeCanvasWithJsQr(canvas: HTMLCanvasElement): string | null {
-  try {
-    const ctx = canvas.getContext("2d", { willReadFrequently: true });
-    if (!ctx) return null;
-    const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-    const qr = jsQR(imgData.data, canvas.width, canvas.height);
-    if (qr && qr.data) {
-      return qr.data;
-    }
-  } catch (e) {
-    // Ignore
-  }
-  return null;
-}
-
-// Decode using native BarcodeDetector API if supported (Chrome Android / modern browsers)
+// Hardware-accelerated BarcodeDetector (Android Chrome & modern browsers)
 async function decodeWithBarcodeDetector(
   canvas: HTMLCanvasElement
 ): Promise<{ text: string; format: string } | null> {
@@ -177,7 +218,7 @@ async function decodeWithBarcodeDetector(
   return null;
 }
 
-// Rotate canvas by 90, 180, or 270 degrees (critical for vertical 1D barcodes)
+// Rotate canvas by 90, 180, or 270 degrees
 function createRotatedCanvas(
   src: HTMLCanvasElement,
   degrees: 90 | 180 | 270
@@ -188,17 +229,18 @@ function createRotatedCanvas(
   canvas.height = is90or270 ? src.width : src.height;
   const ctx = canvas.getContext("2d", { willReadFrequently: true });
   if (!ctx) return src;
-  ctx.imageSmoothingEnabled = false;
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = "high";
   ctx.translate(canvas.width / 2, canvas.height / 2);
   ctx.rotate((degrees * Math.PI) / 180);
   ctx.drawImage(src, -src.width / 2, -src.height / 2);
   return canvas;
 }
 
-// Crop center region (removes busy backgrounds and desk clutter)
+// Crop center region
 function createCenterCropCanvas(
   src: HTMLCanvasElement,
-  ratio = 0.7
+  ratio = 0.65
 ): HTMLCanvasElement {
   const canvas = document.createElement("canvas");
   const cropW = Math.round(src.width * ratio);
@@ -209,12 +251,13 @@ function createCenterCropCanvas(
   canvas.height = cropH;
   const ctx = canvas.getContext("2d", { willReadFrequently: true });
   if (!ctx) return src;
-  ctx.imageSmoothingEnabled = false;
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = "high";
   ctx.drawImage(src, startX, startY, cropW, cropH, 0, 0, cropW, cropH);
   return canvas;
 }
 
-// Contrast enhancement for low contrast or uneven lighting
+// Contrast-stretching filter for faint barcodes or poor lighting
 function createContrastEnhancedCanvas(src: HTMLCanvasElement): HTMLCanvasElement {
   const canvas = document.createElement("canvas");
   canvas.width = src.width;
@@ -222,59 +265,60 @@ function createContrastEnhancedCanvas(src: HTMLCanvasElement): HTMLCanvasElement
   const ctx = canvas.getContext("2d", { willReadFrequently: true });
   if (!ctx) return src;
   ctx.drawImage(src, 0, 0);
-  const imgData = ctx.getImageData(0, 0, src.width, src.height);
-  const d = imgData.data;
-  let min = 255;
-  let max = 0;
-  for (let i = 0; i < d.length; i += 4) {
-    const r = d[i] ?? 0;
-    const g = d[i + 1] ?? 0;
-    const b = d[i + 2] ?? 0;
-    const gray = (r * 299 + g * 587 + b * 114) / 1000;
-    if (gray < min) min = gray;
-    if (gray > max) max = gray;
+  try {
+    const imgData = ctx.getImageData(0, 0, src.width, src.height);
+    const d = imgData.data;
+    let min = 255;
+    let max = 0;
+    for (let i = 0; i < d.length; i += 4) {
+      const r = d[i] ?? 0;
+      const g = d[i + 1] ?? 0;
+      const b = d[i + 2] ?? 0;
+      const gray = (r * 299 + g * 587 + b * 114) / 1000;
+      if (gray < min) min = gray;
+      if (gray > max) max = gray;
+    }
+    const range = max - min || 1;
+    for (let i = 0; i < d.length; i += 4) {
+      const r = d[i] ?? 0;
+      const g = d[i + 1] ?? 0;
+      const b = d[i + 2] ?? 0;
+      const gray = (r * 299 + g * 587 + b * 114) / 1000;
+      const normalized = Math.min(255, Math.max(0, ((gray - min) * 255) / range));
+      d[i] = normalized;
+      d[i + 1] = normalized;
+      d[i + 2] = normalized;
+    }
+    ctx.putImageData(imgData, 0, 0);
+  } catch (e) {
+    // Ignore
   }
-  const range = max - min || 1;
-  for (let i = 0; i < d.length; i += 4) {
-    const r = d[i] ?? 0;
-    const g = d[i + 1] ?? 0;
-    const b = d[i + 2] ?? 0;
-    const gray = (r * 299 + g * 587 + b * 114) / 1000;
-    const normalized = Math.min(255, Math.max(0, ((gray - min) * 255) / range));
-    d[i] = normalized;
-    d[i + 1] = normalized;
-    d[i + 2] = normalized;
-  }
-  ctx.putImageData(imgData, 0, 0);
   return canvas;
 }
 
-// Multi-stage decoding pipeline for uploaded or snapped photos
-async function decodeImageFile(
-  file: File,
+// Helper delay to keep UI reactive and responsive during decoding steps
+function yieldToUI(ms = 12): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+// Full multi-step decoding engine for photos
+async function decodeImageFromElement(
+  img: HTMLImageElement,
   reader: MultiFormatReader,
   onStep?: (msg: string) => void
 ): Promise<{ code: string; format: string } | null> {
-  onStep?.("Loading photo…");
-  const img = await new Promise<HTMLImageElement>((resolve, reject) => {
-    const url = URL.createObjectURL(file);
-    const image = new Image();
-    image.onload = () => {
-      URL.revokeObjectURL(url);
-      resolve(image);
-    };
-    image.onerror = (e) => {
-      URL.revokeObjectURL(url);
-      reject(e);
-    };
-    image.src = url;
-  });
+  onStep?.("Optimizing image resolution…");
+  await yieldToUI();
 
-  onStep?.("Analyzing resolution…");
-  // Keep dimensions crisp up to 1600px without lossy JPEG compression
   let width = img.naturalWidth || img.width;
   let height = img.naturalHeight || img.height;
-  const maxDim = 1600;
+  if (!width || !height) {
+    throw new Error("Could not determine image dimensions");
+  }
+
+  // Downscale to max 960px with high quality bicubic interpolation
+  // 960px provides crisp bar contrast while keeping JS decoding under 50ms
+  const maxDim = 960;
   if (width > maxDim || height > maxDim) {
     if (width > height) {
       height = Math.round((height * maxDim) / width);
@@ -290,78 +334,73 @@ async function decodeImageFile(
   baseCanvas.height = height;
   const baseCtx = baseCanvas.getContext("2d", { willReadFrequently: true });
   if (!baseCtx) throw new Error("Could not initialize image canvas");
-  baseCtx.imageSmoothingEnabled = false;
+
+  // Crucial: imageSmoothingEnabled MUST be true to avoid destroying barcode bars!
+  baseCtx.imageSmoothingEnabled = true;
+  baseCtx.imageSmoothingQuality = "high";
   baseCtx.drawImage(img, 0, 0, width, height);
 
-  // 1. Hardware-accelerated BarcodeDetector
-  onStep?.("Checking barcode formats…");
+  // 1. Native BarcodeDetector (fastest on modern Chrome)
+  onStep?.("Scanning barcode…");
   const nativeRes = await decodeWithBarcodeDetector(baseCanvas);
-  if (nativeRes) {
-    return { code: nativeRes.text, format: nativeRes.format };
-  }
+  if (nativeRes) return { code: nativeRes.text, format: nativeRes.format };
 
-  // 2. High-speed jsQR check
+  // 2. Dedicated jsQR check
   onStep?.("Checking QR code…");
   const qrBase = decodeCanvasWithJsQr(baseCanvas);
-  if (qrBase) {
-    return { code: qrBase, format: "QR_CODE" };
-  }
+  if (qrBase) return { code: qrBase, format: "QR_CODE" };
+
+  await yieldToUI();
 
   // 3. ZXing full frame (0 degrees)
-  onStep?.("Scanning barcode patterns…");
+  onStep?.("Analyzing barcode lines…");
   const zxing0 = decodeCanvasWithZxing(reader, baseCanvas);
-  if (zxing0) {
-    return { code: zxing0.text, format: zxing0.format };
-  }
+  if (zxing0) return { code: zxing0.text, format: zxing0.format };
 
-  // 4. Rotated 90 degrees (essential for vertical barcodes in photos!)
-  onStep?.("Checking vertical orientation…");
+  await yieldToUI();
+
+  // 4. Center crop 65% (focuses on the item, removes desktop/background clutter)
+  onStep?.("Focusing center area…");
+  const crop = createCenterCropCanvas(baseCanvas, 0.65);
+  const qrCrop = decodeCanvasWithJsQr(crop);
+  if (qrCrop) return { code: qrCrop, format: "QR_CODE" };
+  const zxingCrop = decodeCanvasWithZxing(reader, crop);
+  if (zxingCrop) return { code: zxingCrop.text, format: zxingCrop.format };
+
+  await yieldToUI();
+
+  // 5. Rotated 90 degrees (essential for vertical 1D barcodes and tilted QR)
+  onStep?.("Checking orientation…");
   const rot90 = createRotatedCanvas(baseCanvas, 90);
   const nativeRot = await decodeWithBarcodeDetector(rot90);
-  if (nativeRot) {
-    return { code: nativeRot.text, format: nativeRot.format };
-  }
+  if (nativeRot) return { code: nativeRot.text, format: nativeRot.format };
+  const qrRot90 = decodeCanvasWithJsQr(rot90);
+  if (qrRot90) return { code: qrRot90, format: "QR_CODE" };
   const zxing90 = decodeCanvasWithZxing(reader, rot90);
-  if (zxing90) {
-    return { code: zxing90.text, format: zxing90.format };
-  }
+  if (zxing90) return { code: zxing90.text, format: zxing90.format };
 
-  // 5. Center crop 70% (avoids background noise)
-  onStep?.("Focusing center area…");
-  const crop = createCenterCropCanvas(baseCanvas, 0.7);
-  const qrCrop = decodeCanvasWithJsQr(crop);
-  if (qrCrop) {
-    return { code: qrCrop, format: "QR_CODE" };
-  }
-  const zxingCrop = decodeCanvasWithZxing(reader, crop);
-  if (zxingCrop) {
-    return { code: zxingCrop.text, format: zxingCrop.format };
-  }
+  await yieldToUI();
+
+  // 6. Center crop rotated 90
   const cropRot90 = createRotatedCanvas(crop, 90);
   const zxingCrop90 = decodeCanvasWithZxing(reader, cropRot90);
-  if (zxingCrop90) {
-    return { code: zxingCrop90.text, format: zxingCrop90.format };
-  }
+  if (zxingCrop90) return { code: zxingCrop90.text, format: zxingCrop90.format };
 
-  // 6. Rotated 270 degrees
+  // 7. Rotated 270 degrees
   const rot270 = createRotatedCanvas(baseCanvas, 270);
   const zxing270 = decodeCanvasWithZxing(reader, rot270);
-  if (zxing270) {
-    return { code: zxing270.text, format: zxing270.format };
-  }
+  if (zxing270) return { code: zxing270.text, format: zxing270.format };
 
-  // 7. Contrast-enhanced pass
+  await yieldToUI();
+
+  // 8. Contrast-enhanced pass (for glare, low lighting, or faded thermal labels)
   onStep?.("Enhancing barcode lines…");
   const enhanced = createContrastEnhancedCanvas(baseCanvas);
   const zxingEnh0 = decodeCanvasWithZxing(reader, enhanced);
-  if (zxingEnh0) {
-    return { code: zxingEnh0.text, format: zxingEnh0.format };
-  }
+  if (zxingEnh0) return { code: zxingEnh0.text, format: zxingEnh0.format };
   const enhRot90 = createRotatedCanvas(enhanced, 90);
   const zxingEnh90 = decodeCanvasWithZxing(reader, enhRot90);
-  if (zxingEnh90) {
-    return { code: zxingEnh90.text, format: zxingEnh90.format };
-  }
+  if (zxingEnh90) return { code: zxingEnh90.text, format: zxingEnh90.format };
 
   return null;
 }
@@ -378,6 +417,9 @@ export function MobileScannerClient({ sessionId }: { sessionId: string }) {
   const [manualCode, setManualCode] = React.useState("");
   const [processingPhoto, setProcessingPhoto] = React.useState(false);
   const [processingStep, setProcessingStep] = React.useState<string>("Processing photo…");
+  const [lastPhotoPreview, setLastPhotoPreview] = React.useState<string | null>(null);
+  const [scanFailed, setScanFailed] = React.useState(false);
+  const [debugStatus, setDebugStatus] = React.useState<string | null>(null);
   const [videoDevices, setVideoDevices] = React.useState<MediaDeviceInfo[]>([]);
   const [currentDeviceId, setCurrentDeviceId] = React.useState<string | undefined>(undefined);
 
@@ -386,19 +428,22 @@ export function MobileScannerClient({ sessionId }: { sessionId: string }) {
   const scanIntervalRef = React.useRef<NodeJS.Timeout | null>(null);
   const zxingReaderRef = React.useRef<MultiFormatReader | null>(null);
   const offscreenCanvasRef = React.useRef<HTMLCanvasElement | null>(null);
+
+  // Dedicated file input refs
   const cameraInputRef = React.useRef<HTMLInputElement | null>(null);
-  const galleryInputRef = React.useRef<HTMLInputElement | null>(null);
+  const fallbackInputRef = React.useRef<HTMLInputElement | null>(null);
 
   React.useEffect(() => {
     if (typeof window !== "undefined") {
       setIsSecure(
         window.isSecureContext ??
-          (window.location.protocol === "https:" || window.location.hostname === "localhost")
+          (window.location.protocol === "https:" ||
+            window.location.hostname === "localhost" ||
+            window.location.hostname === "127.0.0.1")
       );
     }
   }, []);
 
-  // Initialize ZXing MultiFormatReader
   const getZxingReader = () => {
     if (!zxingReaderRef.current) {
       zxingReaderRef.current = createConfiguredReader();
@@ -415,9 +460,7 @@ export function MobileScannerClient({ sessionId }: { sessionId: string }) {
       mediaStreamRef.current.getTracks().forEach((track) => {
         try {
           track.stop();
-        } catch (e) {
-          // Ignore
-        }
+        } catch (e) {}
       });
       mediaStreamRef.current = null;
     }
@@ -440,6 +483,7 @@ export function MobileScannerClient({ sessionId }: { sessionId: string }) {
       setScannedCode(code);
       setScannedFormat(format || "barcode");
       setSyncing(true);
+      setDebugStatus(`Synced: ${code}`);
 
       try {
         const res = await fetch("/api/scan-bridge", {
@@ -468,20 +512,35 @@ export function MobileScannerClient({ sessionId }: { sessionId: string }) {
     [sessionId, stopCamera]
   );
 
-  // Start real live camera feed via standard WebRTC getUserMedia
+  // Live video feed scanner via WebRTC
   const startLiveCamera = async (overrideDeviceId?: string) => {
     setCameraError(null);
     setCameraStarting(true);
-    stopCamera();
+
+    if (scanIntervalRef.current) {
+      clearInterval(scanIntervalRef.current);
+      scanIntervalRef.current = null;
+    }
+    if (mediaStreamRef.current) {
+      mediaStreamRef.current.getTracks().forEach((track) => {
+        try {
+          track.stop();
+        } catch (e) {}
+      });
+      mediaStreamRef.current = null;
+    }
 
     const reader = getZxingReader();
 
     try {
       if (!navigator?.mediaDevices?.getUserMedia) {
-        throw new Error("Live camera is not supported over HTTP on mobile. Tap 'Snap Photo' below to scan!");
+        throw new Error(
+          !isSecure
+            ? "Mobile browsers restrict continuous live streaming on plain HTTP. Please tap '📸 Snap Photo with Camera' below to scan directly with 0 permission issues!"
+            : "Camera API is not supported on this browser."
+        );
       }
 
-      // Resilient camera constraints: try rear camera first, fallback to generic video
       let stream: MediaStream;
       try {
         const constraints: MediaStreamConstraints = {
@@ -492,8 +551,10 @@ export function MobileScannerClient({ sessionId }: { sessionId: string }) {
         };
         stream = await navigator.mediaDevices.getUserMedia(constraints);
       } catch (e1) {
-        // Fallback to simple video: true
-        stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: true,
+          audio: false,
+        });
       }
       mediaStreamRef.current = stream;
 
@@ -504,23 +565,22 @@ export function MobileScannerClient({ sessionId }: { sessionId: string }) {
 
       video.srcObject = stream;
       video.setAttribute("playsinline", "true");
-      video.setAttribute("webkit-playsinline", "true");
       video.muted = true;
 
-      // Wait for video metadata to be loaded and play
-      await new Promise<void>((resolve) => {
-        if (video.readyState >= 2) {
-          return resolve();
-        }
-        video.onloadedmetadata = () => resolve();
-      });
-
-      await video.play();
+      try {
+        await Promise.race([
+          video.play(),
+          new Promise((_, reject) =>
+            setTimeout(() => reject(new Error("Playback timeout")), 2500)
+          ),
+        ]);
+      } catch (playErr) {
+        console.warn("Video play note:", playErr);
+      }
 
       setCameraActive(true);
       setCameraStarting(false);
 
-      // Discover video devices now that permission is active
       try {
         const allDevices = await navigator.mediaDevices.enumerateDevices();
         const vInputs = allDevices.filter((d) => d.kind === "videoinput");
@@ -528,11 +588,8 @@ export function MobileScannerClient({ sessionId }: { sessionId: string }) {
         if (overrideDeviceId) {
           setCurrentDeviceId(overrideDeviceId);
         }
-      } catch (e) {
-        // Ignore
-      }
+      } catch (e) {}
 
-      // Initialize offscreen frame canvas
       if (!offscreenCanvasRef.current) {
         offscreenCanvasRef.current = document.createElement("canvas");
       }
@@ -540,7 +597,6 @@ export function MobileScannerClient({ sessionId }: { sessionId: string }) {
       const scanCtx = scanCanvas.getContext("2d", { willReadFrequently: true });
       if (!scanCtx) return;
 
-      // Continuous 120ms frame decoding loop
       scanIntervalRef.current = setInterval(async () => {
         if (!video || video.readyState < 2 || video.paused || video.ended) {
           return;
@@ -550,28 +606,29 @@ export function MobileScannerClient({ sessionId }: { sessionId: string }) {
         const vh = video.videoHeight;
         if (!vw || !vh) return;
 
-        // Downscale frame for ultra-fast 10ms frame scanning
-        const targetW = Math.min(vw, 720);
+        const targetW = Math.min(vw, 640);
         const targetH = Math.round((vh * targetW) / vw);
         scanCanvas.width = targetW;
         scanCanvas.height = targetH;
+        scanCtx.imageSmoothingEnabled = true;
+        scanCtx.imageSmoothingQuality = "high";
         scanCtx.drawImage(video, 0, 0, targetW, targetH);
 
-        // 1. Check jsQR (fastest for QR codes)
+        // 1. jsQR
         const qrCode = decodeCanvasWithJsQr(scanCanvas);
         if (qrCode) {
           handleCodeScanned(qrCode, "QR_CODE");
           return;
         }
 
-        // 2. Check native BarcodeDetector if available
+        // 2. BarcodeDetector
         const nativeRes = await decodeWithBarcodeDetector(scanCanvas);
         if (nativeRes) {
           handleCodeScanned(nativeRes.text, nativeRes.format);
           return;
         }
 
-        // 3. Check ZXing MultiFormatReader
+        // 3. ZXing
         const zxingRes = decodeCanvasWithZxing(reader, scanCanvas);
         if (zxingRes) {
           handleCodeScanned(zxingRes.text, zxingRes.format);
@@ -581,24 +638,30 @@ export function MobileScannerClient({ sessionId }: { sessionId: string }) {
     } catch (err: any) {
       stopCamera();
       setCameraStarting(false);
-      const isHttp = typeof window !== "undefined" && window.location.protocol === "http:" && window.location.hostname !== "localhost";
+      const isHttp =
+        typeof window !== "undefined" &&
+        window.location.protocol === "http:" &&
+        window.location.hostname !== "localhost" &&
+        window.location.hostname !== "127.0.0.1";
+
       if (err.name === "NotAllowedError" || err.name === "PermissionDeniedError") {
         if (isHttp) {
           setCameraError(
-            "Mobile Chrome security blocks live streaming on unencrypted HTTP connections without asking. Tap '📸 Snap Photo' below to use the camera directly with zero permission hassle!"
+            "Mobile browsers restrict continuous live video on plain HTTP. Tap '📸 Snap Photo' below to use the camera directly without any permission barrier!"
           );
         } else {
           setCameraError(
-            "Camera permission was denied. In Chrome: tap the 🔒/Tune icon in the address bar → Site Settings / Permissions → Camera → Allow, then tap Retry."
+            "Camera permission was denied. Tap the 🔒/Tune icon in the browser address bar → Permissions → Camera → Allow, then tap Retry."
           );
         }
       } else {
-        setCameraError(err.message || "Could not start live camera. Tap 'Snap Photo' below instead.");
+        setCameraError(
+          err.message || "Could not start live camera. Tap 'Snap Photo' below instead."
+        );
       }
     }
   };
 
-  // Flip between available cameras
   const switchCamera = () => {
     if (videoDevices.length <= 1) return;
     const currentIndex = videoDevices.findIndex((d) => d.deviceId === currentDeviceId);
@@ -615,28 +678,62 @@ export function MobileScannerClient({ sessionId }: { sessionId: string }) {
     };
   }, [stopCamera]);
 
-  // Handle Photo Snap or Gallery File Selection
+  // Handle Photo Selection or Camera Capture
   const handlePhotoSelected = async (file: File) => {
+    if (!file) return;
+
+    setScanFailed(false);
     setProcessingPhoto(true);
-    setProcessingStep("Reading photo…");
+    setProcessingStep("Reading captured photo…");
+    const sizeKb = Math.round(file.size / 1024);
+    setDebugStatus(`Photo received: ${sizeKb} KB (${file.type || "image"})`);
+
+    let objectUrl: string | null = null;
 
     try {
+      // 1. Instant zero-copy object URL
+      objectUrl = URL.createObjectURL(file);
+      setLastPhotoPreview(objectUrl);
+
+      // 2. Load image element with strict timeout protection
+      setProcessingStep("Loading photo…");
+      const img = await loadImageWithTimeout(objectUrl, 8000);
+
+      // 3. Decode barcode from image
       const reader = getZxingReader();
-      const result = await decodeImageFile(file, reader, (step) => setProcessingStep(step));
+      const result = await decodeImageFromElement(img, reader, (step) =>
+        setProcessingStep(step)
+      );
 
       if (result && result.code) {
+        setDebugStatus(`Decoded: ${result.code} (${result.format})`);
         handleCodeScanned(result.code, result.format);
       } else {
-        alert(
-          "No clear barcode or QR detected in that photo. Please take a closer photo with good lighting, or enter the code manually below."
-        );
+        setScanFailed(true);
+        setDebugStatus("No barcode detected. Ensure barcode is sharp and well-lit.");
       }
     } catch (err: any) {
-      alert("Could not process photo: " + (err.message || "Unknown error"));
+      setScanFailed(true);
+      setDebugStatus("Error: " + (err.message || "Could not process photo"));
     } finally {
       setProcessingPhoto(false);
+      // Reset input values so taking another snap triggers change cleanly
       if (cameraInputRef.current) cameraInputRef.current.value = "";
-      if (galleryInputRef.current) galleryInputRef.current.value = "";
+      if (fallbackInputRef.current) fallbackInputRef.current.value = "";
+    }
+  };
+
+  const triggerCameraSnap = () => {
+    if (cameraInputRef.current) {
+      cameraInputRef.current.value = "";
+      cameraInputRef.current.click();
+    }
+  };
+
+  const triggerGalleryPick = () => {
+    if (fallbackInputRef.current) {
+      fallbackInputRef.current.value = "";
+      fallbackInputRef.current.click();
     }
   };
 
@@ -651,6 +748,9 @@ export function MobileScannerClient({ sessionId }: { sessionId: string }) {
     setScannedFormat(null);
     setSynced(false);
     setManualCode("");
+    setLastPhotoPreview(null);
+    setScanFailed(false);
+    setDebugStatus(null);
 
     try {
       await fetch("/api/scan-bridge", {
@@ -658,36 +758,47 @@ export function MobileScannerClient({ sessionId }: { sessionId: string }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action: "reset", sessionId }),
       });
-    } catch (e) {
-      // Ignore
-    }
+    } catch (e) {}
   };
 
   return (
     <div className="min-h-screen bg-[#0d1117] text-white flex flex-col justify-between p-4 max-w-md mx-auto select-none">
-      {/* Native Camera input (direct snap) */}
+      {/* Hidden File Inputs with Direct Programmatic Triggers */}
       <input
         ref={cameraInputRef}
+        id="camera-snap-input-main"
         type="file"
-        accept="image/*"
+        accept="image/jpeg,image/png,image/webp,image/*"
         capture="environment"
         onChange={(e) => {
           const file = e.target.files?.[0];
           if (file) handlePhotoSelected(file);
         }}
-        className="hidden"
+        onInput={(e) => {
+          const file = (e.target as HTMLInputElement).files?.[0];
+          if (file) handlePhotoSelected(file);
+        }}
+        className="sr-only"
+        tabIndex={-1}
+        aria-hidden="true"
       />
 
-      {/* Gallery / File picker input */}
       <input
-        ref={galleryInputRef}
+        ref={fallbackInputRef}
+        id="gallery-file-input-main"
         type="file"
-        accept="image/*"
+        accept="image/jpeg,image/png,image/webp,image/*"
         onChange={(e) => {
           const file = e.target.files?.[0];
           if (file) handlePhotoSelected(file);
         }}
-        className="hidden"
+        onInput={(e) => {
+          const file = (e.target as HTMLInputElement).files?.[0];
+          if (file) handlePhotoSelected(file);
+        }}
+        className="sr-only"
+        tabIndex={-1}
+        aria-hidden="true"
       />
 
       {/* Top Header */}
@@ -708,19 +819,6 @@ export function MobileScannerClient({ sessionId }: { sessionId: string }) {
           {sessionId}
         </span>
       </header>
-
-      {/* Insecure Context Warning */}
-      {!isSecure ? (
-        <div className="my-2 rounded-xl bg-amber-500/10 border border-amber-500/30 p-3 text-xs text-amber-300">
-          <p className="font-semibold flex items-center gap-1">
-            <AlertCircle className="size-3.5" />
-            HTTP Connection Detected
-          </p>
-          <p className="mt-1 text-[11px] text-white/70">
-            Live video stream requires HTTPS. Tap <strong>&quot;📸 Snap Photo to Scan&quot;</strong> below to use your native phone camera instantly with zero permission hassle!
-          </p>
-        </div>
-      ) : null}
 
       {/* Main Content Area */}
       <main className="my-auto py-3 flex flex-col items-center">
@@ -755,13 +853,12 @@ export function MobileScannerClient({ sessionId }: { sessionId: string }) {
           </div>
         ) : (
           <div className="w-full flex flex-col items-center">
-            {/* Viewfinder Frame (Always keeps <video> in DOM without display: none) */}
+            {/* Viewfinder Frame */}
             <div className="relative w-full aspect-square max-w-[320px] rounded-2xl overflow-hidden bg-black border-2 border-[#ea580c]/60 shadow-2xl flex items-center justify-center">
               {/* Live WebRTC Video Element */}
               <video
                 ref={videoRef}
                 playsInline
-                webkit-playsinline="true"
                 muted
                 autoPlay
                 className="absolute inset-0 w-full h-full object-cover"
@@ -799,13 +896,46 @@ export function MobileScannerClient({ sessionId }: { sessionId: string }) {
                     </button>
                   </div>
                 </>
+              ) : scanFailed ? (
+                /* Scan Failed Guidance View with Thumbnail Preview */
+                <div className="absolute inset-0 bg-black/95 flex flex-col items-center justify-center p-4 text-center z-10">
+                  <div className="flex size-12 items-center justify-center rounded-full bg-amber-500/20 text-amber-400 mb-2 ring-4 ring-amber-500/10">
+                    <AlertTriangle className="size-6" />
+                  </div>
+                  <h3 className="text-xs font-bold text-white mb-1">No Barcode Detected</h3>
+                  <p className="text-[11px] text-white/60 mb-2.5 px-2 leading-tight">
+                    Ensure the barcode fills the camera frame with good lighting and is sharp.
+                  </p>
+
+                  {lastPhotoPreview ? (
+                    <div className="relative size-16 rounded-lg overflow-hidden border border-white/20 mb-3 bg-white/5">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={lastPhotoPreview}
+                        alt="Captured barcode"
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  ) : null}
+
+                  <Button
+                    type="button"
+                    onClick={triggerCameraSnap}
+                    className="bg-[#ea580c] hover:bg-[#c2410c] text-white text-xs gap-1.5 font-bold py-2.5 px-4 rounded-xl shadow-lg shadow-[#ea580c]/30 flex items-center transition-all"
+                  >
+                    <RotateCcw className="size-3.5" />
+                    <span>📸 Retake Closer Photo</span>
+                  </Button>
+                </div>
               ) : (
                 /* Inactive / Backdrop Card */
                 <div className="absolute inset-0 bg-black/95 flex flex-col items-center justify-center p-6 text-center z-10">
                   {cameraStarting ? (
                     <>
                       <Loader2 className="size-10 text-[#ea580c] animate-spin mb-3" />
-                      <p className="text-xs text-white/90 font-semibold">Connecting to camera feed…</p>
+                      <p className="text-xs text-white/90 font-semibold">
+                        Connecting to camera feed…
+                      </p>
                       <p className="text-[11px] text-white/50 mt-1">Starting live video</p>
                     </>
                   ) : (
@@ -817,55 +947,37 @@ export function MobileScannerClient({ sessionId }: { sessionId: string }) {
                         Point camera at any barcode or QR passport
                       </p>
                       {cameraError ? (
-                        <div className="mb-3 px-2">
-                          <p className="text-[11px] text-rose-400 mb-2 leading-relaxed">
+                        <div className="mb-3 px-2 flex flex-col items-center">
+                          <p className="text-[11px] text-amber-300 mb-2.5 leading-relaxed">
                             {cameraError}
                           </p>
                           <Button
-                            size="sm"
                             type="button"
-                            onClick={() => cameraInputRef.current?.click()}
-                            className="bg-[#ea580c] hover:bg-[#c2410c] text-white text-xs gap-1.5 font-bold py-2 px-3.5 rounded-xl shadow-md"
+                            onClick={triggerCameraSnap}
+                            className="bg-[#ea580c] hover:bg-[#c2410c] text-white text-xs gap-1.5 font-bold py-2 px-4 rounded-xl shadow-md flex items-center transition-all"
                           >
                             <Camera className="size-3.5" />
                             <span>📸 Snap Photo Instead</span>
                           </Button>
                         </div>
                       ) : (
-                        <>
-                          <p className="text-[11px] text-white/50 mb-3">
-                            Real multi-format scanner engine
-                          </p>
-                          {!isSecure ? (
-                            <div className="flex flex-col items-center gap-2">
-                              <Button
-                                size="sm"
-                                type="button"
-                                onClick={() => cameraInputRef.current?.click()}
-                                className="bg-[#ea580c] hover:bg-[#c2410c] text-white text-xs gap-1.5 font-bold py-2 px-4 rounded-xl shadow-lg shadow-[#ea580c]/20"
-                              >
-                                <Camera className="size-4" />
-                                <span>📸 Snap Photo with Camera</span>
-                              </Button>
-                              <button
-                                type="button"
-                                onClick={() => startLiveCamera()}
-                                className="text-[10px] text-white/50 hover:text-white underline mt-0.5"
-                              >
-                                Try Live Camera Feed
-                              </button>
-                            </div>
-                          ) : (
-                            <Button
-                              size="sm"
-                              onClick={() => startLiveCamera()}
-                              className="bg-[#ea580c] hover:bg-[#c2410c] text-white text-xs gap-1.5 font-semibold py-2 px-4 rounded-xl shadow-lg shadow-[#ea580c]/20"
-                            >
-                              <Camera className="size-3.5" />
-                              <span>Start Live Camera</span>
-                            </Button>
-                          )}
-                        </>
+                        <div className="flex flex-col items-center gap-2 w-full px-2 mt-2">
+                          <Button
+                            type="button"
+                            onClick={triggerCameraSnap}
+                            className="w-full bg-[#ea580c] hover:bg-[#c2410c] active:scale-[0.97] text-white text-xs gap-1.5 font-bold py-3 px-4 rounded-xl shadow-lg shadow-[#ea580c]/30 flex items-center justify-center transition-all text-center"
+                          >
+                            <Camera className="size-4" />
+                            <span>📸 Snap Photo with Camera</span>
+                          </Button>
+                          <button
+                            type="button"
+                            onClick={() => startLiveCamera()}
+                            className="text-[11px] text-white/50 hover:text-white underline mt-1 py-1"
+                          >
+                            Or try Live Video Feed
+                          </button>
+                        </div>
                       )}
                     </>
                   )}
@@ -874,7 +986,7 @@ export function MobileScannerClient({ sessionId }: { sessionId: string }) {
 
               {/* Loading Overlay */}
               {syncing || processingPhoto ? (
-                <div className="absolute inset-0 bg-black/90 flex flex-col items-center justify-center z-30 backdrop-blur-sm">
+                <div className="absolute inset-0 bg-black/90 flex flex-col items-center justify-center z-30 backdrop-blur-sm p-4 text-center">
                   <Loader2 className="size-9 text-[#ea580c] animate-spin mb-2" />
                   <p className="text-xs font-bold text-white tracking-wide">
                     {processingPhoto ? processingStep : "Syncing to Laptop…"}
@@ -884,33 +996,40 @@ export function MobileScannerClient({ sessionId }: { sessionId: string }) {
               ) : null}
             </div>
 
-            {/* Quick Capture Options */}
-            <div className="w-full max-w-[320px] mt-3.5 space-y-2">
-              {/* Option 1: Native Camera Snap */}
+            {/* Quick Capture Options Below Viewfinder */}
+            <div className="w-full max-w-[320px] mt-4 space-y-2.5">
+              {/* Option 1: Native Camera Direct Snap */}
               <Button
                 type="button"
-                onClick={() => cameraInputRef.current?.click()}
+                onClick={triggerCameraSnap}
                 disabled={processingPhoto || syncing}
-                className="w-full bg-[#ea580c]/20 hover:bg-[#ea580c]/30 border border-[#ea580c]/40 text-white font-semibold py-2.5 rounded-xl flex items-center justify-center gap-2 text-xs"
+                className="w-full bg-[#ea580c] hover:bg-[#c2410c] active:scale-[0.98] text-white font-bold py-3.5 px-4 rounded-xl flex items-center justify-center gap-2 text-xs shadow-lg shadow-[#ea580c]/30 text-center transition-all"
               >
-                <Camera className="size-4 text-[#ea580c]" />
+                <Camera className="size-4 shrink-0" />
                 <span>📸 Snap Photo with Camera (Ultra-Fast)</span>
               </Button>
 
               {/* Option 2: Pick from Photo Album / Files */}
               <Button
                 type="button"
-                variant="outline"
-                onClick={() => galleryInputRef.current?.click()}
+                onClick={triggerGalleryPick}
                 disabled={processingPhoto || syncing}
-                className="w-full bg-white/10 hover:bg-white/15 border-white/20 text-white font-medium py-2 rounded-xl flex items-center justify-center gap-2 text-xs"
+                variant="outline"
+                className="w-full bg-white/10 hover:bg-white/15 active:scale-[0.98] border border-white/20 text-white font-semibold py-3 px-4 rounded-xl flex items-center justify-center gap-2 text-xs text-center transition-all"
               >
-                <ImageIcon className="size-3.5 text-white/70" />
+                <ImageIcon className="size-3.5 shrink-0 text-white/70" />
                 <span>📁 Choose from Gallery / Album</span>
               </Button>
             </div>
 
-            <p className="mt-2.5 text-[11px] text-white/60 text-center flex items-center gap-1.5">
+            {/* Live Status Indicator */}
+            {debugStatus ? (
+              <p className="mt-2.5 text-[11px] text-amber-300/90 text-center font-mono bg-white/5 border border-white/10 px-2.5 py-1 rounded-lg">
+                {debugStatus}
+              </p>
+            ) : null}
+
+            <p className="mt-3 text-[11px] text-white/60 text-center flex items-center gap-1.5">
               <Sparkles className="size-3 text-[#ea580c]" />
               Real Multi-Format Engine &bull; QR, EAN-13, UPC, Code 128, Code 39
             </p>
