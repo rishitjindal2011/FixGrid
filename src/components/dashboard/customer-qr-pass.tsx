@@ -31,7 +31,18 @@ interface CustomerQrPassProps {
   shopName: string;
   serviceName?: string | null;
   warrantyDays?: number;
+  finalAmount?: number | null;
+  quotedAmount?: number | null;
+  isPriceFinalised?: boolean;
 }
+
+const FINALISED_STATUSES = new Set<BookingStatus>([
+  "confirmed",
+  "in_progress",
+  "completed",
+  "closed",
+  "disputed",
+]);
 
 export function CustomerQrPass({
   reference,
@@ -40,8 +51,22 @@ export function CustomerQrPass({
   shopName,
   serviceName,
   warrantyDays = 30,
+  finalAmount,
+  quotedAmount,
+  isPriceFinalised,
 }: CustomerQrPassProps) {
   const [fullscreenOpen, setFullscreenOpen] = React.useState(false);
+
+  // Passport and QR should ONLY come when the price is finalised
+  const hasPrice =
+    (finalAmount !== null && finalAmount !== undefined) ||
+    (quotedAmount !== null && quotedAmount !== undefined);
+
+  const priceAgreed = isPriceFinalised ?? (FINALISED_STATUSES.has(status) && hasPrice);
+
+  if (!priceAgreed || !FINALISED_STATUSES.has(status)) {
+    return null;
+  }
 
   const passportUrl = typeof window !== "undefined"
     ? `${window.location.origin}/passport/${reference}`

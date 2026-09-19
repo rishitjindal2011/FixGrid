@@ -103,6 +103,28 @@ export async function getWarrantyPassport(reference: string): Promise<WarrantyPa
     return null;
   }
 
+  // Passport and QR are ONLY issued when the price is finalised and booking is active
+  const INVALID_STATUSES = new Set([
+    "declined",
+    "cancelled_customer",
+    "cancelled_shop",
+    "no_show",
+    "expired",
+    "requested",
+  ]);
+
+  if (INVALID_STATUSES.has(booking.status)) {
+    return null;
+  }
+
+  // Price must be finalised (must have a quoted_amount or final_amount)
+  const hasFinalisedPrice =
+    booking.final_amount !== null || booking.quoted_amount !== null;
+
+  if (!hasFinalisedPrice) {
+    return null;
+  }
+
   const now = new Date();
   const completedAt = booking.completed_at || booking.warranty_expires_at || now.toISOString();
   const warrantyDays = booking.warranty_days || 30;

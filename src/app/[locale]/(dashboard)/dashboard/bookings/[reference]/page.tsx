@@ -9,6 +9,7 @@ import {
   ArrowLeft,
   Building2,
   Car,
+  Clock,
   FileText,
   Home,
   MapPin,
@@ -16,6 +17,7 @@ import {
   Paperclip,
   Receipt,
   ShieldCheck,
+  Sparkles,
   Wrench,
 } from "lucide-react";
 
@@ -47,6 +49,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getWallet } from "@/lib/wallet/server";
 import {
   type AttachmentKind,
+  type BookingStatus,
   type DeliveryMode,
 } from "@/lib/types/marketplace";
 
@@ -259,6 +262,20 @@ export default async function BookingDetailPage({
     booking.service?.duration_minutes ??
     (start && end ? Math.max(15, Math.round((end.getTime() - start.getTime()) / 60000)) : 60);
 
+  const FINALISED_STATUSES = new Set<BookingStatus>([
+    "confirmed",
+    "in_progress",
+    "completed",
+    "closed",
+    "disputed",
+  ]);
+
+  const hasFinalisedPrice =
+    booking.final_amount !== null || booking.quoted_amount !== null;
+
+  const isPriceFinalised =
+    FINALISED_STATUSES.has(booking.status) && hasFinalisedPrice;
+
   const canReschedule = RESCHEDULABLE.has(booking.status);
   const showCalendar =
     start !== null &&
@@ -349,14 +366,39 @@ export default async function BookingDetailPage({
         dispute={dispute}
       />
 
-      <CustomerQrPass
-        reference={booking.reference}
-        deliveryMode={booking.delivery_mode}
-        status={booking.status}
-        shopName={booking.shop?.shop_name ?? "FixGrid Workshop"}
-        serviceName={booking.service?.name}
-        warrantyDays={booking.warranty_days ?? 30}
-      />
+      {isPriceFinalised ? (
+        <CustomerQrPass
+          reference={booking.reference}
+          deliveryMode={booking.delivery_mode}
+          status={booking.status}
+          shopName={booking.shop?.shop_name ?? "FixGrid Workshop"}
+          serviceName={booking.service?.name}
+          warrantyDays={booking.warranty_days ?? 30}
+          finalAmount={booking.final_amount}
+          quotedAmount={booking.quoted_amount}
+          isPriceFinalised={isPriceFinalised}
+        />
+      ) : booking.status === "requested" ? (
+        <div className="rounded-machined border border-hairline bg-bench/50 p-4 text-xs text-steel">
+          <div className="flex items-center gap-2 font-semibold text-enamel mb-1">
+            <Clock className="size-4 text-[#ea580c]" />
+            <span>Price &amp; Pass Pending</span>
+          </div>
+          <p>
+            Your repair request has been sent to the workshop. Once the workshop accepts and finalises the price, your Handover QR Pass and Warranty Passport will be generated here.
+          </p>
+        </div>
+      ) : booking.status === "accepted" ? (
+        <div className="rounded-machined border border-[#ea580c]/30 bg-[#ea580c]/5 p-4 text-xs text-steel">
+          <div className="flex items-center gap-2 font-semibold text-enamel mb-1">
+            <Sparkles className="size-4 text-[#ea580c]" />
+            <span>Quote Received &bull; Action Required</span>
+          </div>
+          <p>
+            The workshop has provided a quote for this repair. Please review and accept the quote to finalise the price and unlock your Handover QR Pass.
+          </p>
+        </div>
+      ) : null}
 
       <div className="grid gap-6 lg:grid-cols-5">
         <div className="flex flex-col gap-6 lg:col-span-3">
